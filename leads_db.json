@@ -1,0 +1,162 @@
+[
+  {
+    "id": "crm-1",
+    "name": "Accra Oasis Dental & Wellness",
+    "category": "Dental Clinic",
+    "phone": "+233 24 123 4567",
+    "address": "12 ring road center, Accra, Ghana",
+    "rating": 4.2,
+    "reviewsCount": 38,
+    "website": null,
+    "mapsUrl": "https://maps.google.com/?cid=accra_oasis",
+    "latitude": 5.5601,
+    "longitude": -0.2057,
+    "status": "new",
+    "notes": "High potential client. They rely heavily on Google Maps and direct WhatsApp messages for scheduling. Receptionist mentions they get overwhelmed by bookings.",
+    "tags": [
+      "No Website",
+      "Manual Bookings",
+      "WhatsApp Reliance",
+      "High Value"
+    ],
+    "serviceType": "hybrid",
+    "digitalPresenceScore": 35,
+    "createdAt": "2026-05-25T01:18:18.124Z",
+    "aiAnalysis": {
+      "summary": "Modern dental studio in Ring Road Accra specializing in aesthetic general dentistry and family oral hygiene.",
+      "digitalPresenceSummary": "Very limited. No dedicated website found; listing points is missing. Currently using generic WhatsApp link for user intake and Facebook page placeholders.",
+      "presenceStrength": "low",
+      "operationalPainPoints": [
+        "High friction manual booking flow via WhatsApp",
+        "No structured client database or intake history",
+        "Patients struggle to see prices, services, or calendar availability"
+      ],
+      "systemsNeeded": [
+        "Patient Intake and Slot Reservation Web Tool",
+        "Automated WhatsApp Bot for direct scheduling reminder",
+        "Google Reviews Auto-Request Pipeline"
+      ],
+      "aiOpportunities": [
+        "Intelligent booking form using Cal.com/Calendly or Custom AI Assistant that coordinates calendar spots automatically via WhatsApp.",
+        "Interactive virtual reception bot on landing page to answer patient questions about copays and operating hours."
+      ],
+      "digitalMaturityScore": 35
+    },
+    "webDesignProposal": {
+      "needDetectedReason": "Tooth wellness clinic without any standalone website footprint. Relies 100% on Map reviews, losing online credibility.",
+      "suggestedType": "Booking & Dental Authority Platform",
+      "structure": [
+        {
+          "sectionName": "Hero Clinic Greeting",
+          "purpose": "First Hook",
+          "contentHint": "Highlight pain-free premium teeth procedures with direct reservation links."
+        },
+        {
+          "sectionName": "Treatment Catalogue",
+          "purpose": "Services",
+          "contentHint": "List out crowns, scales, cleanings, and pricing tables explicitly."
+        },
+        {
+          "sectionName": "Meet Our Dentists",
+          "purpose": "Relatability",
+          "contentHint": "Professional portraits of credentialed staff build patient trust."
+        },
+        {
+          "sectionName": "Interactive Appoints Portal",
+          "purpose": "High Conversion Booking",
+          "contentHint": "Direct scheduler calendar widget to claim time slots on the spot."
+        }
+      ],
+      "heroHeadline": "Modern, Pain-Free Dentistry in the Heart of Accra",
+      "heroSubheadline": "Book your expert teeth session online in seconds. Convenient dental Care with Accra's top oral doctors.",
+      "selectedCta": "Claim Your Spot Today",
+      "estimatedValue": "GH₵ 12,000 + / Month in extra patients",
+      "readyToSellOffer": "I'll build a responsive, patient-converting reservation system website integrated with SMS/WhatsApp notifications in 7 days."
+    },
+    "outreachPitch": {
+      "email": "Dear Accra Oasis Team,\n\nI noticed your brilliant reviews on Google Maps and wanted to reach out. Many locals are looking for top-tier dental care, but since you don't have a website, they can't easily find your list of services or book slots.\n\nI specialize in building quick-converting booking websites for healthcare practices in Accra. I've drafted a layout for a portal that integrates directly with a scheduling helper. This would streamline patient intake so your team isn't glued to WhatsApp all day.\n\nCan I send you a quick 2-minute mock graphic of what this would look like?\n\nBest,\nSales Engineer",
+      "whatsapp": "Hello Accra Oasis Dental! 👋 I found you on Maps and saw your clients rave about your care. I noticed you don't have a website for direct clinical booking. I specialize in dental schedulers that automate slot reservations. Would you like to see a free design draft I created for you?",
+      "linkedin": "Hi Oasis Team, I specialize in digital operational scale for medical operations in Accra. I mapped out a high-converting web portal flow for your clinic to reduce manual receptionist load. Let's connect if you're looking to scale operations this quarter!"
+    }
+  },
+  {
+    "id": "crm-2",
+    "name": "Lagos Freight Express & Logistics",
+    "category": "Courier Service",
+    "phone": "+234 80 987 6543",
+    "address": "Ikeja Industrial Avenue, Lagos, Nigeria",
+    "rating": 3.8,
+    "reviewsCount": 75,
+    "website": "http://lagosfreightdummy.com",
+    "mapsUrl": "https://maps.google.com/?cid=lagos_freight",
+    "latitude": 6.5244,
+    "longitude": 3.3792,
+    "status": "contacted",
+    "notes": "They have a basic, old, non-functional website. It is slow, lacks tracking APIs, and has broken contact forms. Direct dispatch calls coordinate everything manually.",
+    "tags": [
+      "Broken Website",
+      "Manual Dispatch",
+      "Automate Tracking",
+      "Hot Lead"
+    ],
+    "serviceType": "ai_automation",
+    "digitalPresenceScore": 48,
+    "createdAt": "2026-05-25T01:18:18.124Z",
+    "aiAnalysis": {
+      "summary": "Industrial freight logistics handler in Mainland Lagos doing heavy container shipping, home packing/delivery, and corporate relocation services.",
+      "digitalPresenceSummary": "Weak and obsolete. Their website was built years ago, does not resize on mobile, has broken internal links, and lacks client tracking capabilities.",
+      "presenceStrength": "medium",
+      "operationalPainPoints": [
+        "Dispatched loads are tracked on Excel booklets which are read manually to querying clients.",
+        "Average quote response time of 4 hours via email.",
+        "Customers must call dispatcher iteratively to request order status updates."
+      ],
+      "systemsNeeded": [
+        "Internal Simple Delivery Tracking DB",
+        "WhatsApp AI Spot-Quote Calculator Bot",
+        "Responsive Client tracking web console"
+      ],
+      "aiOpportunities": [
+        "Integrate a conversational WhatsApp quote agent: Client sends parcel dimensions and location, the AI computes price, saves dispatch, and issues receipt in 10 seconds.",
+        "Automatic SMS delivery alerts mapped to delivery updates."
+      ],
+      "digitalMaturityScore": 48
+    },
+    "webDesignProposal": {
+      "needDetectedReason": "Outdated, non-functional site from 2018 with dead interactive components and no mobile-responsiveness.",
+      "suggestedType": "Modern Logistical Dispatch Console & Client Site",
+      "structure": [
+        {
+          "sectionName": "Track Shipments",
+          "purpose": "Client Service",
+          "contentHint": "Search box where customers input a dispatch number and see real-time route updates."
+        },
+        {
+          "sectionName": "Instant Quote Calculator",
+          "purpose": "Lead Gen",
+          "contentHint": "Select origin, destination, weight, and instantly get estimated shipping rate."
+        },
+        {
+          "sectionName": "Services Suite",
+          "purpose": "Sales",
+          "contentHint": "Dedicated blocks for freight, warehouse space, express parcel courier."
+        },
+        {
+          "sectionName": "Corporate Inquiry Portal",
+          "purpose": "Enterprise Closing",
+          "contentHint": "Clean layout tailored for B2B contract requests."
+        }
+      ],
+      "heroHeadline": "Seamless Logistics & Freight Tracking Across Nigeria",
+      "heroSubheadline": "Request quotes faster, monitor your packages in real-time, and streamline imports with Lagos's premier warehouse partner.",
+      "selectedCta": "Calculate Shipping Rate",
+      "estimatedValue": "₦3,500,000 / Month saved in phone support and tracking friction",
+      "readyToSellOffer": "Let's redesign your logistics platform with client parcel tracking and an automated WhatsApp CRM module. Completed in 10 days."
+    },
+    "outreachPitch": {
+      "email": "Hello Logistics Management,\n\nI was looking to coordinate a dispatch in Lagos and checked your website. I noticed it takes a long time to load on phones and does not support shipment tracking, meaning clients have to call dispatchers iteratively to track boxes.\n\nWe specialize in automated logistic tracking and mobile-responsive websites. I've created a custom concept tracking tool that could integrate into your website so clients can self-serve delivery status reviews on their phones.\n\nThis typically reduces phone call tracking checks by 65% and optimizes quote captures. Can I send a quick video demonstration of this workflow?\n\nBest,\nAutomation Architect",
+      "whatsapp": "Hello Lagos Freight team! 🚚 I checked your website while arranging a delivery. The parcel calculator page seems unresponsive on mobile. I help logistics businesses build simple package tracking portals that let clients self-serve. Let me know if you'd like a quick preview!",
+      "linkedin": "Hi, I specialize in logistics efficiency software. I designed an interactive parcel status and shipping calculation interface for Lagos Freight providers. Let me know if you would like me to share the visual layout draft."
+    }
+  }
+]

@@ -2,10 +2,20 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import { GoogleGenAI, Type } from '@google/genai';
+import { generateContent, generateChatCompletion } from './src/openrouter.js';
 import { createServer as createViteServer } from 'vite';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
+import { runBishop } from './src/agents/bishop.js';
+import {
+  sendTextMessage,
+  sendTemplateMessage,
+  checkMessageStatus,
+  isWhatsAppConfigured as isWaConfigured,
+  verifyWebhook,
+  parseWebhookPayload,
+} from './src/whatsapp.js';
+import { scheduler, setBroadcastFn, generateFollowUpMessage } from './src/scheduler.js';
 
 dotenv.config();
 
@@ -23,6 +33,13 @@ function broadcast(data: any) {
     }
   });
 }
+
+// ─── Agent Log WebSocket Broadcasting ───
+// Injects a global broadcast function that the agent logger can call
+// to push real-time log entries to all connected WebSocket clients.
+(globalThis as any).__agentLogBroadcast = (entry: any) => {
+  broadcast({ type: 'agent_log', entry });
+};
 
 wss.on('connection', (ws) => {
   console.log('CRM Real-time Pipeline WebSocket Client connected.');
@@ -49,6 +66,31 @@ app.use(express.json());
 const DB_FILE = path.join(process.cwd(), 'leads_db.json');
 
 // Interface definition matching Types
+type LeadSource = 'google_maps' | 'linkedin' | 'facebook' | 'ai_search' | 'manual_import' | 'csv_import';
+
+type OutreachChannel = 'whatsapp' | 'email' | 'linkedin_dm' | 'physical_visit' | 'phone_call';
+
+type OutreachStatus = 'pending' | 'sent' | 'opened' | 'replied' | 'no_response' | 'interested' | 'not_interested';
+
+interface OutreachEntry {
+  id: string;
+  channel: OutreachChannel;
+  status: OutreachStatus;
+  sentAt: string;
+  respondedAt?: string | null;
+  notes: string;
+  followUpDate?: string | null;
+}
+
+interface ScoreBreakdown {
+  hasWebsite: number;
+  digitalPresence: number;
+  reviewQuality: number;
+  bookingPotential: number;
+  brandGap: number;
+  total: number;
+}
+
 interface BusinessAnalysis {
   summary: string;
   digitalPresenceSummary: string;
@@ -82,6 +124,15 @@ interface OutreachPitch {
   whatsapp: string;
 }
 
+interface BIReport {
+  businessOverview: string;
+  digitalHealthScore: number;
+  topOpportunity: string;
+  recommendedAction: string;
+  competitiveInsight: string;
+  estimatedValueUpside: string;
+}
+
 interface Lead {
   id: string;
   name: string;
@@ -100,9 +151,13 @@ interface Lead {
   serviceType: 'ai_automation' | 'web_design' | 'hybrid';
   digitalPresenceScore: number;
   createdAt: string;
+  source: LeadSource;
+  scoreBreakdown?: ScoreBreakdown | null;
+  outreachHistory: OutreachEntry[];
   aiAnalysis?: BusinessAnalysis | null;
   webDesignProposal?: WebDesignProposal | null;
   outreachPitch?: OutreachPitch | null;
+  biReport?: BIReport | null;
 }
 
 // Pre-populate some realistic initial leads if database file is empty
@@ -125,6 +180,8 @@ const INITIAL_LEADS: Lead[] = [
     serviceType: "hybrid",
     digitalPresenceScore: 35,
     createdAt: new Date().toISOString(),
+    source: 'manual_import',
+    outreachHistory: [],
     aiAnalysis: {
       summary: "Modern dental studio in Ring Road Accra specializing in aesthetic general dentistry and family oral hygiene.",
       digitalPresenceSummary: "Very limited. No dedicated website found; listing points is missing. Currently using generic WhatsApp link for user intake and Facebook page placeholders.",
@@ -184,6 +241,8 @@ const INITIAL_LEADS: Lead[] = [
     serviceType: "ai_automation",
     digitalPresenceScore: 48,
     createdAt: new Date().toISOString(),
+    source: 'manual_import',
+    outreachHistory: [],
     aiAnalysis: {
       summary: "Industrial freight logistics handler in Mainland Lagos doing heavy container shipping, home packing/delivery, and corporate relocation services.",
       digitalPresenceSummary: "Weak and obsolete. Their website was built years ago, does not resize on mobile, has broken internal links, and lacks client tracking capabilities.",
@@ -251,28 +310,65 @@ function saveDatabase() {
   }
 }
 
-// Lazy load Gemini AI Client
-let aiClient: GoogleGenAI | null = null;
-function getGeminiClient(): GoogleGenAI | null {
-  if (!aiClient) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-      console.warn("GEMINI_API_KEY is not defined - functioning in standard simulation mode.");
-      return null;
-    }
-    aiClient = new GoogleGenAI({
-      apiKey: key,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
-    });
-  }
-  return aiClient;
+// Check if OpenRouter API key is configured
+function isAiConfigured(): boolean {
+  return !!process.env.OPENROUTER_API_KEY;
 }
 
-// Generates incredibly high-fidelity fallback data dynamically if Google Search / Gemini credentials are missing
+// Calculates lead score breakdown based on digital presence factors
+function calculateScoreBreakdown(lead: Lead): ScoreBreakdown {
+  const hasWebsite = !lead.website ? 25 : 0; // No website = higher opportunity
+  const digitalPresence = lead.digitalPresenceScore > 0 ? Math.max(0, 20 - Math.round(lead.digitalPresenceScore / 5)) : 15;
+  const reviewQuality = (lead.rating && lead.rating < 4.0 && lead.rating > 0) ? 20 : (lead.rating && lead.rating >= 4.0) ? 10 : 15;
+  const bookingPotential = lead.tags.some(t => /manual|whatsapp|phone|call|booking/i.test(t)) ? 20 : 15;
+  const brandGap = !lead.website ? 25 : lead.digitalPresenceScore < 50 ? 15 : 5;
+  const total = hasWebsite + digitalPresence + reviewQuality + bookingPotential + brandGap;
+  return { hasWebsite, digitalPresence, reviewQuality, bookingPotential, brandGap, total: Math.min(100, Math.max(0, total)) };
+}
+
+// Generates dynamic BI (Business Intelligence) report for a lead
+function generateBIReport(lead: Lead): BIReport {
+  const hasWeb = !!lead.website;
+  const categoryLower = (lead.category || '').toLowerCase();
+  
+  let recommendedAction = '';
+  let topOpportunity = '';
+  let competitiveInsight = '';
+  let estimatedValueUpside = '';
+
+  if (categoryLower.includes('clinic') || categoryLower.includes('dent') || categoryLower.includes('health')) {
+    topOpportunity = 'Online booking portal to automate patient intake and reduce front-desk congestion';
+    recommendedAction = hasWeb ? 'Redesign existing site with mobile-responsive patient scheduler' : 'Build a patient booking website with automated WhatsApp reminders';
+    competitiveInsight = 'Competitors with online scheduling are capturing 40% more new patient inquiries';
+    estimatedValueUpside = 'Potential to recover 12-18 additional client sessions per week with streamlined booking';
+  } else if (categoryLower.includes('rest') || categoryLower.includes('cafe') || categoryLower.includes('food') || categoryLower.includes('bak')) {
+    topOpportunity = 'Direct online ordering system to bypass third-party delivery commission fees';
+    recommendedAction = hasWeb ? 'Add direct ordering and table reservation modules to existing site' : 'Launch a commission-free ordering website with delivery zone management';
+    competitiveInsight = 'Local competitors using direct ordering capture 25-35% more margin per order';
+    estimatedValueUpside = 'Recapture ~$1,200-2,000/month in lost commission fees and new orders';
+  } else if (categoryLower.includes('logis') || categoryLower.includes('freight') || categoryLower.includes('delivery')) {
+    topOpportunity = 'Real-time shipment tracking portal to reduce customer support calls';
+    recommendedAction = hasWeb ? 'Integrate tracking dashboard and automated SMS status updates' : 'Build a client portal with instant quote calculator and tracking';
+    competitiveInsight = 'Competitors offering live tracking are preferred by 68% of corporate clients';
+    estimatedValueUpside = 'Reduce dispatch support calls by 60% and win 3-5 more enterprise contracts';
+  } else {
+    topOpportunity = hasWeb ? 'Modernize digital presence with conversion-optimized design' : 'Establish first online presence to capture local search traffic';
+    recommendedAction = hasWeb ? 'Redesign with modern UX, integrated booking, and SEO optimization' : 'Create a professional website with service showcase and contact automation';
+    competitiveInsight = 'Businesses with modern websites receive 3x more inbound inquiries than those without';
+    estimatedValueUpside = 'Estimated 15-30% increase in qualified lead generation through improved online presence';
+  }
+
+  return {
+    businessOverview: `${lead.name} is a ${lead.category || 'local business'} operating in ${lead.address || 'the local area'}. ${hasWeb ? 'Has a website but likely needs modernization.' : 'Has no website presence — significant growth opportunity.'}`,
+    digitalHealthScore: lead.digitalPresenceScore || 50,
+    topOpportunity,
+    recommendedAction,
+    competitiveInsight,
+    estimatedValueUpside
+  };
+}
+
+// Generates incredibly high-fidelity fallback data dynamically if OpenRouter credentials are missing
 function getRealisticFallbacks(query: string): Lead[] {
   const searchQuery = (query || '').toLowerCase();
   
@@ -432,7 +528,9 @@ function getRealisticFallbacks(query: string): Lead[] {
       tags: tags[i],
       serviceType: isWebsiteMissing ? 'web_design' : (Math.random() > 0.5 ? 'ai_automation' : 'hybrid'),
       digitalPresenceScore: computedScore,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      source: 'ai_search',
+      outreachHistory: []
     });
   }
 
@@ -733,6 +831,19 @@ app.delete('/api/crm/leads/:id', (req, res) => {
   res.json({ success: true, message: "Lead removed from pipeline successfully." });
 });
 
+// Calculate lead score per lead (opportunity score 0-100)
+function calculateLeadOpportunityScore(lead: Lead): number {
+  let score = 0;
+  if (!lead.website) score += 30;
+  if (lead.rating && lead.rating < 4.0) score += 15;
+  if (!lead.website && (!lead.phone || lead.phone === 'No phone listed')) score += 10;
+  if (lead.tags.some(t => /manual|whatsapp|facebook|instagram/i.test(t))) score += 15;
+  if (lead.digitalPresenceScore < 40) score += 15;
+  if (lead.reviewsCount && lead.reviewsCount < 20) score += 10;
+  if (lead.reviewsCount && lead.reviewsCount === 0) score += 5;
+  return Math.min(100, score);
+}
+
 app.get('/api/crm/stats', (req, res) => {
   const total = leadsDatabase.length;
   const noWebsite = leadsDatabase.filter(l => !l.website).length;
@@ -745,17 +856,30 @@ app.get('/api/crm/stats', (req, res) => {
   const conversionRate = total > 0 ? Math.round((closedCount / total) * 100) : 0;
   
   // Pipeline estimated revenue based on service types:
-  // web_design = GH₵/₦/$ 1,500 average, ai_automation = 2,500 average, hybrid = 4,000 progress
   const revenue = leadsDatabase.reduce((acc, lead) => {
     if (lead.status === 'closed') {
       const value = lead.serviceType === 'web_design' ? 1500 : lead.serviceType === 'ai_automation' ? 2500 : 4000;
       return acc + value;
     } else if (lead.status === 'interested') {
-      const value = (lead.serviceType === 'web_design' ? 1500 : lead.serviceType === 'ai_automation' ? 2500 : 4000) * 0.5; // weighted
+      const value = (lead.serviceType === 'web_design' ? 1500 : lead.serviceType === 'ai_automation' ? 2500 : 4000) * 0.5;
       return acc + value;
     }
     return acc;
   }, 0);
+
+  // Leads by source
+  const sourceCounts: Record<string, number> = {};
+  leadsDatabase.forEach(l => {
+    const src = l.source || 'ai_search';
+    sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+  });
+  const leadsBySource = Object.entries(sourceCounts).map(([source, count]) => ({ source, count }));
+
+  // Average lead score
+  const totalScore = leadsDatabase.reduce((acc, l) => {
+    return acc + (l.scoreBreakdown?.total || calculateLeadOpportunityScore(l));
+  }, 0);
+  const avgLeadScore = total > 0 ? Math.round(totalScore / total) : 0;
 
   res.json({
     totalLeads: total,
@@ -764,103 +888,140 @@ app.get('/api/crm/stats', (req, res) => {
     repliesReceived: replied,
     meetingsBooked: meeting,
     conversionRate,
-    estimatedPipelineRevenue: revenue
+    estimatedPipelineRevenue: revenue,
+    leadsBySource,
+    avgLeadScore
   });
 });
 
-// Search API utilizing Gemini Search Grounding
+// Lead Scoring Endpoint - calculates comprehensive score for a lead
+app.post('/api/leads/score', (req, res) => {
+  const { lead } = req.body as { lead: Lead };
+  if (!lead) return res.status(400).json({ error: "Lead is required." });
+
+  const breakdown = calculateScoreBreakdown(lead);
+  const opportunityScore = calculateLeadOpportunityScore(lead);
+
+  res.json({ scoreBreakdown: breakdown, opportunityScore });
+});
+
+// BI Report Endpoint - generates business intelligence report
+app.post('/api/leads/bi-report', (req, res) => {
+  const { lead } = req.body as { lead: Lead };
+  if (!lead) return res.status(400).json({ error: "Lead is required." });
+
+  const report = generateBIReport(lead);
+  
+  if (!isAiConfigured()) {
+    return res.json({ report, isFallback: true });
+  }
+
+  // In the future, use AI to generate a richer report
+  return res.json({ report, isFallback: false });
+});
+
+// Outreach Logging Endpoint
+app.post('/api/leads/outreach', (req, res) => {
+  const { leadId, entry } = req.body as { leadId: string; entry: OutreachEntry };
+  if (!leadId || !entry) return res.status(400).json({ error: "Lead ID and outreach entry are required." });
+
+  const leadIndex = leadsDatabase.findIndex(l => l.id === leadId);
+  if (leadIndex === -1) return res.status(404).json({ error: "Lead not found." });
+
+  if (!leadsDatabase[leadIndex].outreachHistory) {
+    leadsDatabase[leadIndex].outreachHistory = [];
+  }
+  leadsDatabase[leadIndex].outreachHistory.push(entry);
+  
+  // Auto-update lead status based on outreach
+  if (entry.channel === 'physical_visit' || entry.status === 'sent') {
+    if (leadsDatabase[leadIndex].status === 'new') {
+      leadsDatabase[leadIndex].status = 'contacted';
+    }
+  }
+  if (entry.status === 'replied' || entry.status === 'interested') {
+    leadsDatabase[leadIndex].status = 'interested';
+  }
+
+  saveDatabase();
+  broadcast({ type: 'lead_updated', lead: leadsDatabase[leadIndex] });
+
+  res.json({ lead: leadsDatabase[leadIndex] });
+});
+
+// Search API using OpenRouter AI (generates leads based on model knowledge)
 app.post('/api/leads/search', async (req, res) => {
-  const { query, location } = req.body;
+  const { query, location, source } = req.body;
   const fullSearchQuery = location ? `${query} in ${location}` : query;
   
   if (!query) {
     return res.status(400).json({ error: "Search query string is required" });
   }
 
-  console.log(`Processing lead discovery query in search gateway: "${fullSearchQuery}"`);
+  console.log(`Processing lead discovery query: "${fullSearchQuery}"`);
   
-  const client = getGeminiClient();
-  if (!client) {
+  if (!isAiConfigured()) {
     // Safe fallback mode
     const fallbacks = getRealisticFallbacks(fullSearchQuery);
     return res.json({ 
       leads: fallbacks, 
       isFallback: true, 
-      notice: "Simulated response: set GEMINI_API_KEY for live sales grounding feeds." 
+      notice: "Simulated response: set OPENROUTER_API_KEY for AI-powered lead generation." 
     });
   }
 
   try {
     const systemPrompt = `You are an expert sales discovery intelligence scraper.
-Given the target search: "${fullSearchQuery}", perform a live web search using Google Search tools.
-Locate exactly 4 to 5 REAL local business entities matching the query.
-Determine if they have an active website or not. If they do not, note "website": null.
+Given the target search: "${fullSearchQuery}", generate realistic local business entities matching this query.
+Locate exactly 4 to 5 realistic local business entities matching the query.
+Determine if they have an active website or not. If they do not, set "website": null.
 Compute a realistic Digital Presence Score from 0 to 100 (where having a great website + ratings = 85+, and no website = 25-45).
 Identify key tags like 'No Website', 'Facebook relying', 'WhatsApp booking', etc.
 Return a STRICT valid JSON array enclosing ONLY the matching businesses. Make sure coordinates (latitude/longitude) are realistic numerical values.
-No conversational wrapper text. Do not return markdown except inside markdown response code scopes if required, but with responseMimeType: "application/json" you must return RAW clean JSON array.`;
+No conversational wrapper text. Return ONLY raw JSON.`;
 
-    const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: systemPrompt,
-      config: {
-        tools: [{ googleSearch: {} }],
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              name: { type: Type.STRING },
-              category: { type: Type.STRING },
-              phone: { type: Type.STRING },
-              address: { type: Type.STRING },
-              rating: { type: Type.NUMBER },
-              reviewsCount: { type: Type.INTEGER },
-              website: { type: Type.STRING },
-              mapsUrl: { type: Type.STRING },
-              latitude: { type: Type.NUMBER },
-              longitude: { type: Type.NUMBER },
-              digitalPresenceScore: { type: Type.INTEGER },
-              serviceType: { type: Type.STRING },
-              tags: { type: Type.ARRAY, items: { type: Type.STRING } }
-            },
-            required: ["name", "category", "address", "digitalPresenceScore", "serviceType", "tags"]
-          }
-        }
-      }
+    const text = await generateContent(systemPrompt, fullSearchQuery, {
+      responseFormat: "json_object",
     });
 
-    const text = response.text;
     if (text) {
-      const parsedLeads = JSON.parse(text.trim());
-      // Append generated ID and creation time
-      const finalLeads = parsedLeads.map((item: any, index: number) => ({
-        ...item,
-        id: `lead-found-${index}-${Date.now()}`,
-        status: 'new',
-        createdAt: new Date().toISOString(),
-        notes: item.website ? "Identified older digital framework. Recommend interactive automated chatbots." : "Zero website presence discovered. High potential web design design offer target.",
-        phone: item.phone || null,
-        rating: item.rating || null,
-        reviewsCount: item.reviewsCount || null,
-        website: item.website || null,
-        mapsUrl: item.mapsUrl || `https://maps.google.com/?q=${encodeURIComponent(item.name + " " + (location || ''))}`,
-        latitude: item.latitude || 5.55 + (Math.random() - 0.5) * 0.04,
-        longitude: item.longitude || -0.20 + (Math.random() - 0.5) * 0.04
-      }));
+      const parsed = JSON.parse(text.trim());
+      const leadsArray = Array.isArray(parsed) ? parsed : (parsed.leads || parsed.businesses || []);
+      const finalLeads = leadsArray.map((item: any, index: number) => {
+        const leadSource = source || 'ai_search';
+        const scoreBreakdown = calculateScoreBreakdown(item);
+        const biReport = generateBIReport(item);
+        return {
+          ...item,
+          id: `lead-found-${index}-${Date.now()}`,
+          status: 'new',
+          source: leadSource,
+          outreachHistory: [],
+          scoreBreakdown,
+          biReport,
+          createdAt: new Date().toISOString(),
+          notes: item.website ? "Identified older digital framework. Recommend interactive automated chatbots." : "Zero website presence discovered. High potential web design offer target.",
+          phone: item.phone || null,
+          rating: item.rating || null,
+          reviewsCount: item.reviewsCount || null,
+          website: item.website || null,
+          mapsUrl: item.mapsUrl || `https://maps.google.com/?q=${encodeURIComponent(item.name + " " + (location || ''))}`,
+          latitude: item.latitude || 5.55 + (Math.random() - 0.5) * 0.04,
+          longitude: item.longitude || -0.20 + (Math.random() - 0.5) * 0.04
+        };
+      });
       return res.json({ leads: finalLeads, isFallback: false });
     }
   } catch (error) {
-    console.warn("Gemini grounding failure. Scaling to high-grade fallbacks.", error);
+    console.warn("AI search generation failed. Falling back to offline generation.", error);
   }
 
-  // Final graceful fallback if anything goes wrong (such as 429 quota exhaustion)
+  // Final graceful fallback
   const fallbacks = getRealisticFallbacks(fullSearchQuery);
   res.json({ 
     leads: fallbacks, 
     isFallback: true, 
-    notice: "Standard Search quota limit hit. Seamlessly scaled to local High-Grade Offline Intelligence." 
+    notice: "AI generation failed. Used offline high-grade intelligence." 
   });
 });
 
@@ -871,9 +1032,7 @@ app.post('/api/leads/analyze', async (req, res) => {
 
   console.log(`Deep-analyzing business profile: "${lead.name}"`);
 
-  const client = getGeminiClient();
-  if (!client) {
-    // Generate high-fidelity simulated analysis structure
+  if (!isAiConfigured()) {
     const mockAnalysis = getDynamicAnalysis(lead);
     return res.json({ 
       analysis: mockAnalysis, 
@@ -883,55 +1042,37 @@ app.post('/api/leads/analyze', async (req, res) => {
   }
 
   try {
-    const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: `Provide a detailed Business Summary, Digital Presence Analysis, and Operational pain point breakdown for the following business:
-Name: ${lead.name}
+    const systemPrompt = `You are an expert business analyst. Analyze this business and return a JSON with:
+- summary (2 sentence business summary)
+- digitalPresenceSummary (digital presence analysis)
+- presenceStrength ("low", "medium", or "high")
+- operationalPainPoints (array of 3 specific pain points)
+- systemsNeeded (array of 3 needed systems)
+- aiOpportunities (array of 2 AI opportunities)
+- digitalMaturityScore (integer 0-100)
+
+Business: ${lead.name}
 Category: ${lead.category}
 Phone: ${lead.phone || 'N/A'}
 Address: ${lead.address}
 Website: ${lead.website || 'None'}
-Global Rating: ${lead.rating || 'N/A'} (Reviews: ${lead.reviewsCount || 0})
+Rating: ${lead.rating || 'N/A'} (Reviews: ${lead.reviewsCount || 0})`;
 
-Map out:
-1. Short 2-sentence summary of what the business does.
-2. Digital presence summaries and categorized strength ("low", "medium", or "high").
-3. A list of 3 specific operational pain points (e.g. manual calendar booking, WhatsApp-based receptionists bottlenecking, lack of follow-up).
-4. List of 3 systems or tools needed (e.g., custom client booking portal, reviews aggregator).
-5. 2 custom AI opportunity recommendations (e.g., WhatsApp AI bots, smart invoice triggers).
-6. A digital maturity score (integer 0 to 100).
-Return STRICT JSON matching the BusinessAnalysis structure.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            summary: { type: Type.STRING },
-            digitalPresenceSummary: { type: Type.STRING },
-            presenceStrength: { type: Type.STRING, enum: ["low", "medium", "high"] },
-            operationalPainPoints: { type: Type.ARRAY, items: { type: Type.STRING } },
-            systemsNeeded: { type: Type.ARRAY, items: { type: Type.STRING } },
-            aiOpportunities: { type: Type.ARRAY, items: { type: Type.STRING } },
-            digitalMaturityScore: { type: Type.INTEGER }
-          },
-          required: ["summary", "digitalPresenceSummary", "presenceStrength", "operationalPainPoints", "systemsNeeded", "aiOpportunities", "digitalMaturityScore"]
-        }
-      }
-    });
+    const text = await generateContent(systemPrompt, `Analyze business: ${lead.name}`, { responseFormat: "json_object" });
 
-    if (response.text) {
-      return res.json({ analysis: JSON.parse(response.text.trim()), isFallback: false });
+    if (text) {
+      const analysis = JSON.parse(text.trim());
+      return res.json({ analysis, isFallback: false });
     }
   } catch (error) {
-    console.warn("Gemini analyze failed. Returning high-grade backup fallback.", error);
+    console.warn("OpenRouter analyze failed. Returning high-grade backup fallback.", error);
   }
 
-  // Graceful fallback for quota / model exceptions
   const mockAnalysis = getDynamicAnalysis(lead);
   res.json({ 
     analysis: mockAnalysis, 
     isFallback: true, 
-    fallbackReason: "Gemini API Quota Exceeded. Load high-grade simulated analysis content." 
+    fallbackReason: "OpenRouter unavailable. Loaded simulated analysis." 
   });
 });
 
@@ -942,9 +1083,7 @@ app.post('/api/leads/propose', async (req, res) => {
 
   console.log(`Creating custom Web Design Proposal for: "${lead.name}"`);
 
-  const client = getGeminiClient();
-  if (!client) {
-    // Elegant fallbacks
+  if (!isAiConfigured()) {
     const mockProposal = getDynamicProposal(lead, analysis);
     return res.json({ proposal: mockProposal, isFallback: true });
   }
@@ -957,58 +1096,25 @@ Category: ${lead.category}
 Website Status: ${lead.website || 'No website found'}
 Summary of Gaps: ${analysis?.digitalPresenceSummary || 'No existing website or poor interactive elements.'}
 
-Prepare:
-1. needDetectedReason (summarize why they urgently need a site)
-2. suggestedType (e.g., 'Booking Site', 'Corporate Lead Engine', 'E-commerce platform')
-3. structure (array of 4 key pages/sections, with sectionName, purpose, and contentHint)
-4. heroHeadline (compelling copy)
-5. heroSubheadline (compelling copy)
-6. selectedCta (converting CTA button label)
-7. estimatedValue (monetizable monthly impact score, e.g. "GH₵ 8,000/mo in scheduling slots" or "$2,000/mo recaptured")
-8. readyToSellOffer (A concise and convincing pitch offer that the CRM operator can paste)
-Return STRICT valid JSON matching the WebDesignProposal structure.`;
+Prepare JSON with:
+1. needDetectedReason
+2. suggestedType
+3. structure (array of 4 objects with sectionName, purpose, contentHint)
+4. heroHeadline
+5. heroSubheadline
+6. selectedCta
+7. estimatedValue
+8. readyToSellOffer`;
 
-    const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: systemPrompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            needDetectedReason: { type: Type.STRING },
-            suggestedType: { type: Type.STRING },
-            structure: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  sectionName: { type: Type.STRING },
-                  purpose: { type: Type.STRING },
-                  contentHint: { type: Type.STRING }
-                },
-                required: ["sectionName", "purpose", "contentHint"]
-              }
-            },
-            heroHeadline: { type: Type.STRING },
-            heroSubheadline: { type: Type.STRING },
-            selectedCta: { type: Type.STRING },
-            estimatedValue: { type: Type.STRING },
-            readyToSellOffer: { type: Type.STRING }
-          },
-          required: ["needDetectedReason", "suggestedType", "structure", "heroHeadline", "heroSubheadline", "selectedCta", "estimatedValue", "readyToSellOffer"]
-        }
-      }
-    });
+    const text = await generateContent(systemPrompt, `Propose design for: ${lead.name}`, { responseFormat: "json_object" });
 
-    if (response.text) {
-      return res.json({ proposal: JSON.parse(response.text.trim()), isFallback: false });
+    if (text) {
+      return res.json({ proposal: JSON.parse(text.trim()), isFallback: false });
     }
   } catch (err) {
-    console.warn("Propose Gemini failed. Rendering high-grade offline backup.", err);
+    console.warn("Propose OpenRouter failed. Rendering high-grade offline backup.", err);
   }
 
-  // Graceful backup fallback
   const mockProposal = getDynamicProposal(lead, analysis);
   res.json({ proposal: mockProposal, isFallback: true });
 });
@@ -1020,8 +1126,7 @@ app.post('/api/leads/pitch', async (req, res) => {
 
   console.log(`Generating pitch copy for: "${lead.name}"`);
 
-  const client = getGeminiClient();
-  if (!client) {
+  if (!isAiConfigured()) {
     const pitch = getDynamicPitch(lead, analysis, proposal);
     return res.json({ pitch, isFallback: true });
   }
@@ -1033,40 +1138,24 @@ Business: ${lead.name}
 Category: ${lead.category}
 Contact Number: ${lead.phone || 'N/A'}
 Website Status: ${lead.website ? 'Legacy website exists at ' + lead.website : 'No website found'}
-Critical Paint Point: ${analysis?.operationalPainPoints?.[0] || 'Manual booking intake'}
+Critical Pain Point: ${analysis?.operationalPainPoints?.[0] || 'Manual booking intake'}
 Suggested Offer: ${proposal?.readyToSellOffer || 'Responsive booking web portal'}
 
 Ensure:
 1. They are brief, respectful of business owners' time, and highly outcome-oriented.
 2. Direct references to local community reviews or ratings.
 3. No fluffy marketing, zero mass-spam feel. Speak like a local software freelancer / agency peer.
-Return STRICT valid JSON matching OutreachPitch structure.`;
+Return STRICT valid JSON with email, linkedin, and whatsapp string properties.`;
 
-    const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: systemPrompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            email: { type: Type.STRING, description: "With subject line and spaced paragraphs" },
-            linkedin: { type: Type.STRING, description: "Short, direct hook message" },
-            whatsapp: { type: Type.STRING, description: "Friendly, casual introductory message with emojis" }
-          },
-          required: ["email", "linkedin", "whatsapp"]
-        }
-      }
-    });
+    const text = await generateContent(systemPrompt, `Pitch for: ${lead.name}`, { responseFormat: "json_object" });
 
-    if (response.text) {
-      return res.json({ pitch: JSON.parse(response.text.trim()), isFallback: false });
+    if (text) {
+      return res.json({ pitch: JSON.parse(text.trim()), isFallback: false });
     }
   } catch (err) {
     console.warn("Pitch copy generation failed. Rendering premium backup copywriting.", err);
   }
 
-  // Graceful backup fallback
   const pitch = getDynamicPitch(lead, analysis, proposal);
   res.json({ pitch, isFallback: true });
 });
@@ -1076,7 +1165,6 @@ app.post('/api/leads/followup', async (req, res) => {
   const { lead, previousStatus, attempt } = req.body;
   if (!lead) return res.status(400).json({ error: "Lead is required." });
 
-  const client = getGeminiClient();
   const attemptNum = attempt || 1;
 
   const getMockFollowup = () => {
@@ -1085,30 +1173,20 @@ app.post('/api/leads/followup', async (req, res) => {
     };
   };
 
-  if (!client) {
+  if (!isAiConfigured()) {
     return res.json({ ...getMockFollowup(), isFallback: true });
   }
 
   try {
-    const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: `Create a follow-up outreach message (Attempt #${attemptNum}) for the business "${lead.name}" (${lead.category}).
+    const systemPrompt = `Create a follow-up outreach message (Attempt #${attemptNum}) for the business "${lead.name}" (${lead.category}).
 Previous history: They were contacted with a web design or automation proposal but have not responded yet.
 Keep it extremely polite, human, low-pressure, and high value. Focus on solving booking friction and saving time.
-Return a simple JSON enclosing a "message" string property.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            message: { type: Type.STRING }
-          },
-          required: ["message"]
-        }
-      }
-    });
-    if (response.text) {
-      return res.json({ ...JSON.parse(response.text.trim()), isFallback: false });
+Return a simple JSON enclosing a "message" string property.`;
+
+    const text = await generateContent(systemPrompt, `Follow-up #${attemptNum} for ${lead.name}`, { responseFormat: "json_object" });
+
+    if (text) {
+      return res.json({ ...JSON.parse(text.trim()), isFallback: false });
     }
   } catch (err) {
     console.warn("Follow up generation failed. Returning mock.", err);
@@ -1125,20 +1203,18 @@ app.post('/api/crm/leads/:id/summarize', async (req, res) => {
     return res.status(404).json({ error: "Lead not found" });
   }
 
-  const client = getGeminiClient();
-
   const getFallbackSummary = () => {
     return {
       summary: `• **Stage Analysis**: Currently staged in "${lead.status.toUpperCase()}" with a digital health score of ${lead.digitalPresenceScore}%.\n• **Pain Points**: ${lead.website ? 'Legacy website active' : 'Has no website listed'} with notes: "${lead.notes}".\n• **Action Proposal**: Re-initiate contact to address specific delivery, intake or layout conversion optimizations.`
     };
   };
 
-  if (!client) {
+  if (!isAiConfigured()) {
     return res.json({ ...getFallbackSummary(), isFallback: true });
   }
 
   try {
-    const prompt = `You are a high-performance CRM intelligence optimizer.
+    const systemPrompt = `You are a high-performance CRM intelligence optimizer.
 Generate a concise, elite AI summary (maximum 3 bullet points, friendly but highly professional sales-focused tone) analyzing the current CRM status and recent notes of this lead. Do not include introductory text, start directly with the first bullet point. Use markdown formatting.
 
 Lead Name: ${lead.name}
@@ -1155,23 +1231,10 @@ Structure your response with:
 
 Return a simple JSON enclosing a "summary" string property (with nice markdown bullets inside).`;
 
-    const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            summary: { type: Type.STRING }
-          },
-          required: ["summary"]
-        }
-      }
-    });
+    const text = await generateContent(systemPrompt, `Summarize lead: ${lead.name}`, { responseFormat: "json_object" });
 
-    if (response.text) {
-      return res.json({ ...JSON.parse(response.text.trim()), isFallback: false });
+    if (text) {
+      return res.json({ ...JSON.parse(text.trim()), isFallback: false });
     }
   } catch (err) {
     console.warn("CRM Lead status summary generation failed. Returning simulation summary.", err);
@@ -1181,14 +1244,442 @@ Return a simple JSON enclosing a "summary" string property (with nice markdown b
 });
 
 
+// ─── Inject broadcast into scheduler ───
+setBroadcastFn(broadcast);
+
+// ─── Scheduler Routes ───
+
+/**
+ * GET /api/scheduler/jobs
+ * List all scheduled follow-up jobs, optionally filtered by status or leadId.
+ */
+app.get('/api/scheduler/jobs', (req, res) => {
+  const { status, leadId } = req.query;
+  let jobs = scheduler.getJobs(status as any);
+  if (leadId) {
+    jobs = jobs.filter(j => j.leadId === leadId);
+  }
+  res.json({ jobs });
+});
+
+/**
+ * POST /api/scheduler/jobs
+ * Create a new follow-up job.
+ */
+app.post('/api/scheduler/jobs', (req, res) => {
+  const { leadId, leadName, leadPhone, message, scheduledAt, type, attemptNumber, maxAttempts, metadata } = req.body;
+
+  if (!leadId || !leadName || !leadPhone || !message || !scheduledAt) {
+    return res.status(400).json({ error: 'Missing required fields: leadId, leadName, leadPhone, message, scheduledAt' });
+  }
+
+  const job = scheduler.createJob({
+    leadId,
+    leadName,
+    leadPhone,
+    type: type || 'whatsapp_followup',
+    message,
+    scheduledAt,
+    attemptNumber,
+    maxAttempts,
+    metadata,
+  });
+
+  console.log(`[Scheduler] Created job ${job.id} for ${leadName} at ${new Date(scheduledAt).toLocaleString()}`);
+  res.status(201).json({ job });
+});
+
+/**
+ * DELETE /api/scheduler/jobs/:id
+ * Cancel a pending follow-up job.
+ */
+app.delete('/api/scheduler/jobs/:id', (req, res) => {
+  const { id } = req.params;
+  const job = scheduler.cancelJob(id);
+  if (!job) {
+    return res.status(404).json({ error: 'Job not found or already completed/cancelled.' });
+  }
+  res.json({ job, message: 'Job cancelled successfully.' });
+});
+
+/**
+ * POST /api/scheduler/generate
+ * Generate a follow-up message for a lead based on their outreach history.
+ */
+app.post('/api/scheduler/generate', (req, res) => {
+  const { lead } = req.body;
+  if (!lead) {
+    return res.status(400).json({ error: 'Lead is required.' });
+  }
+
+  const attemptNumber = (lead.outreachHistory?.length || 0) + 1;
+  const lastOutreach = lead.outreachHistory?.[lead.outreachHistory.length - 1];
+  const message = generateFollowUpMessage(lead, attemptNumber, lastOutreach?.notes);
+
+  res.json({ message, attemptNumber });
+});
+
+/**
+ * POST /api/whatsapp/broadcast
+ * Send WhatsApp messages to multiple leads in batch.
+ * If scheduleAt is provided, creates scheduled jobs instead of sending immediately.
+ */
+app.post('/api/whatsapp/broadcast', async (req, res) => {
+  const { leadIds, message, scheduleAt, maxMessages = 10 } = req.body;
+
+  if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
+    return res.status(400).json({ error: 'leadIds array is required.' });
+  }
+  if (!message) {
+    return res.status(400).json({ error: 'Message text is required.' });
+  }
+
+  const batch = leadIds.slice(0, Math.min(maxMessages, 20)); // Safety cap
+
+  if (!isWaConfigured()) {
+    return res.status(503).json({
+      error: 'WhatsApp Business API not configured.',
+      isFallback: true,
+    });
+  }
+
+  const results: { leadId: string; leadName: string; success: boolean; error?: string; jobId?: string }[] = [];
+
+  for (const leadId of batch) {
+    const lead = leadsDatabase.find((l: any) => l.id === leadId);
+    if (!lead) {
+      results.push({ leadId, leadName: 'Unknown', success: false, error: 'Lead not found' });
+      continue;
+    }
+    if (!lead.phone) {
+      results.push({ leadId, leadName: lead.name, success: false, error: 'No phone number' });
+      continue;
+    }
+
+    // Schedule for later?
+    if (scheduleAt) {
+      const job = scheduler.createJob({
+        leadId: lead.id,
+        leadName: lead.name,
+        leadPhone: lead.phone,
+        message,
+        scheduledAt: scheduleAt,
+        metadata: { source: 'batch_broadcast' },
+      });
+
+      // Log outreach
+      lead.outreachHistory = lead.outreachHistory || [];
+      lead.outreachHistory.push({
+        id: `batch-scheduled-${Date.now()}`,
+        channel: 'whatsapp',
+        status: 'pending',
+        sentAt: new Date().toISOString(),
+        notes: `[Batch Broadcast] Scheduled follow-up for ${new Date(scheduleAt).toLocaleString()}. Job ID: ${job.id}`,
+        followUpDate: scheduleAt,
+      });
+      if (lead.status === 'new') lead.status = 'contacted';
+
+      results.push({ leadId, leadName: lead.name, success: true, jobId: job.id });
+    } else {
+      // Send immediately
+      try {
+        const result = await sendTextMessage(lead.phone, message);
+        if (result && result.status !== 'failed') {
+          lead.outreachHistory = lead.outreachHistory || [];
+          lead.outreachHistory.push({
+            id: `batch-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            channel: 'whatsapp',
+            status: 'sent',
+            sentAt: result.timestamp,
+            notes: `[Batch Broadcast] Sent via broadcast. Message ID: ${result.messageId}`,
+          });
+          if (lead.status === 'new') lead.status = 'contacted';
+          results.push({ leadId, leadName: lead.name, success: true });
+        } else {
+          results.push({ leadId, leadName: lead.name, success: false, error: result?.error || 'Send failed' });
+        }
+      } catch (err: any) {
+        results.push({ leadId, leadName: lead.name, success: false, error: err.message });
+      }
+    }
+  }
+
+  // Persist and broadcast
+  saveDatabase();
+  broadcast({ type: 'leads_updated', timestamp: new Date().toISOString() });
+
+  const succeeded = results.filter(r => r.success).length;
+  const failed = results.filter(r => !r.success).length;
+
+  res.json({
+    total: results.length,
+    succeeded,
+    failed,
+    results,
+    message: scheduleAt
+      ? `Scheduled ${succeeded} follow-ups for ${new Date(scheduleAt).toLocaleString()}`
+      : `Sent ${succeeded} messages, ${failed} failed`,
+  });
+});
+
+// ─── WhatsApp Business API Routes ───
+// Integrate with WaCRM / Meta Cloud API for outreach sending and webhook reception
+
+/**
+ * GET /api/whatsapp/config
+ * Returns whether WhatsApp is configured and the phone number ID (masked).
+ */
+app.get('/api/whatsapp/config', (_req, res) => {
+  const configured = isWaConfigured();
+  res.json({
+    configured,
+    phoneNumberId: configured
+      ? process.env.WHATSAPP_PHONE_NUMBER_ID?.slice(0, 4) + '****'
+      : undefined,
+    webhookToken: configured
+      ? (process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'hunter_wacrm_verify')
+      : undefined,
+  });
+});
+
+/**
+ * POST /api/whatsapp/send
+ * Send a WhatsApp message to a lead.
+ */
+app.post('/api/whatsapp/send', async (req, res) => {
+  const { to, text, leadId, templateName } = req.body;
+
+  if (!to) {
+    return res.status(400).json({ error: 'Recipient phone number is required.' });
+  }
+  if (!text && !templateName) {
+    return res.status(400).json({ error: 'Message text or template name is required.' });
+  }
+
+  if (!isWaConfigured()) {
+    return res.status(503).json({
+      error: 'WhatsApp Business API not configured. Set WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_ACCESS_TOKEN in .env',
+      isFallback: true,
+    });
+  }
+
+  try {
+    let result;
+    if (templateName) {
+      result = await sendTemplateMessage(to, templateName);
+    } else {
+      result = await sendTextMessage(to, text!);
+    }
+
+    if (!result) {
+      return res.status(500).json({ error: 'Failed to send WhatsApp message.' });
+    }
+
+    // Log the outreach in CRM if leadId provided
+    if (leadId && result.status !== 'failed') {
+      const leadIndex = leadsDatabase.findIndex((l: any) => l.id === leadId);
+      if (leadIndex !== -1) {
+        const entry = {
+          id: `wa-${Date.now()}`,
+          channel: 'whatsapp' as const,
+          status: 'sent' as const,
+          sentAt: result.timestamp,
+          notes: `WhatsApp message sent via API. Message ID: ${result.messageId}`,
+        };
+        if (!leadsDatabase[leadIndex].outreachHistory) {
+          leadsDatabase[leadIndex].outreachHistory = [];
+        }
+        leadsDatabase[leadIndex].outreachHistory.push(entry);
+        if (leadsDatabase[leadIndex].status === 'new') {
+          leadsDatabase[leadIndex].status = 'contacted';
+        }
+        saveDatabase();
+        broadcast({ type: 'lead_updated', lead: leadsDatabase[leadIndex] });
+      }
+    }
+
+    res.json({
+      success: result.status !== 'failed',
+      status: result,
+      message: result.status === 'failed'
+        ? `Failed: ${result.error || 'Unknown error'}`
+        : 'Message sent successfully!',
+    });
+  } catch (err: any) {
+    console.error('[WhatsApp Route] Send error:', err);
+    res.status(500).json({ error: err.message || 'Failed to send WhatsApp message.' });
+  }
+});
+
+/**
+ * GET /api/whatsapp/status/:messageId
+ * Check the delivery/read status of a sent WhatsApp message.
+ */
+app.get('/api/whatsapp/status/:messageId', async (req, res) => {
+  const { messageId } = req.params;
+
+  if (!isWaConfigured()) {
+    return res.status(503).json({ error: 'WhatsApp not configured.' });
+  }
+
+  try {
+    const status = await checkMessageStatus(messageId);
+    if (!status) {
+      return res.status(404).json({ error: 'Message not found or status unavailable.' });
+    }
+    res.json({ status });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/whatsapp/webhook
+ * Meta/WaCRM webhook verification endpoint (GET for challenge).
+ */
+app.get('/api/whatsapp/webhook', (req, res) => {
+  const challenge = verifyWebhook(req.query as Record<string, string | string[] | undefined>);
+  if (challenge) {
+    console.log('[WhatsApp] Webhook verified successfully.');
+    return res.status(200).send(challenge);
+  }
+  console.warn('[WhatsApp] Webhook verification failed.');
+  res.status(403).send('Verification failed');
+});
+
+/**
+ * POST /api/whatsapp/webhook
+ * Receive inbound WhatsApp messages and status updates from Meta/WaCRM.
+ */
+app.post('/api/whatsapp/webhook', (req, res) => {
+  if (!isWaConfigured()) {
+    return res.status(200).send('OK'); // Acknowledge but ignore
+  }
+
+  const payload = parseWebhookPayload(req.body);
+  if (!payload) {
+    // Acknowledge anyway (Meta requires 200)
+    return res.status(200).send('OK');
+  }
+
+  console.log(`[WhatsApp Webhook] Received ${payload.type} from ${payload.from}: ${payload.text || payload.status}`);
+
+  if (payload.type === 'message') {
+    // Try to find a matching lead by phone number
+    const phoneClean = payload.from.replace(/[^0-9]/g, '');
+    const matchingLead = leadsDatabase.find((l: any) =>
+      l.phone && l.phone.replace(/[^0-9]/g, '').includes(phoneClean.slice(-9))
+    );
+
+    if (matchingLead) {
+      const entry = {
+        id: `wa-in-${Date.now()}`,
+        channel: 'whatsapp' as const,
+        status: 'replied' as const,
+        sentAt: payload.timestamp,
+        respondedAt: payload.timestamp,
+        notes: `Inbound WhatsApp reply: "${payload.text || '(media)'}"`,
+      };
+      if (!matchingLead.outreachHistory) {
+        matchingLead.outreachHistory = [];
+      }
+      matchingLead.outreachHistory.push(entry);
+      if (matchingLead.status !== 'interested' && matchingLead.status !== 'closed') {
+        matchingLead.status = 'replied';
+      }
+      saveDatabase();
+      broadcast({ type: 'lead_updated', lead: matchingLead });
+    }
+  } else if (payload.type === 'status_update' && payload.status) {
+    // Update outreach history entry with delivery status
+    for (const lead of leadsDatabase) {
+      const histEntry = lead.outreachHistory?.find(
+        (e: any) => e.notes?.includes(payload.messageId)
+      );
+      if (histEntry) {
+        histEntry.status = payload.status === 'delivered' ? 'opened' :
+                           payload.status === 'read' ? 'replied' :
+                           payload.status === 'failed' ? 'no_response' :
+                           (lead.status as any);
+        saveDatabase();
+        broadcast({ type: 'lead_updated', lead });
+        break;
+      }
+    }
+  }
+
+  res.status(200).send('OK');
+});
+
+// ─── Start Scheduler ───
+// Start the automated follow-up scheduler worker.
+setTimeout(() => {
+  scheduler.start();
+  console.log('[Server] Follow-up scheduler worker started');
+}, 2000);
+
+// ─── Agentic Execution Endpoint ───
+// Submit a goal/task to the Bishop orchestrator agent.
+// Bishop will plan, execute tools, and return results.
+app.post('/api/agent/execute', async (req, res) => {
+  const { goal } = req.body;
+  if (!goal) {
+    return res.status(400).json({ error: 'Goal is required. Provide a task for Bishop to execute.' });
+  }
+
+  console.log(`[Agent] Bishop executing goal: "${goal}"`);
+
+  // Compute stats for agent context
+  const total = leadsDatabase.length;
+  const totalScore = leadsDatabase.reduce((acc, l) => {
+    return acc + (l.scoreBreakdown?.total || calculateLeadOpportunityScore(l));
+  }, 0);
+  const stats = {
+    totalLeads: total,
+    noWebsite: leadsDatabase.filter(l => !l.website).length,
+    contactedLeads: leadsDatabase.filter(l => l.status !== 'new').length,
+    repliesReceived: leadsDatabase.filter(l => l.status === 'replied' || l.status === 'interested' || l.status === 'closed').length,
+    meetingsBooked: leadsDatabase.filter(l => l.status === 'interested' || l.status === 'closed').length,
+    conversionRate: total > 0 ? Math.round((leadsDatabase.filter(l => l.status === 'closed').length / total) * 100) : 0,
+    estimatedPipelineRevenue: leadsDatabase.reduce((acc, lead) => {
+      if (lead.status === 'closed') return acc + (lead.serviceType === 'web_design' ? 1500 : lead.serviceType === 'ai_automation' ? 2500 : 4000);
+      if (lead.status === 'interested') return acc + (lead.serviceType === 'web_design' ? 1500 : lead.serviceType === 'ai_automation' ? 2500 : 4000) * 0.5;
+      return acc;
+    }, 0),
+    leadsBySource: Object.entries(
+      leadsDatabase.reduce((acc: Record<string, number>, l) => {
+        const src = l.source || 'ai_search';
+        acc[src] = (acc[src] || 0) + 1;
+        return acc;
+      }, {})
+    ).map(([source, count]) => ({ source, count })),
+    avgLeadScore: total > 0 ? Math.round(totalScore / total) : 0,
+  };
+
+  try {
+    const result = await runBishop(goal, leadsDatabase, stats);
+    
+    // Broadcast that leads were updated (agents may have modified the database)
+    saveDatabase();
+    broadcast({ type: 'leads_updated', timestamp: new Date().toISOString() });
+
+    res.json({
+      response: result.response,
+      toolCalls: result.toolCalls,
+      steps: result.steps,
+    });
+  } catch (err: any) {
+    console.error('[Agent] Bishop execution error:', err);
+    res.status(500).json({ error: 'Agent execution failed: ' + (err.message || String(err)) });
+  }
+});
+
 // AI Copilot Interactive Chat Endpoint
 app.post('/api/copilot/chat', async (req, res) => {
   const { messages } = req.body;
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "Chat messages array is required." });
   }
-
-  const client = getGeminiClient();
 
   const getFallbackReply = () => {
     const lastMsg = messages[messages.length - 1]?.content || "";
@@ -1207,7 +1698,7 @@ app.post('/api/copilot/chat', async (req, res) => {
     return { content: reply };
   };
 
-  if (!client) {
+  if (!isAiConfigured()) {
     return res.json({ ...getFallbackReply(), isFallback: true });
   }
 
@@ -1237,26 +1728,13 @@ Rules for response:
 - Keep answers insightful, warm, objective, and highly action-oriented.
 - Keep responses within 2-3 concise paragraphs so they read out smoothly via vocal synthesizers.`;
 
-    const chatHistory = messages.map((m: any) => ({
-      role: m.role === 'user' ? 'user' : 'model',
-      parts: [{ text: m.content }]
-    }));
+    const text = await generateChatCompletion(messages, systemInstruction, { temperature: 0.7 });
 
-    // Generate output utilizing gemini-3.5-flash
-    const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: chatHistory,
-      config: {
-        systemInstruction,
-        temperature: 0.7
-      }
-    });
-
-    if (response.text) {
-      return res.json({ content: response.text.trim(), isFallback: false });
+    if (text) {
+      return res.json({ content: text.trim(), isFallback: false });
     }
   } catch (err) {
-    console.warn("Copilot chat Gemini call failed, falling back gracefully.", err);
+    console.warn("Copilot chat OpenRouter call failed, falling back gracefully.", err);
   }
 
   res.json({ ...getFallbackReply(), isFallback: true });

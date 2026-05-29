@@ -7,7 +7,7 @@ import {
   TrendingUp, CircleDollarSign, CalendarRange, CheckCircle2,
   AlertOctagon, Globe, Inbox, Sparkles
 } from 'lucide-react';
-import { Lead, DashboardStats } from '../types';
+import { Lead, DashboardStats, LeadSource } from '../types';
 
 interface AnalyticsPanelProps {
   leads: Lead[];
@@ -21,7 +21,9 @@ export default function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
     repliesReceived: 0,
     meetingsBooked: 0,
     conversionRate: 0,
-    estimatedPipelineRevenue: 0
+    estimatedPipelineRevenue: 0,
+    leadsBySource: [],
+    avgLeadScore: 0
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +56,34 @@ export default function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
     { name: 'Meetings', value: leads.filter(l => l.status === 'interested').length, fill: '#10b981' },
     { name: 'Closed Won', value: leads.filter(l => l.status === 'closed').length, fill: '#4f46e5' }
   ];
+
+  // Source Distribution
+  const sourceLabels: Record<string, string> = {
+    google_maps: 'Google Maps',
+    linkedin: 'LinkedIn',
+    facebook: 'Facebook',
+    ai_search: 'AI Search',
+    manual_import: 'Manual',
+    csv_import: 'CSV Import'
+  };
+  const sourceColors: Record<string, string> = {
+    google_maps: '#34a853',
+    linkedin: '#0a66c2',
+    facebook: '#1877f2',
+    ai_search: '#8b5cf6',
+    manual_import: '#f59e0b',
+    csv_import: '#6b7280'
+  };
+  const sourceCount: Record<string, number> = {};
+  leads.forEach(l => {
+    const src = l.source || 'ai_search';
+    sourceCount[src] = (sourceCount[src] || 0) + 1;
+  });
+  const sourceChartData = Object.entries(sourceCount).map(([key, value]) => ({
+    name: sourceLabels[key] || key,
+    value,
+    color: sourceColors[key] || '#6b7280'
+  }));
 
   // 2. Website presence ratio
   const websiteCount = leads.filter(l => l.website).length;
@@ -202,9 +232,7 @@ export default function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
           </p>
           <span className="text-[9px] text-blue-300 block mt-1.5 leading-normal font-bold">Inferred proposal pipeline</span>
         </div>
-      </div>
-
-      {/* Recharts Data Visualization block */}
+      </div>        {/* Recharts Data Visualization block */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Column pipeline stats */}
@@ -241,26 +269,28 @@ export default function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
           </div>
         </div>
 
-        {/* Website Proportions */}
+        {/* Source Distribution Pie */}
         <div className="lg:col-span-5 rounded-xl border border-zinc-800 bg-[#0C0C0E] p-5 space-y-4 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2">
               <Globe className="h-4.5 w-4.5 text-zinc-500" />
-              <span className="text-xs font-sans font-bold text-white">Prospect Deficit Proportions</span>
+              <span className="text-xs font-sans font-bold text-white">Lead Source Distribution</span>
             </div>
             <p className="text-[10px] text-zinc-500 mt-1 leading-relaxed">
-              Targeted businesses categorized by missing official web layouts.
+              Breakdown by acquisition channel (Google Maps, LinkedIn, Facebook, AI).
             </p>
           </div>
 
           <div className="h-[180px] w-full flex items-center justify-center relative">
             {leads.length === 0 ? (
-              <div className="text-xs text-zinc-505 italic select-none">No active metrics yet</div>
+              <div className="text-xs text-zinc-500 italic select-none">No active metrics yet</div>
+            ) : sourceChartData.length === 0 ? (
+              <div className="text-xs text-zinc-500 italic">No source data</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={websiteChartData}
+                    data={sourceChartData}
                     cx="50%"
                     cy="50%"
                     innerRadius={55}
@@ -268,7 +298,7 @@ export default function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {websiteChartData.map((entry, idx) => (
+                    {sourceChartData.map((entry, idx) => (
                       <Cell key={`cell-${idx}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -279,25 +309,15 @@ export default function AnalyticsPanel({ leads }: AnalyticsPanelProps) {
                 </PieChart>
               </ResponsiveContainer>
             )}
-            {leads.length > 0 && (
-              <div className="absolute flex flex-col items-center justify-center inset-0 z-0">
-                <span className="text-md font-bold font-mono text-white">
-                  {Math.round((noWebsiteCount / Math.max(1, leads.length)) * 100)}%
-                </span>
-                <span className="text-[8px] uppercase tracking-wider text-rose-450 font-bold leading-none mt-0.5">Deficit</span>
-              </div>
-            )}
           </div>
 
-          <div className="flex items-center justify-between gap-2.5 pt-2 border-t border-zinc-800 text-[10px] font-bold text-zinc-400 font-sans">
-            <div className="flex items-center gap-1.5 text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0"></span>
-              <span>Web Missing ({noWebsiteCount})</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-              <span>Has Web ({websiteCount})</span>
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2 border-t border-zinc-800">
+            {sourceChartData.map((entry) => (
+              <div key={entry.name} className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400">
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                <span>{entry.name} ({entry.value})</span>
+              </div>
+            ))}
           </div>
         </div>
 

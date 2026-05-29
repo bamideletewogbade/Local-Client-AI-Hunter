@@ -1,26 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { 
   MapPin, 
   Sparkles, 
   Check, 
   ArrowRight, 
   Database,
-  Layers,
-  Search,
-  Store,
-  PenTool,
-  Send,
-  ExternalLink,
-  ShieldAlert,
-  Zap,
-  Users,
   Mail,
   Twitter,
   Linkedin,
-  RefreshCw,
-  Sliders,
-  Code,
-  Activity
+  FileText,
+  ClipboardList,
+  Cpu,
+  Search,
+  Zap,
+  ClipboardCheck,
+  PenTool,
+  CheckCircle,
+  Globe,
+  Smartphone,
+  Gauge
 } from 'lucide-react';
 
 const COUNTRIES_AND_CITIES = [
@@ -57,6 +56,35 @@ interface ProductLandingProps {
   onConnectDatabase: () => void;
 }
 
+// ─── Discovery Report Types ───
+interface ReportFinding {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  severity: 'critical' | 'high' | 'medium';
+  effort: string;
+  value: string;
+  color: string;
+}
+
+interface DiscoveryReport {
+  businessName: string;
+  industry: string;
+  location: string;
+  score: number;
+  findings: ReportFinding[];
+}
+
+interface DiscoveryFormState {
+  businessName: string;
+  industry: string;
+  website: string;
+  painPoints: string[];
+  budget: string;
+  isSubmitting: boolean;
+  isComplete: boolean;
+}
+
 export default function ProductLanding({ onStartApp, isFirebaseConfigured, onConnectDatabase }: ProductLandingProps) {
   // Interactive Hero Widget State
   const [selectedNiche, setSelectedNiche] = useState('Gym');
@@ -68,111 +96,47 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
   // Compare Tab State
   const [activeCompareTab, setActiveCompareTab] = useState<'rating' | 'website' | 'outreach'>('website');
 
-  // --- Sandbox Simulator States (Levelsio style interactive feature test-drive) ---
-  const [simStep, setSimStep] = useState<1 | 2 | 3>(1);
-  const [simNiche, setSimNiche] = useState('Gym');
-  const [simCountry, setSimCountry] = useState('GH');
-  const [simCity, setSimCity] = useState('Accra');
-  const [isCustomSimLocation, setIsCustomSimLocation] = useState(false);
-  const [isSimScan, setIsSimScan] = useState(false);
-  const [simProgress, setSimProgress] = useState(0);
-  const [copiedPitch, setCopiedPitch] = useState(false);
-
-  // Simulated leads generated based on user niche selection - loaded with Accra Gym defaults
-  const [simLeads, setSimLeads] = useState<any[]>([
-    { name: "Accra Corporate Gym & Fitness Center", rating: 4.1, speed: "5.2s (Heavy)", hasWebsite: true, issue: "No Interactive Bookings", originalScore: 55, category: "Gym" },
-    { name: "Osu Community Fitness Club", rating: 3.2, speed: "N/A (Offline)", hasWebsite: false, issue: "No Active Website", originalScore: 25, category: "Gym" },
-    { name: "Ridge Pilates & Athletic Hub", rating: 4.4, speed: "3.8s (Tardy)", hasWebsite: true, issue: "Broken Contact Gateway", originalScore: 48, category: "Gym" }
-  ]);
-
-  const [selectedSimLead, setSelectedSimLead] = useState<any>({
-    name: "Accra Corporate Gym & Fitness Center", rating: 4.1, speed: "5.2s (Heavy)", hasWebsite: true, issue: "No Interactive Bookings", originalScore: 55, category: "Gym"
+  // Discovery Call 3-Step Engine State (persisted to localStorage)
+  const [activeDiscoveryStep, setActiveDiscoveryStep] = useState<number>(1);
+  const [visibleDiscoverySteps, setVisibleDiscoverySteps] = useState<Set<number>>(new Set([1]));
+  const [discoveryForm, setDiscoveryForm] = useLocalStorage<DiscoveryFormState>('hunter_discovery_form', {
+    businessName: '',
+    industry: '',
+    website: '',
+    painPoints: [],
+    budget: '$1k–$3k',
+    isSubmitting: false,
+    isComplete: false,
   });
+  // Reset transient process flags on reload (prevents stuck spinner)
+  if (discoveryForm.isSubmitting || discoveryForm.isComplete) {
+    setDiscoveryForm(f => ({ ...f, isSubmitting: false, isComplete: false }));
+  }
+  const [generatedReport, setGeneratedReport] = useLocalStorage<DiscoveryReport | null>('hunter_discovery_report', null);
 
-  // Simulated Audit Correction switches
-  const [fixImages, setFixImages] = useState(false);
-  const [fixMobile, setFixMobile] = useState(false);
-  const [fixMapPin, setFixMapPin] = useState(false);
-  const [fixSEO, setFixSEO] = useState(false);
-
-  // Compute live corrected scores
-  const getSimulatedScore = () => {
-    if (!selectedSimLead) return 35;
-    let score = selectedSimLead.originalScore;
-    if (fixImages) score += 20;
-    if (fixMobile) score += 25;
-    if (fixMapPin) score += 20;
-    if (fixSEO) score += 10;
-    return Math.min(score, 100);
-  };
-
-  // Run lead scan simulation
-  const handleSimRadarScan = () => {
-    setIsSimScan(true);
-    setSimProgress(10);
-    
-    // Reset switches
-    setFixImages(false);
-    setFixMobile(false);
-    setFixMapPin(false);
-    setFixSEO(false);
-
-    // Increment progress simulated ticking
-    const interval = setInterval(() => {
-      setSimProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsSimScan(false);
-          // Set custom simulated leads based on user text to feel ultra real
-          const titleCaseNiche = simNiche.charAt(0).toUpperCase() + simNiche.slice(1);
-          const cityShort = simCity.split(',')[0];
-          setSimLeads([
-            { name: `${cityShort} Premium ${titleCaseNiche}s Ltd`, rating: 3.2, speed: "8.6s (Slow)", hasWebsite: true, issue: "Extremely Heavy Image Assets", originalScore: 30, category: titleCaseNiche },
-            { name: `${cityShort} Classic ${titleCaseNiche} Pros`, rating: 2.5, speed: "Offline", hasWebsite: false, issue: "Missing Map Website Asset", originalScore: 15, category: titleCaseNiche },
-            { name: `Apex ${titleCaseNiche} Outreach Group`, rating: 4.2, speed: "5.1s (Average)", hasWebsite: true, issue: "Dead External Links & Mobile Bugs", originalScore: 50, category: titleCaseNiche }
-          ]);
-          // Default selection
-          setSelectedSimLead({
-            name: `${cityShort} Premium ${titleCaseNiche}s Ltd`, rating: 3.2, speed: "8.6s (Slow)", hasWebsite: true, issue: "Extremely Heavy Image Assets", originalScore: 30, category: titleCaseNiche
-          });
-          // Push to audit step automatically to feel snappy
-          setSimStep(2);
-          return 100;
-        }
-        return prev + 30;
-      });
-    }, 450);
-  };
-
-  const getPitchEmailText = () => {
-    const businessName = selectedSimLead?.name || "Local Business";
-    const speedStr = selectedSimLead?.speed || "9.2s (Slow)";
-    const nicheLabel = simNiche.toLowerCase();
-    
-    return `Subject: Performance & Design Audit for ${businessName}
-
-Hi team at ${businessName},
-
-I was running a local digital presence audit for ${nicheLabel} businesses in ${simCity} and noticed your profile. 
-
-Your map ranking has great potential, but your website's mobile response speed is currently pegged at ${speedStr}. That is causing over 40% of potential local customers to bounce before your menu/portfolio even loads!
-
-I went ahead and designed a modern, high-performance web dashboard concepts specifically for ${businessName}. It takes only 1.2 seconds to load, has built-in one-tap mobile booking triggers, and aligns perfectly with modern local Google SEO guidelines.
-
-I would love to send over the initial Figma/Tailwind mockup structures free of charge. No obligation at all—I just wanted to show you what is possible for your brand.
-
-Would you be open to a quick 5-minute look?
-
-Best regards,
-Bamidele Tewogbade
-Lead Performance Architect, Client Hunter`;
-  };
-
-  const handleCopyPitch = () => {
-    navigator.clipboard.writeText(getPitchEmailText());
-    setCopiedPitch(true);
-    setTimeout(() => setCopiedPitch(false), 2000);
-  };
+  // IntersectionObserver to animate steps into view
+  const stepRef1 = useRef<HTMLDivElement>(null);
+  const stepRef2 = useRef<HTMLDivElement>(null);
+  const stepRef3 = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const refs = [stepRef1, stepRef2, stepRef3];
+    const observers: IntersectionObserver[] = [];
+    refs.forEach((ref, idx) => {
+      if (!ref.current) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setVisibleDiscoverySteps(prev => new Set([...prev, idx + 1]));
+          }
+        },
+        { threshold: 0.2 }
+      );
+      observer.observe(ref.current);
+      observers.push(observer);
+    });
+    return () => observers.forEach(o => o.disconnect());
+  }, []);
 
   // Handle the Interactive Search simulation
   const handleLaunchInstantScan = () => {
@@ -186,58 +150,6 @@ Lead Performance Architect, Client Hunter`;
       onStartApp();
     }, 850);
   };
-
-  // Mock Active Leads for the Masonry Live Feed (mimicking interiorai style grids)
-  const previewLeads = [
-    {
-      name: "Apex Auto Repair",
-      rating: "3.2 ⭐",
-      issue: "No Website Found",
-      location: "Miami, FL",
-      status: "Opportunity detected",
-      type: "Automotive"
-    },
-    {
-      name: "Summit Bakery & Cafe",
-      rating: "2.8 ⭐",
-      issue: "Broken Link & Menu PDF",
-      location: "Denver, CO",
-      status: "Ready for pitch",
-      type: "Bakery"
-    },
-    {
-      name: "Bright Dental Care",
-      rating: "4.1 ⭐",
-      issue: "Ugly, Non-responsive UI",
-      location: "Austin, TX",
-      status: "Proposal drafted",
-      type: "Dentist"
-    },
-    {
-      name: "Vogue Hair Studio",
-      rating: "3.4 ⭐",
-      issue: "Slow Load Time (8.4s)",
-      location: "Seattle, WA",
-      status: "SEO checklist ready",
-      type: "Salon"
-    },
-    {
-      name: "Greenfield Landscaping",
-      rating: "3.0 ⭐",
-      issue: "No Website Declared",
-      location: "Atlanta, GA",
-      status: "Opportunity detected",
-      type: "Gardening"
-    },
-    {
-      name: "Pioneer Chiropractic",
-      rating: "4.5 ⭐",
-      issue: "Missing Google Maps Pin",
-      location: "Chicago, IL",
-      status: "Ready for audit",
-      type: "Medical"
-    }
-  ];
 
   return (
     <div id="product-landing-root" className="bg-[#FAFAFB] text-zinc-900 selection:bg-blue-600/10 selection:text-blue-600 min-h-screen">
@@ -500,768 +412,359 @@ Lead Performance Architect, Client Hunter`;
         </div>
       </section>
 
-      {/* 📊 Masonry Feed Section: Show Leads that Need Redesigns (Interior/Photo AI style Masonry visual) */}
-      <section className="py-20 bg-white border-b border-zinc-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <span className="text-[11px] font-bold tracking-widest uppercase text-blue-600 font-mono">Live Acquisition Tracker</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight text-zinc-900 mt-2">
-              Leads matching current design criteria
-            </h2>
-            <p className="text-sm text-zinc-500 mt-2">
-              Our radar finds physical, local business listings that suffer from bad design, missing layout mobile features, or incorrect map parameters.
-            </p>
-          </div>
+      {/* Removed: Masonry Feed section — redundant with AgentProcessFlow */}
 
-          {/* Grid Layout of simulated leads cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {previewLeads.map((lead, idx) => (
-              <div 
-                key={idx} 
-                className="bg-zinc-50 border border-zinc-200 rounded-2xl p-5 hover:shadow-md transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-[9px] font-bold font-mono uppercase bg-zinc-200 text-zinc-700 rounded-md px-1.5 py-0.5 tracking-wider">
-                        {lead.type}
-                      </span>
-                      <h3 className="text-sm font-bold text-zinc-950 font-display mt-2">{lead.name}</h3>
-                      <p className="text-xs text-zinc-400 font-mono mt-0.5">{lead.location}</p>
-                    </div>
-                    <span className="text-xs font-bold text-amber-600 font-mono bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md">
-                      {lead.rating}
-                    </span>
-                  </div>
+      {/* Removed: Interactive Simulator section — deep demo redundant with AgentProcessFlow */}
 
-                  <div className="mt-4 flex items-center gap-2 text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-3 py-2">
-                    <ShieldAlert className="h-4 w-4 shrink-0" />
-                    <span className="text-xs font-bold tracking-tight">{lead.issue}</span>
-                  </div>
-                </div>
+      {/* 🎯 Discovery Call 3-Step Engine — Questionnaire → AI Analysis → Custom Report */}
+      <section className="relative overflow-hidden bg-zinc-950 py-24 sm:py-32 border-b border-zinc-800/60">
+        {/* Background grid pattern matching AgentProcessFlow */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, #3b82f6 1px, transparent 0)`,
+            backgroundSize: '24px 24px'
+          }}
+        />
+        {/* Ambient glow orbs */}
+        <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-blue-600/8 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-purple-600/8 rounded-full blur-[100px] pointer-events-none" />
 
-                <div className="mt-5 pt-4 border-t border-dashed border-zinc-200 flex items-center justify-between">
-                  <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold tracking-wider">{lead.status}</span>
-                  <button
-                    type="button"
-                    onClick={onStartApp}
-                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>Run Audit</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 text-center">
-            <button
-              onClick={onStartApp}
-              className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs py-3.5 px-6 uppercase tracking-wider transition-all cursor-pointer shadow-xs active:scale-95"
-            >
-              <span>Explore All Active Map Leads</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 🚀 LEVELS.IO / PHOTOAI / INTERIORAI STYLE INTERACTIVE PLAYGROUND AND SIMULATOR */}
-      <section id="interactive-sandbox-simulator" className="py-24 bg-zinc-950 text-white relative overflow-hidden border-y border-zinc-800">
-        {/* Ambient grids in dark theme */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#1e40af_1px,transparent_1px)] [background-size:16px_16px]" />
-        
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 px-3 py-1 text-xs font-semibold text-blue-400">
-              <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-              Interactive Workshop
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold font-display tracking-tight text-white">
-              Try the design engine in real-time
+          {/* Section header */}
+          <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-18">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-4 py-1.5 mb-4">
+              <FileText className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="text-[10px] font-mono tracking-widest text-emerald-300/80 uppercase font-bold">
+                Discovery Engine
+              </span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display tracking-tight text-white leading-[1.1]">
+              One call. Full diagnosis.<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400">
+                A plan they can't refuse.
+              </span>
             </h2>
-            <p className="text-sm text-zinc-400 max-w-xl mx-auto font-light leading-relaxed">
-              Experience the core workflow of Client Hunter. Search, diagnose performance, toggle layout fixes to boost their digital presence score, and construct live contracts instantly.
+            <p className="text-sm sm:text-base text-zinc-400 font-light mt-4 max-w-2xl mx-auto leading-relaxed">
+              Skip the generic pitch. Our standardized discovery questionnaire captures everything about a prospect's business,
+              then our AI agents build a detailed, customized report showing exactly what they need — and why you're the one to deliver it.
             </p>
           </div>
 
-          {/* Interactive Steps Progress tabs */}
-          <div className="flex flex-col sm:flex-row justify-center items-stretch gap-2.5 max-w-3xl mx-auto mb-12">
-            {[
-              { step: 1, label: "1. Radar Map Probe", desc: "Select niche & scan maps" },
-              { step: 2, label: "2. Real-Time Audit", desc: "Toggle diagnostic fixes" },
-              { step: 3, label: "3. Automated Outreach", desc: "Preview custom proposal" },
-            ].map((s) => (
-              <button
-                key={s.step}
-                type="button"
-                onClick={() => setSimStep(s.step as any)}
-                className={`flex-1 text-left p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${
-                  simStep === s.step
-                    ? 'bg-zinc-900 border-blue-500 shadow-lg shadow-blue-500/5'
-                    : 'bg-zinc-900/40 border-zinc-900 hover:border-zinc-800 text-zinc-400'
-                }`}
-              >
-                {simStep === s.step && (
-                  <div className="absolute top-0 bottom-0 left-0 w-[3px] bg-blue-500" />
-                )}
-                <p className={`text-xs font-bold tracking-wide uppercase ${simStep === s.step ? 'text-blue-400' : 'text-zinc-500'}`}>
-                  {s.label}
-                </p>
-                <p className="text-[11px] mt-0.5 font-light">{s.desc}</p>
-              </button>
-            ))}
-          </div>
-
-          {/* Sandbox Workspace Stage Grid */}
-          <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6 sm:p-8 lg:p-10 shadow-2xl relative">
-            <div className="absolute top-4 left-4 flex gap-1.5 select-none">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
-              <span className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
-            </div>
-            <div className="absolute top-4 right-6 font-mono text-[10px] text-zinc-500 uppercase font-bold tracking-wider">
-              CLIENT_HUNTER_SIMULATOR_V2 // LIVE_PROT
-            </div>
-
-            <div className="mt-6 md:mt-4">
-              
-              {/* STEP 1: SCAN GENERATOR */}
-              {simStep === 1 && (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center animate-fade-in">
-                  <div className="md:col-span-12 lg:col-span-5 space-y-6">
-                    <div className="space-y-1 text-left">
-                      <h3 className="text-lg font-bold font-display text-white">1. Probe Local Map coordinates</h3>
-                      <p className="text-xs text-zinc-400 leading-relaxed font-light">
-                        Deploy Client Hunter's map crawler. Provide the specific local service niche and city. Our pipeline instantly scrapes, matches, and logs deficient listings.
-                      </p>
-                    </div>
-
-                    <div className="space-y-4 pt-2 text-left">
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
-                            Local Service Sector
-                          </label>
-                          <span className="text-[9px] text-zinc-500 font-mono">Select preset or type</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 mb-2">
-                          {[
-                            { label: '🏨 Hotels', query: 'Hotel' },
-                            { label: '🏫 Schools', query: 'School' },
-                            { label: '🏥 Hospitals', query: 'Hospital' },
-                            { label: '🏋️ Gyms', query: 'Gym' }
-                          ].map((n) => (
-                            <button
-                              key={n.query}
-                              type="button"
-                              onClick={() => setSimNiche(n.query)}
-                              className={`text-[10px] py-2 px-1.5 rounded-xl border text-center transition-all cursor-pointer font-mono ${
-                                simNiche.toLowerCase() === n.query.toLowerCase()
-                                  ? 'bg-blue-600/20 border-blue-500 text-blue-400 font-bold'
-                                  : 'bg-zinc-850/60 border-zinc-800 text-zinc-300 hover:border-zinc-700'
-                              }`}
-                            >
-                              {n.label}
-                            </button>
-                          ))}
-                        </div>
-                        <input
-                          type="text"
-                          value={simNiche}
-                          onChange={(e) => setSimNiche(e.target.value)}
-                          placeholder="Or type simulated niche..."
-                          className="w-full bg-zinc-850 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-700 font-mono"
-                        />
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-[10px] font-bold text-zinc-400 tracking-wider uppercase font-mono">
-                            Local Municipality
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newMode = !isCustomSimLocation;
-                              setIsCustomSimLocation(newMode);
-                              if (!newMode) {
-                                setSimCity('Accra');
-                                setSimCountry('GH');
-                              }
-                            }}
-                            className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold underline cursor-pointer"
-                          >
-                            {isCustomSimLocation ? "Select Hub" : "Type Custom"}
-                          </button>
-                        </div>
-
-                        {isCustomSimLocation ? (
-                          <div className="relative">
-                            <MapPin className="absolute left-3 top-3 h-3.5 w-3.5 text-zinc-500" />
-                            <input
-                              type="text"
-                              value={simCity}
-                              onChange={(e) => setSimCity(e.target.value)}
-                              placeholder="e.g. Accra, Lagos, London..."
-                              className="w-full bg-zinc-850 border border-zinc-800 rounded-xl pl-9 pr-4 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-700 font-mono"
-                            />
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-[9px] text-zinc-500 block mb-0.5">Country</label>
-                              <select
-                                value={simCountry}
-                                onChange={(e) => {
-                                  const code = e.target.value;
-                                  setSimCountry(code);
-                                  const match = COUNTRIES_AND_CITIES.find(c => c.code === code);
-                                  if (match && match.cities.length > 0) {
-                                    setSimCity(match.cities[0]);
-                                  }
-                                }}
-                                className="w-full bg-zinc-850 border border-zinc-800 text-zinc-200 rounded-xl text-xs px-2 py-2 cursor-pointer font-sans outline-none focus:border-zinc-700"
-                              >
-                                {COUNTRIES_AND_CITIES.map(c => (
-                                  <option key={c.code} value={c.code} className="bg-zinc-900 text-zinc-200">
-                                    {c.name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="text-[9px] text-zinc-500 block mb-0.5">City Hub</label>
-                              <select
-                                value={simCity}
-                                onChange={(e) => {
-                                  setSimCity(e.target.value);
-                                }}
-                                className="w-full bg-zinc-850 border border-zinc-800 text-zinc-200 rounded-xl text-xs px-2 py-2 cursor-pointer font-sans outline-none focus:border-zinc-700"
-                              >
-                                {COUNTRIES_AND_CITIES.find(c => c.code === simCountry)?.cities.map(ct => (
-                                  <option key={ct} value={ct} className="bg-zinc-900 text-zinc-200">
-                                    {ct}
-                                  </option>
-                                )) || <option value="Accra" className="bg-zinc-900 text-zinc-205">Accra</option>}
-                              </select>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleSimRadarScan}
-                        disabled={isSimScan}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl py-3 px-4 text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-600/10"
-                      >
-                        {isSimScan ? (
-                          <div className="flex items-center gap-2">
-                            <RefreshCw className="h-3.5 w-3.5 animate-spin text-white" />
-                            <span>Pinging Map Coordinates ({simProgress}%)...</span>
-                          </div>
-                        ) : (
-                          <>
-                            <Search className="h-3.5 w-3.5" />
-                            <span>Deploy Simulated Probe →</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
+          {/* ─── 3-Step Flow ─── */}
+          <div className="max-w-5xl mx-auto">
+            
+            {/* Step 1: Discovery Questionnaire */}
+            <DiscoveryStep
+              stepNumber={1}
+              title="Discovery Questionnaire"
+              subtitle="Standardized intake — 2 minutes"
+              description="Answer a smart, structured questionnaire about the prospect's business. Every answer feeds directly into our AI analysis engine."
+              icon={ClipboardList}
+              color="#3b82f6"
+              innerRef={stepRef1}
+              isExpanded={activeDiscoveryStep === 1}
+              onToggle={() => setActiveDiscoveryStep(activeDiscoveryStep === 1 ? -1 : 1)}
+              visible={visibleDiscoverySteps.has(1)}
+            >
+              <div className="space-y-3.5">
+                {/* Business info */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono mb-1.5">Business Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Joe's Pizza"
+                      value={discoveryForm.businessName}
+                      onChange={(e) => setDiscoveryForm(f => ({ ...f, businessName: e.target.value }))}
+                      className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder-zinc-600 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500/60 transition-colors font-sans"
+                    />
                   </div>
-
-                  <div className="md:col-span-12 lg:col-span-7 bg-[#0b0c0e] border border-zinc-800 rounded-2xl p-5 font-mono text-[11px] text-zinc-400 min-h-[290px] flex flex-col justify-between relative overflow-hidden">
-                    {isSimScan ? (
-                      <div className="space-y-3.5 my-auto text-center py-6 animate-pulse">
-                        <Activity className="h-10 w-10 text-blue-500 mx-auto animate-bounce" />
-                        <div className="space-y-1">
-                          <p className="text-zinc-200 font-bold uppercase tracking-wider">DEPLOYING VIRTUAL GEO-RADAR MAPS SCRAPER</p>
-                          <p className="text-[10px] text-blue-400">Pinging latitudes near {simCity} for {simNiche} listings...</p>
-                        </div>
-                        <div className="w-full max-w-xs bg-zinc-850 h-1.5 rounded-full mx-auto overflow-hidden">
-                          <div className="bg-blue-500 h-full transition-all duration-300" style={{ width: `${simProgress}%` }} />
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-2.5">
-                          <div className="flex justify-between text-[10px] text-zinc-500 pb-2 border-b border-zinc-850">
-                            <span>GEO_PING // OK</span>
-                            <span>RADAR_PRESET_CONNECTED</span>
-                          </div>
-                          <p className="text-[10px] text-zinc-500 text-left">// Simulated search results for {simNiche} in {simCity}:</p>
-                          {simLeads.map((s, i) => (
-                            <div key={i} className="bg-zinc-900 border border-zinc-850 p-3 rounded-xl flex justify-between items-center hover:border-zinc-700 transition-all text-left">
-                              <div className="space-y-1.5 truncate pr-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                                  <span className="font-bold text-zinc-100 truncate">{s.name}</span>
-                                </div>
-                                <div className="flex items-center gap-2.5 text-[9px] text-zinc-450">
-                                  <span>Rating: <strong className="text-zinc-300">{s.rating} ★</strong></span>
-                                  <span>•</span>
-                                  <span>Audit: <strong className="text-rose-500">{s.issue}</strong></span>
-                                </div>
-                              </div>
-                              <span className="text-[9px] px-2 py-0.5 rounded-md bg-zinc-850 text-zinc-450 border border-zinc-800 select-none uppercase tracking-wide">
-                                {s.speed}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-[9.5px] text-zinc-500 mt-4 leading-relaxed font-sans text-left">// Click 'Deploy Simulated Probe' at left to customize geographic queries inputs or proceed to step 2 above!</p>
-                      </>
-                    )}
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono mb-1.5">Industry</label>
+                    <select
+                      value={discoveryForm.industry}
+                      onChange={(e) => setDiscoveryForm(f => ({ ...f, industry: e.target.value }))}
+                      className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500/60 transition-colors font-sans cursor-pointer"
+                    >
+                      <option value="" className="bg-zinc-900">Select industry...</option>
+                      <option value="restaurant" className="bg-zinc-900">🍕 Restaurant / Cafe</option>
+                      <option value="fitness" className="bg-zinc-900">🏋️ Fitness / Gym</option>
+                      <option value="medical" className="bg-zinc-900">🏥 Medical / Dental</option>
+                      <option value="education" className="bg-zinc-900">🏫 Education / School</option>
+                      <option value="retail" className="bg-zinc-900">🛍️ Retail / Store</option>
+                      <option value="service" className="bg-zinc-900">🔧 Home Service</option>
+                      <option value="other" className="bg-zinc-900">📌 Other</option>
+                    </select>
                   </div>
                 </div>
-              )}
 
-              {/* STEP 2: LIVE AUDIT & SCORE OPTIMIZER */}
-              {simStep === 2 && (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch animate-fade-in">
-                  
-                  {/* Left subcolumn: Mock lead choosing */}
-                  <div className="md:col-span-12 lg:col-span-5 space-y-5">
-                    <div className="space-y-1 text-left">
-                      <h3 className="text-lg font-bold font-display text-white">2. Run Dynamic Performance Audit</h3>
-                      <p className="text-xs text-zinc-400 leading-relaxed font-light">
-                        Configure layout changes to solve core faults. Click these toggle switches on the bottom cards, and see the Digital Presence Score and mobile response speeds scale instantly!
-                      </p>
-                    </div>
+                {/* Website & social */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono mb-1.5">Current Website URL</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. joespizza.com — or leave blank if none"
+                    value={discoveryForm.website}
+                    onChange={(e) => setDiscoveryForm(f => ({ ...f, website: e.target.value }))}
+                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder-zinc-600 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-blue-500/60 transition-colors font-sans"
+                  />
+                </div>
 
-                    {/* Mock listing list */}
-                    <div className="space-y-2.5 pt-1 text-left">
-                      <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest font-bold">SELECT BUSINESS TO AUDIT:</p>
-                      {simLeads.map((s, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => {
-                            setSelectedSimLead(s);
-                            // reset triggers
-                            setFixImages(false);
-                            setFixMobile(false);
-                            setFixMapPin(false);
-                            setFixSEO(false);
-                          }}
-                          className={`w-full text-left p-3.5 rounded-2xl border transition-all flex justify-between items-center cursor-pointer ${
-                            selectedSimLead?.name === s.name
-                              ? 'bg-zinc-850 border-blue-500 shadow-md'
-                              : 'bg-zinc-900/60 border-zinc-850 hover:border-zinc-800'
-                          }`}
-                        >
-                          <div className="truncate pr-2">
-                            <p className="text-xs font-bold text-white truncate">{s.name}</p>
-                            <p className="text-[10px] mt-0.5 font-mono uppercase font-bold text-rose-500">{s.issue}</p>
-                          </div>
-                          <span className="text-[10px] font-mono shrink-0 font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md">
-                            {s.rating} ★
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Right subcolumn: Custom Speed dials and checkboxes */}
-                  <div className="md:col-span-12 lg:col-span-7 bg-[#0b0c0e] border border-zinc-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between pb-3.5 border-b border-zinc-850 mb-6">
-                        <div className="flex items-center gap-2">
-                          <Activity className="h-4 w-4 text-emerald-500" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 font-mono">Simulated Audit Workbench</span>
-                        </div>
-                        <span className="text-[9px] px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full font-mono border border-emerald-500/20 uppercase font-bold">
-                          ACTIVE_PROFILE: {selectedSimLead?.category || 'Standard'}
-                        </span>
-                      </div>
-
-                      {/* Score Dial Simulator */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 mt-1 bg-zinc-900/40 p-4 border border-zinc-850 rounded-2xl">
-                        
-                        <div className="text-center space-y-1">
-                          <p className="text-[10px] font-mono text-zinc-400 uppercase font-bold tracking-widest">Presence Score</p>
-                          <div className="relative inline-flex items-center justify-center mt-2">
-                            {/* Simple dynamic SVG visual circular indicator */}
-                            <svg className="w-20 h-20 transform -rotate-90">
-                              <circle cx="40" cy="40" r="32" className="text-zinc-850" strokeWidth="6" stroke="currentColor" fill="transparent" />
-                              <circle cx="40" cy="40" r="32" 
-                                className={`transition-all duration-500 ${
-                                  getSimulatedScore() >= 80 ? 'text-emerald-500' : 'text-amber-500'
-                                }`} 
-                                strokeWidth="6" 
-                                strokeDasharray={2 * Math.PI * 32}
-                                strokeDashoffset={2 * Math.PI * 32 * (1 - getSimulatedScore() / 100)}
-                                strokeLinecap="round"
-                                stroke="currentColor" 
-                                fill="transparent" 
-                              />
-                            </svg>
-                            <span className="absolute text-base font-extrabold font-mono text-white mt-0.5">
-                              {getSimulatedScore()}%
-                            </span>
-                          </div>
-                          <p className="text-[11px] font-sans font-light mt-1.5 text-zinc-400">
-                            {getSimulatedScore() >= 90 ? '⭐⭐⭐⭐⭐ Highly Optimized' : '⚠ Action required'}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-col justify-center space-y-2 text-left">
-                          <div className="space-y-0.5">
-                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase">Target Listing</span>
-                            <p className="text-xs font-bold text-zinc-200 truncate">{selectedSimLead?.name}</p>
-                          </div>
-                          <div className="space-y-0.5">
-                            <span className="text-[9px] font-mono font-bold text-zinc-500 uppercase">Current Response Speed</span>
-                            <p className="text-xs font-bold text-red-400">
-                              {fixImages && fixMobile ? '1.2s (Lightning)' : fixImages ? '4.8s (Average)' : selectedSimLead?.speed || 'Not Found'}
-                            </p>
-                          </div>
-                        </div>
-
-                      </div>
-
-                      {/* Interactive Diagnostic Checklist Switches */}
-                      <div className="space-y-3">
-                        <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest font-extrabold mb-1 text-left">DRAFT PERFORMANCE FIXES & CODE TOGGLES:</p>
-                        
-                        <label className="flex items-center justify-between p-3 rounded-xl border border-zinc-850 hover:bg-zinc-850/40 transition-colors cursor-pointer select-none">
-                          <div className="flex items-center gap-2.5">
-                            <input 
-                              type="checkbox" 
-                              checked={fixImages}
-                              onChange={(e) => setFixImages(e.target.checked)}
-                              className="h-4.5 w-4.5 rounded-lg border-zinc-800 text-blue-600 bg-zinc-900 focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                            />
-                            <div className="text-left">
-                              <span className="text-xs font-bold text-zinc-200 block">Compress Modern WebP Images Asset Nodes</span>
-                              <p className="text-[10px] text-zinc-400">Halves page asset footprint over initial JPEG frames (+20% Score)</p>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-mono font-bold text-emerald-400">+20%</span>
-                        </label>
-
-                        <label className="flex items-center justify-between p-3 rounded-xl border border-zinc-850 hover:bg-zinc-850/40 transition-colors cursor-pointer select-none">
-                          <div className="flex items-center gap-2.5">
-                            <input 
-                              type="checkbox" 
-                              checked={fixMobile}
-                              onChange={(e) => setFixMobile(e.target.checked)}
-                              className="h-4.5 w-4.5 rounded-lg border-zinc-800 text-blue-600 bg-zinc-900 focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                            />
-                            <div className="text-left">
-                              <span className="text-xs font-bold text-zinc-200 block">Inject Mobile Viewport Meta Tags & CSS media Queries</span>
-                              <p className="text-[10px] text-zinc-400">Aligns page grid elements neatly to small screen displays (+25% Score)</p>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-mono font-bold text-emerald-400">+25%</span>
-                        </label>
-
-                        <label className="flex items-center justify-between p-3 rounded-xl border border-zinc-850 hover:bg-zinc-850/40 transition-colors cursor-pointer select-none">
-                          <div className="flex items-center gap-2.5">
-                            <input 
-                              type="checkbox" 
-                              checked={fixMapPin}
-                              onChange={(e) => setFixMapPin(e.target.checked)}
-                              className="h-4.5 w-4.5 rounded-lg border-zinc-800 text-blue-600 bg-zinc-900 focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                            />
-                            <div className="text-left">
-                              <span className="text-xs font-bold text-zinc-200 block">Anchor Validated Google Map Coordinates & Embed Listing Pins</span>
-                              <p className="text-[10px] text-zinc-400">Aligns spatial indicators on regional storefront results (+20% Score)</p>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-mono font-bold text-emerald-400">+20%</span>
-                        </label>
-                      </div>
-
-                    </div>
-
-                    <div className="mt-8 pt-4 border-t border-zinc-850 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
-                      <p className="text-[10.5px] text-zinc-400 font-sans font-light leading-tight">
-                        Perfect! When score exceeds 60%, click Next Step directly to compile their custom redesign pitch templates.
-                      </p>
+                {/* Pain points — checkbox grid */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono mb-2">Identified Pain Points (select all that apply)</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { id: 'no_website', label: 'No website at all', emoji: '🚫' },
+                    { id: 'slow_speed', label: 'Slow loading speed', emoji: '🐢' },
+                    { id: 'mobile_broken', label: 'Broken on mobile', emoji: '📱' },
+                    { id: 'no_seo', label: 'Poor SEO / no Google Maps', emoji: '🔍' },
+                    { id: 'outdated', label: 'Looks outdated / unprofessional', emoji: '📟' },
+                    { id: 'no_booking', label: 'No online booking / orders', emoji: '📋' },
+                  ].map((p) => {
+                    const isSelected = discoveryForm.painPoints.includes(p.id);
+                    return (
                       <button
+                        key={p.id}
                         type="button"
-                        onClick={() => setSimStep(3)}
-                        className={`text-xs font-bold tracking-wider px-5 py-2.5 rounded-xl uppercase transition-all shrink-0 cursor-pointer shadow-md ${
-                          getSimulatedScore() >= 60 
-                            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/10' 
-                            : 'bg-zinc-800 text-zinc-500 border border-zinc-800'
+                        onClick={() => {
+                          setDiscoveryForm(f => ({
+                            ...f,
+                            painPoints: isSelected
+                              ? f.painPoints.filter(x => x !== p.id)
+                              : [...f.painPoints, p.id]
+                          }));
+                        }}
+                        className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-blue-600/15 border-blue-500/50 text-blue-200'
+                            : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                         }`}
                       >
-                        Compile Custom Pitch →
+                        <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                          isSelected
+                            ? 'bg-blue-500 border-blue-400'
+                            : 'bg-zinc-800 border-zinc-700'
+                        }`}>
+                          {isSelected && <Check className="h-3 w-3 text-white" />}
+                        </div>
+                        <span>{p.emoji} {p.label}</span>
                       </button>
-                    </div>
+                    );
+                  })}
                   </div>
                 </div>
-              )}
 
-              {/* STEP 3: AUTOMATED OUTREACH TEMPLATE GENERATOR */}
-              {simStep === 3 && (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch animate-fade-in">
-                  
-                  {/* Left Column: Explainer and interactive wireframe */}
-                  <div className="md:col-span-12 lg:col-span-5 space-y-6">
-                    <div className="space-y-1 text-left">
-                      <h3 className="text-lg font-bold font-display text-white">3. Generate Custom Redesign Pitch</h3>
-                      <p className="text-xs text-zinc-400 leading-relaxed font-light">
-                        Never send spam. Send customized design ideas, showing modern high-conversion UI layouts with dynamic viewport widgets tailored to their local niche.
-                      </p>
-                    </div>
-
-                    {/* Cute Wireframe Preview Mock */}
-                    <div className="bg-zinc-850 border border-zinc-800 rounded-2xl p-4 space-y-3 text-left">
-                      <p className="text-[9px] font-mono text-zinc-400 uppercase tracking-widest font-bold">PREVIEW DRAFT DESIGN SCHEME:</p>
-                      
-                      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 space-y-2.5">
-                        {/* Header bar */}
-                        <div className="flex items-center justify-between border-b border-zinc-850 pb-2">
-                          <span className="font-extrabold text-[10px] text-blue-400 uppercase tracking-tight font-display truncate max-w-[70%]">{selectedSimLead?.name || 'Local Business'}</span>
-                          <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 rounded uppercase font-mono">1.2s Load Speed</span>
-                        </div>
-
-                        {/* Banner */}
-                        <div className="bg-blue-600/10 border border-dashed border-blue-500/20 rounded-lg p-3 text-center space-y-1">
-                          <p className="text-[11px] font-bold text-white">Transformative {simNiche} Layout</p>
-                          <p className="text-[9px] text-zinc-400">Tap-to-Book Reservation triggers & local SEO attributes optimized</p>
-                        </div>
-
-                        {/* Features */}
-                        <div className="grid grid-cols-2 gap-2 text-[8px] font-mono">
-                          <div className="bg-zinc-850 p-1.5 rounded border border-zinc-800 text-zinc-300 flex items-center gap-1">
-                            <span className="text-emerald-400">✔</span> Responsive Viewport
-                          </div>
-                          <div className="bg-zinc-850 p-1.5 rounded border border-zinc-800 text-zinc-300 flex items-center gap-1">
-                            <span className="text-emerald-400">✔</span> WebP Asset Pipeline
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <p className="text-[10px] text-zinc-500 leading-relaxed">
-                        By presenting this wireframe visual proposal first, response rates typically scale up beyond 30%.
-                      </p>
-                    </div>
-
-                    <div className="pt-2">
+                {/* Budget range */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono mb-1.5">Estimated Budget Range</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {['$500–$1k', '$1k–$3k', '$3k–$8k', '$8k+'].map((range) => (
                       <button
+                        key={range}
                         type="button"
-                        onClick={onStartApp}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl py-3.5 px-4 text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-600/25 animate-pulse"
+                        onClick={() => setDiscoveryForm(f => ({ ...f, budget: range }))}
+                        className={`rounded-xl border py-2 text-[10px] font-bold transition-all cursor-pointer ${
+                          discoveryForm.budget === range
+                            ? 'bg-emerald-600/15 border-emerald-500/50 text-emerald-300'
+                            : 'bg-zinc-900/60 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                        }`}
                       >
-                        <Sparkles className="h-4 w-4" />
-                        <span>Launch Applet Dashboard Now</span>
+                        {range}
                       </button>
-                    </div>
+                    ))}
                   </div>
-
-                  {/* Right Column: Text block with copy-clipboard trigger */}
-                  <div className="md:col-span-12 lg:col-span-7 bg-[#0b0c0e] border border-zinc-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between pb-3.5 border-b border-zinc-850">
-                        <div className="flex items-center gap-2">
-                          <Send className="h-4 w-4 text-blue-500" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 font-mono">Simulated Outreach Email Draft</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleCopyPitch}
-                          className="text-[10px] border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl cursor-pointer transition-colors active:scale-98 font-bold flex items-center gap-1.5"
-                        >
-                          <span>{copiedPitch ? 'Copied Pitch!' : 'Copy to Clipboard'}</span>
-                        </button>
-                      </div>
-
-                      <div className="bg-zinc-900 border border-zinc-850 rounded-2xl p-4 font-mono text-zinc-300 text-xs overflow-x-auto whitespace-pre-wrap max-h-[290px] leading-relaxed text-left">
-                        {getPitchEmailText()}
-                      </div>
-                    </div>
-
-                    <div className="pt-5 border-t border-zinc-850 flex justify-between items-center text-[10px] font-mono text-zinc-500">
-                      <span>EMAIL_STATUS // PERFECTLY_REFINED</span>
-                      <button 
-                        onClick={() => setSimStep(1)} 
-                        className="text-blue-400 hover:underline cursor-pointer uppercase font-bold text-right"
-                      >
-                        ← Restart Simulation
-                      </button>
-                    </div>
-                  </div>
-
                 </div>
-              )}
 
-            </div>
-          </div>
+                {/* Generate report CTA */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDiscoveryForm(f => ({ ...f, isSubmitting: true }));
+                      // Simulate AI analysis delay
+                      setTimeout(() => {
+                        setDiscoveryForm(f => ({ ...f, isSubmitting: false, isComplete: true }));
+                        setGeneratedReport(generateMockReport(discoveryForm));
+                        setActiveDiscoveryStep(3);
+                        setTimeout(() => {
+                          document.getElementById('discovery-report-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 300);
+                      }, 2000);
+                    }}
+                    disabled={!discoveryForm.businessName || !discoveryForm.industry || discoveryForm.isSubmitting}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-white font-bold rounded-xl py-3 text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-blue-600/20 active:scale-[0.98] disabled:cursor-not-allowed"
+                  >
+                    {discoveryForm.isSubmitting ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>AI Agents Analyzing...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2">
+                        <span>Generate Discovery Report</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </div>
+                    )}
+                  </button>
+                  <p className="text-[9px] text-zinc-600 mt-2 font-mono text-center">
+                    {discoveryForm.isComplete ? '✓ Report ready — scroll to Step 3' : 'All fields are optional except Business Name & Industry'}
+                  </p>
+                </div>
+              </div>
+            </DiscoveryStep>
 
-        </div>
-      </section>
+            {/* Step 2: AI Analysis visualization */}
+            <StepConnector visible={visibleDiscoverySteps.has(2)} />
 
-      {/* ⚡ The "Problem vs Fix" Interactive Feature comparison tool */}
-      <section className="py-20 bg-zinc-50 border-b border-zinc-200">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-[11px] font-bold tracking-widest uppercase text-indigo-600 font-mono">Visual Proof</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight text-zinc-900 mt-2">
-              Transform local businesses in 3 clicks
-            </h2>
-            <p className="text-sm text-zinc-500 mt-2">
-              Don't sell service packages—sell instant, beautiful solutions. Compare what local clients have, versus what you can construct for them instantly.
-            </p>
-          </div>
+            <DiscoveryStep
+              stepNumber={2}
+              title="AI Multi-Agent Analysis"
+              subtitle="5 agents process the data — 3 seconds"
+              description="Scanner, Analyzer, and Auditor agents cross-reference the questionnaire answers against live market data to build a comprehensive deficit report."
+              icon={Cpu}
+              color="#8b5cf6"
+              innerRef={stepRef2}
+              isExpanded={activeDiscoveryStep === 2}
+              onToggle={() => setActiveDiscoveryStep(activeDiscoveryStep === 2 ? -1 : 2)}
+              visible={visibleDiscoverySteps.has(2)}
+            >
+              <div className="space-y-3">
+                {/* Agent processing visualization */}
+                {[
+                  { name: 'Scanner Agent', status: 'complete', detail: 'Market data fetched — 47 similar businesses analyzed', icon: Search, color: '#3b82f6' },
+                  { name: 'Analyzer Agent', status: 'complete', detail: 'Digital footprint scored — 64/100 (below threshold)', icon: Zap, color: '#8b5cf6' },
+                  { name: 'Auditor Agent', status: 'complete', detail: '8 critical deficits identified across 4 categories', icon: ClipboardCheck, color: '#f59e0b' },
+                  { name: 'Pitcher Agent', status: 'processing', detail: 'Building custom proposal wireframes...', icon: PenTool, color: '#06b6d4' },
+                ].map((agent, idx) => {
+                  const AgentIcon = agent.icon;
+                  return (
+                    <div key={agent.name} className="flex items-center gap-3 bg-zinc-900/40 border border-zinc-800 rounded-xl px-4 py-3">
+                      <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: agent.color + '20', borderColor: agent.color + '30', borderWidth: 1 }}
+                      >
+                        <AgentIcon className="h-4 w-4" style={{ color: agent.color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-zinc-200">{agent.name}</p>
+                        <p className="text-[10px] text-zinc-500 truncate">{agent.detail}</p>
+                      </div>
+                      <div>
+                        {agent.status === 'complete' ? (
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <div className="h-4 w-4 border-2 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin" />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
 
-          {/* Toggle Controller Tabs */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex bg-zinc-200/80 p-1 border border-zinc-300/40 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setActiveCompareTab('website')}
-                className={`text-xs font-bold py-2 px-4 rounded-lg cursor-pointer transition-all ${
-                  activeCompareTab === 'website' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500'
-                }`}
-              >
-                Website Redesign
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveCompareTab('rating')}
-                className={`text-xs font-bold py-2 px-4 rounded-lg cursor-pointer transition-all ${
-                  activeCompareTab === 'rating' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500'
-                }`}
-              >
-                SEO & Maps Presence
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveCompareTab('outreach')}
-                className={`text-xs font-bold py-2 px-4 rounded-lg cursor-pointer transition-all ${
-                  activeCompareTab === 'outreach' ? 'bg-white text-zinc-900 shadow-xs' : 'text-zinc-500'
-                }`}
-              >
-                Inbound Outreach
-              </button>
-            </div>
-          </div>
+                {/* Market insight chip */}
+                <div className="bg-gradient-to-r from-purple-600/10 to-blue-600/10 border border-purple-500/20 rounded-xl p-3.5 text-xs text-zinc-300">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 font-mono block mb-1">⚡ Market Insight</span>
+                  Businesses in <strong className="text-zinc-100">{discoveryForm.industry || 'your target'}</strong> with modern websites see <strong className="text-emerald-400">3.4× more</strong> inbound leads than those without. Your prospect is leaving money on the table.
+                </div>
+              </div>
+            </DiscoveryStep>
 
-          {/* Compare Content Visual Board */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-            
-            {/* The Before / Current State card */}
-            <div className="bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-bold font-mono uppercase bg-red-50 border border-red-200 text-red-700 px-2 py-0.5 rounded-full">
-                  Before / The Friction
-                </span>
+            {/* Step 3: Custom Report output */}
+            <StepConnector visible={visibleDiscoverySteps.has(3)} />
 
-                {activeCompareTab === 'website' && (
-                  <div className="mt-6 space-y-4">
-                    <h3 className="text-lg font-bold font-display text-zinc-900">Ugly, Broken Templates</h3>
-                    <p className="text-xs leading-relaxed text-zinc-500">
-                      Most storefront sites look built in 2011. Mobile pages load slowly, navigation layouts overflow, and online orders fail due to outdated scripting.
-                    </p>
-                    <ul className="text-xs text-zinc-600 space-y-2 pt-2">
-                      <li className="flex items-center gap-2">• Slow mobile load speeds (8.5 seconds)</li>
-                      <li className="flex items-center gap-2">• Booking or catalog triggers are broken</li>
-                      <li className="flex items-center gap-2">• Zero layout responsiveness on smaller screens</li>
-                    </ul>
+            <DiscoveryStep
+              stepNumber={3}
+              title="Custom Discovery Report"
+              subtitle="Ready to present — detailed & actionable"
+              description="A comprehensive, beautifully formatted report tailored to this specific prospect. Ready to present as proof of value and close the deal."
+              icon={FileText}
+              color="#10b981"
+              innerRef={stepRef3}
+              isExpanded={activeDiscoveryStep === 3}
+              onToggle={() => setActiveDiscoveryStep(activeDiscoveryStep === 3 ? -1 : 3)}
+              visible={visibleDiscoverySteps.has(3)}
+            >
+              <div id="discovery-report-section">
+                {generatedReport ? (
+                  <div className="space-y-3.5">
+                    {/* Report header */}
+                    <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-4 sm:p-5">
+                      <div className="flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                          <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-400">Prepared For</p>
+                          <h4 className="text-lg font-bold font-display text-white mt-1">{generatedReport.businessName}</h4>
+                          <p className="text-xs text-zinc-400">{generatedReport.industry} • {generatedReport.location}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-mono text-zinc-500">Digital Presence Score</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="h-2 w-24 bg-zinc-800 rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-1000"
+                                style={{
+                                  width: `${generatedReport.score}%`,
+                                  background: generatedReport.score < 40
+                                    ? 'linear-gradient(90deg, #ef4444, #f97316)'
+                                    : 'linear-gradient(90deg, #f59e0b, #10b981)'
+                                }}
+                              />
+                            </div>
+                            <span className={`text-sm font-bold font-display ${
+                              generatedReport.score < 40 ? 'text-red-400' : generatedReport.score < 70 ? 'text-amber-400' : 'text-emerald-400'
+                            }`}>
+                              {generatedReport.score}/100
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Findings sections */}
+                    {generatedReport.findings.map((finding, idx) => {
+                      const FindingIcon = finding.icon;
+                      return (
+                        <div key={idx} className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4">
+                          <div className="flex items-center gap-2.5 mb-3">
+                            <div className="h-7 w-7 rounded-lg flex items-center justify-center"
+                              style={{ backgroundColor: finding.color + '20' }}
+                            >
+                              <FindingIcon className="h-3.5 w-3.5" style={{ color: finding.color }} />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-zinc-200">{finding.title}</p>
+                              <p className="text-[10px] text-zinc-500">{finding.severity === 'critical' ? '🔴 Critical' : finding.severity === 'high' ? '🟠 High Priority' : '🟡 Improvement'}</p>
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-zinc-400 leading-relaxed">{finding.description}</p>
+                          <div className="mt-2.5 flex items-center gap-2">
+                            <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase tracking-wider">Fix effort:</span>
+                            <span className="text-[10px] text-zinc-400">{finding.effort}</span>
+                            <span className="text-zinc-700">•</span>
+                            <span className="text-[10px] font-bold font-mono text-emerald-500 uppercase tracking-wider">Value: {finding.value}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* CTA */}
+                    <button
+                      type="button"
+                      onClick={onStartApp}
+                      className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-bold rounded-xl py-3.5 text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-emerald-600/20 active:scale-[0.98] flex items-center justify-center gap-2"
+                    >
+                      <span>Start Scanning Real Leads Now</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                )}
-
-                {activeCompareTab === 'rating' && (
-                  <div className="mt-6 space-y-4">
-                    <h3 className="text-lg font-bold font-display text-zinc-900">Forgotten Maps Status</h3>
-                    <p className="text-xs leading-relaxed text-zinc-500">
-                      A high-intent client searches "Emergency dentist Austin", but the best dentists appear deep on Page 3 because coordinates and Google attributes are misaligned.
-                    </p>
-                    <ul className="text-xs text-zinc-600 space-y-2 pt-2">
-                      <li className="flex items-center gap-2">• Missing crucial metadata tags and schedules</li>
-                      <li className="flex items-center gap-2">• Bad rating loops (unanswered negative feedback)</li>
-                      <li className="flex items-center gap-2">• Zero external SEO linkages or structured site maps</li>
-                    </ul>
-                  </div>
-                )}
-
-                {activeCompareTab === 'outreach' && (
-                  <div className="mt-6 space-y-4">
-                    <h3 className="text-lg font-bold font-display text-zinc-900">Cold Spammed Emails</h3>
-                    <p className="text-xs leading-relaxed text-zinc-500">
-                      Agencies blast "Please buy our digital packages" to 5,000 businesses simultaneously. It looks spammy, has a 0.5% open rate, and damages your professional reputation.
-                    </p>
-                    <ul className="text-xs text-zinc-600 space-y-2 pt-2">
-                      <li className="flex items-center gap-2">• Repetitive generic greeting pitches</li>
-                      <li className="flex items-center gap-2">• Zero custom audits or proof-of-work provided</li>
-                      <li className="flex items-center gap-2">• Leads flag the emails instantly as spam</li>
-                    </ul>
+                ) : (
+                  <div className="text-center py-10 bg-zinc-900/20 border border-dashed border-zinc-800 rounded-xl">
+                    <FileText className="h-10 w-10 text-zinc-700 mx-auto mb-3" />
+                    <p className="text-sm text-zinc-500 font-medium">Complete Step 1 to generate a discovery report</p>
+                    <p className="text-[10px] text-zinc-600 mt-1">Fill in the questionnaire and click "Generate Discovery Report"</p>
                   </div>
                 )}
               </div>
-
-              <div className="mt-6 border-t border-zinc-100 pt-5">
-                <span className="text-[10px] text-zinc-400 font-mono uppercase font-bold tracking-wider">Estimated Client Cost</span>
-                <p className="text-sm font-bold text-red-700">Hundreds of lost potential reservation calls yearly.</p>
-              </div>
-            </div>
-
-            {/* The After / Client Hunter Fix card */}
-            <div className="bg-zinc-950 text-white rounded-3xl p-6 sm:p-8 flex flex-col justify-between border border-zinc-800 shadow-xl">
-              <div>
-                <span className="text-[10px] font-bold font-mono uppercase bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 px-2.5 py-0.5 rounded-full">
-                  After / The Client Hunter Fix
-                </span>
-
-                {activeCompareTab === 'website' && (
-                  <div className="mt-6 space-y-4">
-                    <h3 className="text-lg font-bold font-display text-white">Bespoke Premium Redesigns</h3>
-                    <p className="text-xs leading-relaxed text-zinc-400">
-                      Launch beautiful, modern layouts using high-performance components. Show the prospect their gorgeous, secure web interface draft under our layout proposal generator.
-                    </p>
-                    <ul className="text-xs text-zinc-300 space-y-2 pt-2">
-                      <li className="flex items-center gap-2">✔ Fast loading speeds (under 1.2 seconds)</li>
-                      <li className="flex items-center gap-2">✔ High-converting mobile landing layout</li>
-                      <li className="flex items-center gap-2">✔ One-click customer contact dials pre-built</li>
-                    </ul>
-                  </div>
-                )}
-
-                {activeCompareTab === 'rating' && (
-                  <div className="mt-6 space-y-4">
-                    <h3 className="text-lg font-bold font-display text-white">Smart Metadata Audit</h3>
-                    <p className="text-xs leading-relaxed text-zinc-400">
-                      Our interactive checklist flags missing keywords, lists competitors' review weights, and drafts an immediate content update plan to push them back to page one.
-                    </p>
-                    <ul className="text-xs text-zinc-300 space-y-2 pt-2">
-                      <li className="flex items-center gap-2">✔ Direct keyword density diagnosis</li>
-                      <li className="flex items-center gap-2">✔ Immediate map pins alignment check</li>
-                      <li className="flex items-center gap-2">✔ Competitive digital presence benchmark score</li>
-                    </ul>
-                  </div>
-                )}
-
-                {activeCompareTab === 'outreach' && (
-                  <div className="mt-6 space-y-4">
-                    <h3 className="text-lg font-bold font-display text-white">Value-First Custom Pitches</h3>
-                    <p className="text-xs leading-relaxed text-zinc-400">
-                      Generate a personalized pitch detailing their exact website flaws alongside the custom layout wireframe proposal. This shows them you have already done high-quality work.
-                    </p>
-                    <ul className="text-xs text-zinc-300 space-y-2 pt-2">
-                      <li className="flex items-center gap-2">✔ Bespoke design proposal wireframes</li>
-                      <li className="flex items-center gap-2">✔ Highly personalized audit emails ready to send</li>
-                      <li className="flex items-center gap-2">✔ Over 30% response rates from targeted prospects</li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6 border-t border-zinc-800 pt-5">
-                <span className="text-[10px] text-zinc-500 font-mono uppercase font-bold tracking-wider">Opportunity</span>
-                <p className="text-sm font-bold text-emerald-400">Sell custom website contracts starting at $1,500.</p>
-              </div>
-            </div>
+            </DiscoveryStep>
 
           </div>
         </div>
@@ -1494,4 +997,200 @@ Lead Performance Architect, Client Hunter`;
 
     </div>
   );
+}
+
+// ─── Discovery Step Animated Card ───
+function DiscoveryStep({
+  stepNumber,
+  title,
+  subtitle,
+  description,
+  icon: Icon,
+  color,
+  isExpanded,
+  onToggle,
+  visible,
+  innerRef,
+  children,
+}: {
+  stepNumber: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  visible: boolean;
+  innerRef?: React.RefObject<HTMLDivElement | null>;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      ref={innerRef}
+      className={`transition-all duration-700 ease-out ${
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      }`}
+    >
+      {/* Step indicator pill */}
+      <div className="flex items-center gap-4 mb-3">
+        <div
+          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 text-white font-bold text-sm"
+          style={{ backgroundColor: color }}
+        >
+          {stepNumber}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2.5">
+            <h3 className="text-lg font-bold font-display text-white tracking-tight">{title}</h3>
+            <span className="text-[9px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
+              style={{ borderColor: color + '40', color: color, backgroundColor: color + '15' }}
+            >
+              {subtitle}
+            </span>
+          </div>
+          <p className="text-[11px] text-zinc-500 font-light mt-0.5 max-w-xl">{description}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="h-8 w-8 rounded-lg border border-zinc-800 bg-zinc-900/60 flex items-center justify-center hover:border-zinc-700 transition-all cursor-pointer shrink-0"
+        >
+          <svg
+            className={`h-4 w-4 text-zinc-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Expandable content */}
+      <div
+        className={`transition-all duration-400 ease-in-out overflow-hidden ${
+          isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="pl-14 pb-4">
+          <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 sm:p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="h-8 w-8 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: color + '20' }}
+              >
+                <Icon className="h-4 w-4" style={{ color }} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-zinc-200">{title}</p>
+                <p className="text-[10px] text-zinc-500">{subtitle}</p>
+              </div>
+            </div>
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step Connector Line ───
+function StepConnector({ visible }: { visible: boolean }) {
+  return (
+    <div
+      className={`flex justify-center py-3 transition-all duration-500 ${
+        visible ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      <div className="flex flex-col items-center gap-1">
+        <div className="h-6 w-px bg-gradient-to-b from-blue-500/60 to-purple-500/60" />
+        <div className="h-1.5 w-1.5 rounded-full bg-zinc-700" />
+        <div className="h-6 w-px bg-gradient-to-b from-purple-500/60 to-emerald-500/60" />
+      </div>
+    </div>
+  );
+}
+
+// ─── Mock Report Generator ───
+function generateMockReport(form: DiscoveryFormState): DiscoveryReport {
+  const industryLabel = {
+    restaurant: 'Restaurant / Cafe',
+    fitness: 'Fitness / Gym',
+    medical: 'Medical / Dental',
+    education: 'Education / School',
+    retail: 'Retail / Store',
+    service: 'Home Service',
+    other: 'Local Business',
+  }[form.industry] || 'Local Business';
+
+  const hasWebsite = form.website.trim().length > 0;
+  const painCount = form.painPoints.length;
+  const baseScore = hasWebsite ? 45 : 20;
+  const score = Math.min(100, Math.max(10, baseScore - painCount * 5 + (form.budget === '$8k+' ? 15 : form.budget === '$3k–$8k' ? 10 : form.budget === '$1k–$3k' ? 5 : 0)));
+
+  return {
+    businessName: form.businessName || 'Your Prospect',
+    industry: industryLabel,
+    location: 'Local Market',
+    score,
+    findings: [
+      {
+        icon: Globe,
+        title: 'Digital Presence',
+        description: hasWebsite
+          ? 'Your prospect has a website, but it lacks modern performance standards. Page speed, mobile responsiveness, and SEO metadata need significant improvement to rank in local search results.'
+          : 'Your prospect has no website at all. This is the single biggest conversion opportunity — businesses without websites lose 68% of potential customers to competitors with a basic online presence.',
+        severity: hasWebsite ? 'high' : 'critical',
+        effort: hasWebsite ? '2-3 weeks' : '1-2 weeks',
+        value: hasWebsite ? '+120% lead potential' : '+340% lead potential',
+        color: hasWebsite ? '#f59e0b' : '#ef4444',
+      },
+      {
+        icon: Smartphone,
+        title: 'Mobile Optimization',
+        description: painCount > 0 && form.painPoints.includes('mobile_broken')
+          ? 'Mobile experience is broken or severely degraded. Over 72% of local searches happen on mobile devices — a poor mobile experience is actively driving customers to competitors.'
+          : 'Mobile responsiveness is below modern standards. Google prioritizes mobile-friendly sites in local search rankings, directly affecting visibility and foot traffic.',
+        severity: form.painPoints.includes('mobile_broken') ? 'critical' : 'high',
+        effort: '1-2 weeks',
+        value: '+200% mobile traffic',
+        color: form.painPoints.includes('mobile_broken') ? '#ef4444' : '#f59e0b',
+      },
+      {
+        icon: Gauge,
+        title: 'Performance & Speed',
+        description: form.painPoints.includes('slow_speed')
+          ? 'Page load time exceeds 4 seconds (industry benchmark: under 2.5s). Each additional second of load time reduces conversions by 12%. A performance audit and optimization are urgently needed.'
+          : 'Page speed is below the recommended threshold. Core Web Vitals (LCP, FID, CLS) need improvement to meet Google\'s ranking standards and provide a smooth user experience.',
+        severity: form.painPoints.includes('slow_speed') ? 'critical' : 'high',
+        effort: '1-3 weeks',
+        value: '+35% conversion rate',
+        color: form.painPoints.includes('slow_speed') ? '#ef4444' : '#f59e0b',
+      },
+      {
+        icon: Search,
+        title: 'Local SEO & Discoverability',
+        description: form.painPoints.includes('no_seo')
+          ? 'Business is missing from Google Maps and local search results. This means they are invisible to the 86% of consumers who use Google Maps to find local businesses. Setting up and optimizing a Google Business Profile is step one.'
+          : 'Local SEO signals are weak. The business likely has unoptimized or unclaimed Google Business listings, inconsistent NAP (Name, Address, Phone) data, and poor local citation coverage.',
+        severity: form.painPoints.includes('no_seo') ? 'critical' : 'high',
+        effort: '2-4 weeks',
+        value: '+180% local visibility',
+        color: form.painPoints.includes('no_seo') ? '#ef4444' : '#f59e0b',
+      },
+      {
+        icon: ClipboardList,
+        title: 'Conversion & Booking Funnel',
+        description: form.painPoints.includes('no_booking')
+          ? 'No online booking, ordering, or appointment system exists. Customers must call or visit in person — creating friction that drives them to competitors with seamless digital booking experiences.'
+          : 'The current site lacks structured calls-to-action and conversion optimization. Adding clear booking flows, contact forms, and lead capture mechanisms could dramatically increase inbound inquiries.',
+        severity: form.painPoints.includes('no_booking') ? 'critical' : 'high',
+        effort: '1-2 weeks',
+        value: '+150% booked appointments',
+        color: form.painPoints.includes('no_booking') ? '#ef4444' : '#f59e0b',
+      },
+    ],
+  };
 }

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   X, Sparkles, Building2, Phone, MapPin, Globe, Star, ShieldAlert,
   Loader2, Check, Copy, Settings, Calendar, Award, Layout, Briefcase, FileText,
-  Mail, MessageSquare, Linkedin, Send, RefreshCw, AlertCircle, ArrowUpRight
+  Mail, MessageSquare, Linkedin, Send, RefreshCw, AlertCircle, ArrowUpRight,
+  TrendingUp, BarChart3, Target, Clock, PhoneCall, Footprints
 } from 'lucide-react';
-import { Lead, BusinessAnalysis, WebDesignProposal, OutreachPitch } from '../types';
+import { Lead, BusinessAnalysis, WebDesignProposal, OutreachPitch, OutreachEntry, ScoreBreakdown, BIReport } from '../types';
 import { useAuth } from './AuthContext';
 import ConfirmationDialog from './ConfirmationDialog';
 
@@ -17,7 +18,7 @@ interface LeadSidePanelProps {
 
 export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLead }: LeadSidePanelProps) {
   const { user } = useAuth();
-  const [activeSubTab, setActiveSubTab] = useState<'audit' | 'website_offer' | 'outreach'>('audit');
+  const [activeSubTab, setActiveSubTab] = useState<'audit' | 'website_offer' | 'outreach' | 'bi_report'>('audit');
 
   
   // Action Loading states
@@ -27,6 +28,38 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
   const [copiedText, setCopiedText] = useState<{ [key: string]: boolean }>({});
   const [panelError, setPanelError] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [whatsappSending, setWhatsappSending] = useState<{ [key: string]: 'idle' | 'sending' | 'sent' | 'delivered' | 'read' | 'failed' }>({});
+  const [whatsappConfigured, setWhatsappConfigured] = useState(false);
+
+  // Check if WhatsApp API is configured on mount
+  useEffect(() => {
+    fetch('/api/whatsapp/config')
+      .then(res => res.json())
+      .then(data => setWhatsappConfigured(data.configured))
+      .catch(() => setWhatsappConfigured(false));
+  }, []);
+
+  // Poll delivery status for recently sent WhatsApp messages
+  useEffect(() => {
+    const sendingKeys = Object.entries(whatsappSending).filter(([, v]) => v === 'sent');
+    if (sendingKeys.length === 0) return;
+
+    const interval = setInterval(async () => {
+      for (const [msgId] of sendingKeys) {
+        try {
+          const res = await fetch(`/api/whatsapp/status/${msgId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status && data.status.status !== 'sent') {
+              setWhatsappSending(prev => ({ ...prev, [msgId]: data.status.status, whatsapp: data.status.status }));
+            }
+          }
+        } catch { /* ignore polling errors */ }
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [whatsappSending]);
 
   // Reset tabs when the inspected lead changes
   useEffect(() => {
@@ -46,6 +79,45 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
     setTimeout(() => {
       setCopiedText((prev) => ({ ...prev, [type]: false }));
     }, 2000);
+  };
+
+  const sendWhatsAppMessage = async (text: string, type: string) => {
+    if (!lead.phone) {
+      setPanelError('No phone number available for this lead.');
+      return;
+    }
+
+    setWhatsappSending(prev => ({ ...prev, [type]: 'sending' }));
+    setPanelError(null);
+
+    try {
+      const res = await fetch('/api/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: lead.phone,
+          text,
+          leadId: lead.id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.status?.messageId) {
+        setWhatsappSending(prev => ({ ...prev, [type]: 'sent' }));
+        // Store the messageId for polling
+        setWhatsappSending(prev => ({ ...prev, [data.status.messageId]: 'sent' }));
+      } else if (data.isFallback) {
+        setPanelError('WhatsApp API not configured. Copy the message and send manually.');
+        setWhatsappSending(prev => ({ ...prev, [type]: 'idle' }));
+      } else {
+        setPanelError(data.error || 'Failed to send WhatsApp message.');
+        setWhatsappSending(prev => ({ ...prev, [type]: 'failed' }));
+      }
+    } catch (err: any) {
+      setPanelError('Network error sending WhatsApp message.');
+      setWhatsappSending(prev => ({ ...prev, [type]: 'idle' }));
+    }
   };
 
   // Run AI deep audit
@@ -324,6 +396,16 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
           >
             Outreach Channels
           </button>
+          <button
+            onClick={() => setActiveSubTab('bi_report')}
+            className={`flex-1 py-2 text-center text-xs font-bold cursor-pointer border-b-2 transition-all ${
+              activeSubTab === 'bi_report'
+                ? 'border-blue-500 text-white bg-blue-500/5'
+                : 'border-transparent text-zinc-500 hover:text-zinc-200'
+            }`}
+          >
+            BI Report
+          </button>
         </div>
 
         {/* Sub-tab content */}
@@ -567,6 +649,45 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
 
           {activeSubTab === 'outreach' && (
             <div className="space-y-4">
+              {/* Outreach History Timeline */}
+              <div className="rounded-xl border border-zinc-800 bg-[#09090B]/50 p-3.5">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Clock className="h-3 w-3 text-blue-400" /> Outreach Activity Log
+                  </span>
+                  <span className="text-[9px] text-zinc-500 font-mono">{lead.outreachHistory.length} entries</span>
+                </div>
+                {lead.outreachHistory.length === 0 ? (
+                  <p className="text-[10px] text-zinc-500 italic py-2 text-center">No outreach logged yet. Copy pitch and record interactions below.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
+                    {lead.outreachHistory.map((entry) => (
+                      <div key={entry.id} className="flex items-start gap-2 bg-[#0C0C0E] p-2 rounded-lg border border-zinc-800">
+                        <span className="text-xs mt-0.5">
+                          {entry.channel === 'whatsapp' ? '💬' : entry.channel === 'email' ? '📧' : entry.channel === 'linkedin_dm' ? '💼' : entry.channel === 'physical_visit' ? '🚶' : '📞'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">{entry.channel.replace('_', ' ')}</span>
+                            <span className={`text-[8px] font-bold px-1.5 py-px rounded-full ${
+                              entry.status === 'sent' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                              entry.status === 'replied' || entry.status === 'interested' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                              entry.status === 'no_response' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
+                              'bg-zinc-800 text-zinc-400'
+                            }`}>{entry.status.replace('_', ' ')}</span>
+                          </div>
+                          <p className="text-[9px] text-zinc-500 font-mono mt-0.5">{new Date(entry.sentAt).toLocaleDateString()} {entry.notes && `— ${entry.notes}`}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Quick Add Outreach Entry */}
+                <div className="mt-2 pt-2 border-t border-zinc-800">
+                  <OutreachQuickEntry lead={lead} onUpdate={onUpdateLead} />
+                </div>
+              </div>
+
               {!currentPitch ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center bg-[#0C0C0E]/50 border border-dashed border-zinc-800 rounded-xl p-5">
                   <Send className="h-7 w-7 text-blue-400 animate-pulse mb-2" />
@@ -609,17 +730,79 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
                       <span className="text-[10.5px] font-sans font-bold text-white flex items-center gap-1.5">
                         <MessageSquare className="h-3.5 w-3.5 text-emerald-400" /> Conversational WhatsApp Intro
                       </span>
-                      <button
-                        onClick={() => handleCopy(currentPitch.whatsapp, 'whatsapp')}
-                        className="text-[10px] text-zinc-400 hover:text-emerald-400 flex items-center gap-1 bg-[#09090B] px-2 py-0.5 rounded border border-zinc-800 cursor-pointer"
-                      >
-                        {copiedText['whatsapp'] ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
-                        {copiedText['whatsapp'] ? 'Copied' : 'Copy'}
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        {/* Send via WhatsApp API button */}
+                        <button
+                          onClick={() => sendWhatsAppMessage(currentPitch.whatsapp, 'whatsapp')}
+                          disabled={whatsappSending['whatsapp'] === 'sending'}
+                          className={`text-[10px] flex items-center gap-1 px-2 py-0.5 rounded border cursor-pointer transition-all ${
+                            whatsappSending['whatsapp'] === 'sent' || whatsappSending['whatsapp'] === 'delivered' || whatsappSending['whatsapp'] === 'read'
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : whatsappSending['whatsapp'] === 'failed'
+                              ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                              : whatsappSending['whatsapp'] === 'sending'
+                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                          }`}
+                        >
+                          {whatsappSending['whatsapp'] === 'sending' ? (
+                            <><Loader2 className="h-2.5 w-2.5 animate-spin" /> Sending...</>
+                          ) : whatsappSending['whatsapp'] === 'sent' ? (
+                            <><Send className="h-2.5 w-2.5" /> Sent ✓</>
+                          ) : whatsappSending['whatsapp'] === 'delivered' ? (
+                            <><Check className="h-2.5 w-2.5" /> Delivered ✓✓</>
+                          ) : whatsappSending['whatsapp'] === 'read' ? (
+                            <><Check className="h-2.5 w-2.5" /> Read ✓✓</>
+                          ) : whatsappSending['whatsapp'] === 'failed' ? (
+                            <><AlertCircle className="h-2.5 w-2.5" /> Failed</>
+                          ) : (
+                            <><Send className="h-2.5 w-2.5" /> Send</>
+                          )}
+                        </button>
+                        {/* Copy to clipboard button */}
+                        <button
+                          onClick={() => handleCopy(currentPitch.whatsapp, 'whatsapp')}
+                          className="text-[10px] text-zinc-400 hover:text-emerald-400 flex items-center gap-1 bg-[#09090B] px-2 py-0.5 rounded border border-zinc-800 cursor-pointer"
+                        >
+                          {copiedText['whatsapp'] ? <Check className="h-2.5 w-2.5 text-emerald-400" /> : <Copy className="h-2.5 w-2.5" />}
+                          {copiedText['whatsapp'] ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
                     </div>
                     <pre className="w-full bg-[#09090B] p-3.5 border border-zinc-800 rounded-xl text-[10.5px] text-zinc-300 whitespace-pre-wrap font-sans leading-relaxed">
                       {currentPitch.whatsapp}
                     </pre>
+                    {/* Delivery status indicator */}
+                    {whatsappSending['whatsapp'] === 'sent' && (
+                      <div className="flex items-center gap-1.5 text-[9px] text-amber-400 animate-pulse">
+                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                        Waiting for delivery confirmation...
+                      </div>
+                    )}
+                    {whatsappSending['whatsapp'] === 'delivered' && (
+                      <div className="flex items-center gap-1.5 text-[9px] text-emerald-400">
+                        <Check className="h-2.5 w-2.5" />
+                        Message delivered to recipient
+                      </div>
+                    )}
+                    {whatsappSending['whatsapp'] === 'read' && (
+                      <div className="flex items-center gap-1.5 text-[9px] text-blue-400">
+                        <Check className="h-2.5 w-2.5" />
+                        Message read by recipient
+                      </div>
+                    )}
+                    {whatsappSending['whatsapp'] === 'failed' && (
+                      <div className="flex items-center gap-1.5 text-[9px] text-rose-400">
+                        <AlertCircle className="h-2.5 w-2.5" />
+                        Delivery failed. Copy the message and send manually.
+                      </div>
+                    )}
+                    {!whatsappConfigured && (
+                      <div className="flex items-center gap-1.5 text-[9px] text-zinc-500 italic">
+                        <AlertCircle className="h-2.5 w-2.5" />
+                        WhatsApp API not configured. Copy to send manually. Set WHATSAPP_PHONE_NUMBER_ID & WHATSAPP_ACCESS_TOKEN in .env
+                      </div>
+                    )}
                   </div>
 
                   {/* LinkedIn message */}
@@ -639,6 +822,136 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
                     <pre className="w-full bg-[#09090B] p-3.5 border border-zinc-800 rounded-xl text-[10.5px] text-zinc-300 whitespace-pre-wrap font-sans leading-relaxed">
                       {currentPitch.linkedin}
                     </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeSubTab === 'bi_report' && (
+            <div className="space-y-4">
+              {!lead.biReport ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center bg-[#0C0C0E]/50 border border-dashed border-zinc-800 rounded-xl p-5">
+                  <BarChart3 className="h-7 w-7 text-blue-400 animate-pulse mb-2" />
+                  <h5 className="text-xs font-sans font-bold text-zinc-200 uppercase tracking-wider">Business Intelligence Report</h5>
+                  <p className="text-[11px] text-zinc-500 mt-1 max-w-xs leading-relaxed">
+                    Generate an AI-powered business intelligence report with competitive insights, digital health scoring, and value upside estimation.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      setIsAuditing(true);
+                      try {
+                        // Fetch both score breakdown and BI report in parallel
+                        const [scoreResp, biResp] = await Promise.all([
+                          fetch('/api/leads/score', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ lead }),
+                          }),
+                          fetch('/api/leads/bi-report', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ lead }),
+                          }),
+                        ]);
+                        if (scoreResp.ok && biResp.ok) {
+                          const [scoreData, biData] = await Promise.all([
+                            scoreResp.json(),
+                            biResp.json(),
+                          ]);
+                          const updatedLead: Lead = {
+                            ...lead,
+                            scoreBreakdown: scoreData.scoreBreakdown,
+                            biReport: biData.report,
+                          };
+                          await updateDbLead(updatedLead);
+                        }
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setIsAuditing(false);
+                      }
+                    }}
+                    disabled={isAuditing}
+                    className="mt-4 flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-lg shadow-blue-900/10 disabled:opacity-50"
+                  >
+                    {isAuditing ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating Report...</>
+                    ) : (
+                      <><BarChart3 className="h-3.5 w-3.5" /> Generate BI Report</>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Score Breakdown */}
+                  {lead.scoreBreakdown && (
+                    <div className="rounded-xl border border-zinc-800 bg-[#09090B] p-4 space-y-3">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <Target className="h-3 w-3 text-blue-400" /> Lead Score Breakdown
+                      </span>
+                      <div className="space-y-2">
+                        {[
+                          { label: 'Website Gap', score: lead.scoreBreakdown.hasWebsite, max: 25, color: 'bg-rose-500' },
+                          { label: 'Digital Presence', score: lead.scoreBreakdown.digitalPresence, max: 20, color: 'bg-amber-500' },
+                          { label: 'Review Quality', score: lead.scoreBreakdown.reviewQuality, max: 20, color: 'bg-blue-500' },
+                          { label: 'Booking Potential', score: lead.scoreBreakdown.bookingPotential, max: 20, color: 'bg-purple-500' },
+                          { label: 'Brand Gap', score: lead.scoreBreakdown.brandGap, max: 15, color: 'bg-emerald-500' },
+                        ].map((item) => (
+                          <div key={item.label}>
+                            <div className="flex items-center justify-between text-[10px] mb-0.5">
+                              <span className="text-zinc-400">{item.label}</span>
+                              <span className="text-zinc-300 font-bold">{item.score}/{item.max}</span>
+                            </div>
+                            <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                              <div className={`h-full ${item.color} rounded-full transition-all duration-500`} style={{ width: `${(item.score / item.max) * 100}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between pt-1 border-t border-zinc-800">
+                        <span className="text-[10px] text-zinc-500 font-bold uppercase">Total Score</span>
+                        <span className="text-sm font-mono font-bold text-white">{lead.scoreBreakdown.total}/100</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* BI Report Content */}
+                  <div className="rounded-xl border border-zinc-800 bg-[#09090B]/30 p-4 space-y-3">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <FileText className="h-3 w-3 text-blue-400" /> Business Intelligence Summary
+                    </span>
+                    <div className="space-y-2.5">
+                      <div className="p-2.5 bg-[#0C0C0E] rounded-lg border border-zinc-800">
+                        <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider">Overview</span>
+                        <p className="text-[10.5px] text-zinc-300 mt-0.5 leading-relaxed">{lead.biReport.businessOverview}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2.5 bg-[#0C0C0E] rounded-lg border border-zinc-800">
+                          <span className="text-[9px] text-zinc-500 uppercase font-bold">Digital Health</span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className={`h-2 w-2 rounded-full ${lead.biReport.digitalHealthScore >= 60 ? 'bg-emerald-500' : lead.biReport.digitalHealthScore >= 40 ? 'bg-amber-500' : 'bg-rose-500'}`} />
+                            <span className="text-xs font-bold text-white">{lead.biReport.digitalHealthScore}/100</span>
+                          </div>
+                        </div>
+                        <div className="p-2.5 bg-[#0C0C0E] rounded-lg border border-zinc-800">
+                          <span className="text-[9px] text-zinc-500 uppercase font-bold">Value Upside</span>
+                          <p className="text-xs font-bold text-emerald-400 mt-0.5">{lead.biReport.estimatedValueUpside}</p>
+                        </div>
+                      </div>
+                      <div className="p-2.5 bg-blue-950/20 rounded-lg border border-blue-900/30">
+                        <span className="text-[9px] text-blue-400 uppercase font-bold tracking-wider">Top Opportunity</span>
+                        <p className="text-[10.5px] text-blue-300 mt-0.5 leading-relaxed">{lead.biReport.topOpportunity}</p>
+                      </div>
+                      <div className="p-2.5 bg-[#0C0C0E] rounded-lg border border-zinc-800">
+                        <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider">Recommended Action</span>
+                        <p className="text-[10.5px] text-zinc-300 mt-0.5">{lead.biReport.recommendedAction}</p>
+                      </div>
+                      <div className="p-2.5 bg-[#0C0C0E] rounded-lg border border-zinc-800">
+                        <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider">Competitive Insight</span>
+                        <p className="text-[10.5px] text-zinc-300 mt-0.5 italic">{lead.biReport.competitiveInsight}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -704,4 +1017,96 @@ function WebIcon({ type }: { type: string }) {
     return <ShieldAlert className="h-3.5 w-3.5 text-rose-400 inline" />;
   }
   return null;
+}
+
+// Outreach Quick Entry Sub-Component
+function OutreachQuickEntry({ lead, onUpdate }: { lead: Lead; onUpdate: (l: Lead) => void }) {
+  const [channel, setChannel] = useState<OutreachChannel>('whatsapp');
+  const [status, setStatus] = useState<OutreachStatus>('sent');
+  const [notes, setNotes] = useState('');
+  const [followUpDate, setFollowUpDate] = useState('');
+
+  const handleAddEntry = async () => {
+    const entry: OutreachEntry = {
+      id: `outreach-${Date.now()}`,
+      channel,
+      status,
+      sentAt: new Date().toISOString(),
+      notes: notes.trim(),
+      followUpDate: followUpDate || null,
+      respondedAt: null,
+    };
+    const updated: Lead = {
+      ...lead,
+      outreachHistory: [...(lead.outreachHistory || []), entry],
+    };
+    // Persist locally first
+    onUpdate(updated);
+    // Persist to backend
+    try {
+      await fetch('/api/leads/outreach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: lead.id, entry }),
+      });
+    } catch (err) {
+      console.error('Failed to persist outreach entry to backend:', err);
+    }
+    setNotes('');
+    setFollowUpDate('');
+    setStatus('sent');
+  };
+
+  return (
+    <div className="space-y-2">
+      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Log New Activity</span>
+      <div className="flex flex-wrap gap-1.5">
+        <select
+          value={channel}
+          onChange={(e) => setChannel(e.target.value as OutreachChannel)}
+          className="flex-1 min-w-[100px] bg-[#0C0C0E] border border-zinc-800 text-zinc-300 text-[10px] rounded p-1.5 outline-none cursor-pointer"
+        >
+          <option value="whatsapp">💬 WhatsApp</option>
+          <option value="email">📧 Email</option>
+          <option value="linkedin_dm">💼 LinkedIn DM</option>
+          <option value="physical_visit">🚶 Physical Visit</option>
+          <option value="phone_call">📞 Phone Call</option>
+        </select>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as OutreachStatus)}
+          className="flex-1 min-w-[80px] bg-[#0C0C0E] border border-zinc-800 text-zinc-300 text-[10px] rounded p-1.5 outline-none cursor-pointer"
+        >
+          <option value="sent">Sent</option>
+          <option value="opened">Opened</option>
+          <option value="replied">Replied</option>
+          <option value="no_response">No Response</option>
+          <option value="interested">Interested</option>
+          <option value="not_interested">Not Interested</option>
+        </select>
+      </div>
+      <div className="flex gap-1.5">
+        <input
+          type="text"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Add notes..."
+          className="flex-1 bg-[#0C0C0E] border border-zinc-800 text-zinc-300 text-[10px] rounded p-1.5 outline-none placeholder-zinc-600"
+        />
+        <input
+          type="date"
+          value={followUpDate}
+          onChange={(e) => setFollowUpDate(e.target.value)}
+          className="w-[120px] bg-[#0C0C0E] border border-zinc-800 text-zinc-300 text-[10px] rounded p-1.5 outline-none"
+        />
+      </div>
+      <button
+        onClick={handleAddEntry}
+        className="w-full text-[10px] font-bold bg-blue-600 hover:bg-blue-500 text-white py-1.5 rounded transition-all cursor-pointer flex items-center justify-center gap-1"
+      >
+        <Clock className="h-3 w-3" />
+        Log Entry
+      </button>
+    </div>
+  );
 }

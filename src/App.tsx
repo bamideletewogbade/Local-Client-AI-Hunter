@@ -6,14 +6,18 @@ import AnalyticsPanel from './components/AnalyticsPanel';
 import LeadSidePanel from './components/LeadSidePanel';
 import LaunchVideoPlayer from './components/LaunchVideo';
 import ProductLanding from './components/ProductLanding';
+import NeuralFlowHero from './components/NeuralFlowHero';
+import AgentProcessFlow from './components/AgentProcessFlow';
+import AgentLogPanel from './components/AgentLogPanel';
 import SalesCopilot from './components/SalesCopilot';
 import { useAuth } from './components/AuthContext';
 import { Lead } from './types';
+import { useLocalStorage } from './hooks/useLocalStorage';
 import { Sparkles, CalendarRange, Target, AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'guide' | 'discovery' | 'crm' | 'analytics'>('guide');
+  const [activeTab, setActiveTab] = useLocalStorage<'guide' | 'discovery' | 'crm' | 'analytics'>('hunter_active_tab', 'guide');
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error'; id: number } | null>(null);
 
@@ -56,8 +60,8 @@ export default function App() {
     deleteLead: deleteLeadFirebase,
   } = useAuth();
 
-  // Local CRM leads loaded from offline server database
-  const [localLeads, setLocalLeads] = useState<Lead[]>([]);
+  // Local CRM leads loaded from offline server database (persisted in localStorage)
+  const [localLeads, setLocalLeads] = useLocalStorage<Lead[]>('hunter_local_leads', []);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
@@ -289,17 +293,26 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         crmCount={crmLeads.length}
-        onOpenTour={() => setIsTourOpen(true)}
+        onOpenChat={() => window.dispatchEvent(new CustomEvent('hunter-toggle-copilot'))}
       />
 
       {activeTab === 'guide' ? (
-        <ProductLanding 
-          onStartApp={() => setActiveTab('discovery')}
-          isFirebaseConfigured={isConfigured}
-          onConnectDatabase={() => {
-            triggerToast("To pair your Cloud Database, ensure you configure Firebase terms in the platform panel! Once live, client data will seamlessly auto-synchronize to Firestore.", 'info');
-          }}
-        />
+        <div>
+          {/* Full-screen cinematic hero — scroll down to explore */}
+          <NeuralFlowHero onScrollDown={() => {
+            document.getElementById('agent-process-flow')?.scrollIntoView({ behavior: 'smooth' });
+          }} />
+          {/* Animated 5-agent workflow infographic */}
+          <AgentProcessFlow />
+          {/* Interactive product demo, simulator, pricing */}
+          <ProductLanding
+            onStartApp={() => setActiveTab('discovery')}
+            isFirebaseConfigured={isConfigured}
+            onConnectDatabase={() => {
+              triggerToast("To pair your Cloud Database, ensure you configure Firebase terms in the platform panel! Once live, client data will seamlessly auto-synchronize to Firestore.", 'info');
+            }}
+          />
+        </div>
       ) : (
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           
@@ -359,6 +372,9 @@ export default function App() {
         </main>
       )}
 
+      {/* Agent Log Panel floating overlay */}
+      <AgentLogPanel />
+
       {/* Side drawer detail overlays */}
       {selectedLead && (
         <>
@@ -413,6 +429,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Interactive Floating AI Sales Copilot Agent widget */}
+      {/* Also toggled via Header 'Ask Bishop' button */}
       <SalesCopilot />
 
       {/* Remotion-Powered Video Launch Tour Overlay */}

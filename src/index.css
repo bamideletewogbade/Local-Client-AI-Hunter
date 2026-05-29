@@ -18,6 +18,37 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Outreach entry status pulse */
+.status-dot-pulse {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Source badge styles */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* BI Report card hover effect */
+.bi-card-hover {
+  transition: all 0.2s ease;
+}
+.bi-card-hover:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.1);
+}
+
 /* Custom premium scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

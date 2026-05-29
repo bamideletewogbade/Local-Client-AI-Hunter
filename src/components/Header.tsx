@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { 
   Target, 
   Sparkles, 
-  CalendarRange, 
   BarChart3, 
   Settings, 
-  Play, 
-  BookOpen,
+  House,
   CloudLightning,
-  Database
+  Database,
+  LayoutList,
+  Search,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
@@ -16,17 +17,11 @@ interface HeaderProps {
   activeTab: 'guide' | 'discovery' | 'crm' | 'analytics';
   setActiveTab: (tab: 'guide' | 'discovery' | 'crm' | 'analytics') => void;
   crmCount: number;
-  onOpenTour?: () => void;
+  onOpenChat?: () => void;
 }
 
-export default function Header({ activeTab, setActiveTab, crmCount, onOpenTour }: HeaderProps) {
+export default function Header({ activeTab, setActiveTab, crmCount, onOpenChat }: HeaderProps) {
   const { user, isConfigured, signInWithGoogle, logout } = useAuth();
-
-  const API_KEY =
-    (process.env as any).GOOGLE_MAPS_PLATFORM_KEY ||
-    (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY ||
-    '';
-  const hasValidMapKey = Boolean(API_KEY) && API_KEY !== 'YOUR_API_KEY';
 
   const [isFallbackActive, setIsFallbackActive] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -80,10 +75,10 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenTour }
                 ? 'bg-white text-zinc-900 shadow-xs border border-zinc-200/50'
                 : 'text-zinc-500 hover:text-zinc-900 border border-transparent'
             }`}
-            title="Product Guide"
+            title="Home — Product Overview"
           >
-            <BookOpen className="h-3.5 w-3.5 shrink-0" />
-            <span className="font-display hidden sm:inline">Guide</span>
+            <House className="h-3.5 w-3.5 shrink-0" />
+            <span className="font-display hidden sm:inline">Home</span>
           </button>
           
           <button
@@ -93,10 +88,10 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenTour }
                 ? 'bg-white text-blue-600 shadow-xs border border-zinc-200/50'
                 : 'text-zinc-500 hover:text-zinc-900 border border-transparent'
             }`}
-            title="Search Leads"
+            title="Discover & Search Leads"
           >
             <Sparkles className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-            <span className="font-display hidden sm:inline">Search</span>
+            <span className="font-display hidden sm:inline">Discover</span>
           </button>
           
           <button
@@ -106,9 +101,9 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenTour }
                 ? 'bg-white text-zinc-900 shadow-xs border border-zinc-200/50'
                 : 'text-zinc-500 hover:text-zinc-900 border border-transparent'
             }`}
-            title="Pipeline Map"
+            title="CRM Pipeline"
           >
-            <CalendarRange className="h-3.5 w-3.5 text-zinc-700 shrink-0" />
+            <LayoutList className="h-3.5 w-3.5 text-zinc-700 shrink-0" />
             <span className="font-display hidden sm:inline">Pipeline</span>
             {crmCount > 0 && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-zinc-900 px-1 text-[8px] font-bold text-white leading-none shrink-0">
@@ -124,37 +119,27 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenTour }
                 ? 'bg-white text-zinc-900 shadow-xs border border-zinc-200/50'
                 : 'text-zinc-500 hover:text-zinc-900 border border-transparent'
             }`}
-            title="Performance Metrics"
+            title="Analytics Dashboard"
           >
             <BarChart3 className="h-3.5 w-3.5 text-zinc-700 shrink-0" />
-            <span className="font-display hidden sm:inline">Metrics</span>
+            <span className="font-display hidden sm:inline">Analytics</span>
           </button>
         </nav>
 
         {/* Operations Dashboard */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {onOpenTour && (
-            <button
-              type="button"
-              onClick={onOpenTour}
-              className="hidden lg:flex items-center gap-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 px-3 py-1.5 text-[10px] font-bold uppercase transition-all tracking-wider font-mono cursor-pointer"
-            >
-              <Play className="h-2.5 w-2.5 text-zinc-600 fill-zinc-600" />
-              <span>Tour</span>
-            </button>
-          )}
-
-          <div
-            className={`hidden md:flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-mono font-medium border ${
-              hasValidMapKey
-                ? 'bg-blue-50/50 text-blue-600 border-blue-100/80'
-                : 'bg-zinc-50 text-zinc-500 border-zinc-200/80'
-            }`}
+          {/* ASK BISHOP button — opens AI chat copilot */}
+          <button
+            type="button"
+            onClick={onOpenChat}
+            className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 sm:px-3 py-1.5 transition-all cursor-pointer shadow-xs active:scale-95 border border-indigo-400/30"
           >
-            <span>MAPS: {hasValidMapKey ? 'ACTIVE' : 'PREVIEW'}</span>
-          </div>
+            <MessageSquare className="h-3 w-3 shrink-0" />
+            <span className="hidden sm:inline">Ask Bishop</span>
+            <span className="sm:hidden">AI</span>
+          </button>
 
-          {/* Core Firebase Auth state */}
+          {/* Core Firebase Auth state — compact */}
           {!isConfigured ? (
             <div 
               title="Database backup defaults to fast native browser IndexedDB."
@@ -195,11 +180,11 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenTour }
             <button
               type="button"
               onClick={signInWithGoogle}
-              className="flex items-center gap-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-[10px] uppercase tracking-wider px-2 sm:px-3 py-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+              className="flex items-center gap-1 rounded-lg bg-zinc-200 hover:bg-zinc-300 text-zinc-600 font-bold text-[9px] uppercase tracking-wider px-2 py-1.5 transition-all cursor-pointer shadow-xs active:scale-95 border border-zinc-300"
+              title="Sign in with Google"
             >
-              <CloudLightning className="h-3 w-3 text-yellow-400" />
-              <span className="hidden sm:inline">Backup CRM</span>
-              <span className="sm:hidden">Backup</span>
+              <CloudLightning className="h-3 w-3 text-zinc-500 shrink-0" />
+              <span className="hidden sm:inline text-[9px]">Sign In</span>
             </button>
           )}
         </div>

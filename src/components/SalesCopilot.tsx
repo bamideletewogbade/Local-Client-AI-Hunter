@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -25,7 +26,20 @@ interface ChatMessage {
 
 export default function SalesCopilot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
+
+  // Listen for external toggle event from header nav
+  useEffect(() => {
+    const handleToggle = () => setIsOpen((prev) => !prev);
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('hunter-toggle-copilot', handleToggle);
+    window.addEventListener('hunter-open-copilot', handleOpen);
+    return () => {
+      window.removeEventListener('hunter-toggle-copilot', handleToggle);
+      window.removeEventListener('hunter-open-copilot', handleOpen);
+    };
+  }, []);
+  // Persisted chat messages — timestamps revive from ISO strings on load
+  const [rawMessages, setMessages] = useLocalStorage<ChatMessage[]>('hunter_copilot_messages', [
     {
       id: 'init',
       role: 'assistant',
@@ -33,6 +47,8 @@ export default function SalesCopilot() {
       timestamp: new Date()
     }
   ]);
+  // Ensure timestamps are Date objects (JSON.parse returns strings)
+  const messages = rawMessages.map(m => ({ ...m, timestamp: typeof m.timestamp === 'string' ? new Date(m.timestamp) : m.timestamp }));
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -353,28 +369,7 @@ export default function SalesCopilot() {
 
   return (
     <>
-      {/* Floating Sparkle Toggle Button */}
-      <div className="fixed bottom-6 right-6 z-40 select-none">
-        <motion.button
-          id="sales-copilot-trigger"
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            setIsOpen(!isOpen);
-            stopSpeaking();
-          }}
-          className="flex items-center gap-2 px-4 py-3.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white shadow-2xl hover:shadow-indigo-500/20 border border-indigo-400/30 cursor-pointer"
-        >
-          <Sparkles className="h-5 w-5 animate-pulse text-yellow-300 shrink-0" />
-          <span className="text-xs font-bold font-mono tracking-wider">ASK BISHOP</span>
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-        </motion.button>
-      </div>
-
-      {/* Slide-Up Collapsible AI Panel */}
+      {/* Slide-Up Collapsible AI Panel — opened via nav 'Ask Bishop' button */}
       <AnimatePresence>
         {isOpen && (
           <motion.div

@@ -1,6 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import L from 'leaflet';
 import { Lead } from '../types';
+
+const GOOGLE_MAPS_KEY =
+  (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY ||
+  (process.env as any).GOOGLE_MAPS_PLATFORM_KEY ||
+  '';
+const hasGoogleMapsKey = Boolean(GOOGLE_MAPS_KEY) && GOOGLE_MAPS_KEY !== 'YOUR_API_KEY';
 
 interface MapViewProps {
   leads: Lead[];
@@ -12,11 +18,186 @@ export default function MapView({ leads, onSelectLead, activeLeadId }: MapViewPr
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
+  const googleMapRef = useRef<google.maps.Map | null>(null);
+  const googleMarkersRef = useRef<{ [key: string]: google.maps.Marker }>({});
+  const googleInfoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const [gmapLoaded, setGmapLoaded] = useState(false);
 
   const activeLead = leads.find(l => l.id === activeLeadId) || null;
 
-  // Initialize Map
+  // Load Google Maps API script if key is present
   useEffect(() => {
+    if (!hasGoogleMapsKey || gmapLoaded) return;
+    if (document.querySelector('#gmaps-script')) {
+      // Check if already loaded
+      if (typeof google !== 'undefined' && google.maps) {
+        setGmapLoaded(true);
+      }
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'gmaps-script';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places`;
+    script.async = true;
+    script.onload = () => setGmapLoaded(true);
+    document.head.appendChild(script);
+  }, [gmapLoaded]);
+
+  // ─── Google Maps Renderer ───
+  useEffect(() => {
+    if (!hasGoogleMapsKey || !gmapLoaded || !containerRef.current || googleMapRef.current) return;
+
+    const firstValidLead = leads.find(l => l.latitude && l.longitude);
+    const center = firstValidLead?.latitude && firstValidLead?.longitude
+      ? { lat: firstValidLead.latitude, lng: firstValidLead.longitude }
+      : { lat: 5.5601, lng: -0.2057 };
+
+    const map = new google.maps.Map(containerRef.current, {
+      center,
+      zoom: 12,
+      styles: [
+        { elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#1e293b' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
+        {
+          featureType: 'water',
+          elementType: 'geometry',
+          stylers: [{ color: '#0f172a' }],
+        },
+        {
+          featureType: 'road',
+          elementType: 'geometry',
+          stylers: [{ color: '#1e293b' }],
+        },
+        {
+          featureType: 'road',
+          elementType: 'labels.text.fill',
+          stylers: [{ color: '#64748b' }],
+        },
+        {
+          featureType: 'poi',
+          elementType: 'geometry',
+          stylers: [{ color: '#1e293b' }],
+        },
+        {
+          featureType: 'poi',
+          elementType: 'labels.text.fill',
+          stylers: [{ color: '#64748b' }],
+        },
+        {
+          featureType: 'transit',
+          elementType: 'geometry',
+          stylers: [{ color: '#1e293b' }],
+        },
+        {
+          featureType: 'administrative',
+          elementType: 'geometry',
+          stylers: [{ color: '#334155' }],
+        },
+        {
+          featureType: 'poi.park',
+          elementType: 'geometry',
+          stylers: [{ color: '#0f766e33' }],
+        },
+      ],
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    });
+
+    googleInfoWindowRef.current = new google.maps.InfoWindow();
+    googleMapRef.current = map;
+
+    return () => {
+      googleMapRef.current = null;
+      googleMarkersRef.current = {};
+    };
+  }, [gmapLoaded, leads]);
+
+  // Sync Google Maps markers
+  useEffect(() => {
+    if (!hasGoogleMapsKey || !gmapLoaded || !googleMapRef.current) return;
+
+    const map = googleMapRef.current;
+    const leadsMap = new Map(leads.map(l => [l.id, l]));
+
+    // Remove stale markers
+    Object.keys(googleMarkersRef.current).forEach(id => {
+      if (!leadsMap.has(id)) {
+        googleMarkersRef.current[id].setMap(null);
+        delete googleMarkersRef.current[id];
+      }
+    });
+
+    leads.forEach(lead => {
+      if (!lead.latitude || !lead.longitude) return;
+
+      const isSelected = activeLeadId === lead.id;
+      const hasWebsite = Boolean(lead.website);
+      const position = { lat: lead.latitude, lng: lead.longitude };
+
+      const markerColor = isSelected ? '#3b82f6' : hasWebsite ? '#10b981' : '#f43f5e';
+
+      if (googleMarkersRef.current[lead.id]) {
+        googleMarkersRef.current[lead.id].setPosition(position);
+        googleMarkersRef.current[lead.id].setIcon({
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: isSelected ? 10 : 7,
+          fillColor: markerColor,
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+        });
+      } else {
+        const marker = new google.maps.Marker({
+          position,
+          map,
+          title: lead.name,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: isSelected ? 10 : 7,
+            fillColor: markerColor,
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+          },
+        });
+
+        marker.addListener('click', () => {
+          if (googleInfoWindowRef.current) {
+            googleInfoWindowRef.current.setContent(`
+              <div style="padding: 8px; font-family: system-ui; color: #18181b;">
+                <h4 style="margin: 0 0 2px; font-size: 13px; font-weight: 700;">${lead.name}</h4>
+                <p style="margin: 0 0 4px; font-size: 11px; color: #71717a;">${lead.category}</p>
+                <p style="margin: 0 0 6px; font-size: 10px; color: #a1a1aa; font-style: italic;">${lead.address || ''}</p>
+                <div style="border-top: 1px solid #e4e4e7; padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: ${hasWebsite ? '#d1fae5' : '#ffe4e6'}; color: ${hasWebsite ? '#065f46' : '#9f1239'};">${hasWebsite ? 'HAS WEBSITE' : 'NO WEBSITE'}</span>
+                  ${lead.rating ? `<span style="font-size: 11px; font-weight: 700; color: #d97706;">★ ${lead.rating}</span>` : ''}
+                </div>
+              </div>
+            `);
+            googleInfoWindowRef.current.open(map, marker);
+          }
+          if (onSelectLead) onSelectLead(lead);
+        });
+
+        googleMarkersRef.current[lead.id] = marker;
+      }
+    });
+  }, [leads, activeLeadId, gmapLoaded, onSelectLead]);
+
+  // Pan to active lead on Google Maps
+  useEffect(() => {
+    if (!hasGoogleMapsKey || !gmapLoaded || !googleMapRef.current || !activeLead?.latitude || !activeLead?.longitude) return;
+    googleMapRef.current.panTo({ lat: activeLead.latitude, lng: activeLead.longitude });
+    googleMapRef.current.setZoom(14);
+  }, [activeLeadId, gmapLoaded]);
+
+  const isGoogleMapsActive = hasGoogleMapsKey && gmapLoaded;
+
+  // ─── Leaflet Maps Renderer (default / fallback) ───
+  useEffect(() => {
+    if (isGoogleMapsActive) return; // Skip if Google Maps is active and loaded
     if (!containerRef.current || mapRef.current) return;
 
     // Focus coordinates on the first lead with valid coordinates, or fall back to default center
@@ -49,10 +230,12 @@ export default function MapView({ leads, onSelectLead, activeLeadId }: MapViewPr
         mapRef.current = null;
       }
     };
-  }, []);
+  }, [isGoogleMapsActive]);
 
-  // Sync Markers and Coordinate changes
+  // Sync Leaflet Markers (only when Google Maps is not active)
   useEffect(() => {
+    const isGmaps = hasGoogleMapsKey && gmapLoaded;
+    if (isGmaps) return;
     const map = mapRef.current;
     if (!map) return;
 
@@ -144,10 +327,12 @@ export default function MapView({ leads, onSelectLead, activeLeadId }: MapViewPr
         markersRef.current[lead.id] = marker;
       }
     });
-  }, [leads, activeLeadId, onSelectLead]);
+  }, [leads, activeLeadId, onSelectLead, gmapLoaded]);
 
-  // Autocenter and focus map on active lead when specified
+  // Autocenter and focus Leaflet map on active lead when specified
   useEffect(() => {
+    const isGmaps = hasGoogleMapsKey && gmapLoaded;
+    if (isGmaps) return;
     const map = mapRef.current;
     if (!map || !activeLead || !activeLead.latitude || !activeLead.longitude) return;
 
@@ -164,7 +349,7 @@ export default function MapView({ leads, onSelectLead, activeLeadId }: MapViewPr
         activeMarker.openPopup();
       }, 100);
     }
-  }, [activeLeadId]);
+  }, [activeLeadId, gmapLoaded]);
 
   return (
     <div className="relative flex flex-col w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950">

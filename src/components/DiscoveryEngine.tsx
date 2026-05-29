@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   Search, MapPin, Sparkles, Building2, Phone, Globe, Star, ArrowRight,
   Loader2, Check, Copy, Settings, Calendar, Award, Layout, Plus, CheckCircle, Map,
-  Edit2, Trash2, RotateCcw
+  Edit2, Trash2, RotateCcw, Navigation, MapPin as MapPinIcon, Facebook, Linkedin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lead, SearchQueryConfig } from '../types';
+import { Lead, SearchQueryConfig, LeadSource } from '../types';
 import MapView from './MapView';
 
 interface DiscoveryEngineProps {
@@ -137,7 +137,7 @@ export default function DiscoveryEngine({ onSaveLead, savedLeadNames, onInspectL
       const response = await fetch('/api/leads/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q, location: l }),
+        body: JSON.stringify({ query: q, location: l, source: searchSource }),
       });
       if (!response.ok) throw new Error("Search gateway error.");
       const data = await response.json();
@@ -193,7 +193,21 @@ export default function DiscoveryEngine({ onSaveLead, savedLeadNames, onInspectL
     triggerSearch(targetQ, targetL);
   }, []);
 
+  const [searchSource, setSearchSource] = useState<LeadSource>('ai_search');
   const [savingId, setSavingId] = useState<string | null>(null);
+
+  // Source labels and icons
+  const sourceOptions: { value: LeadSource; label: string; icon: string }[] = [
+    { value: 'ai_search', label: 'AI Search', icon: '🤖' },
+    { value: 'google_maps', label: 'Google Maps', icon: '📍' },
+    { value: 'linkedin', label: 'LinkedIn', icon: '💼' },
+    { value: 'facebook', label: 'Facebook', icon: '👍' }
+  ];
+
+  const getSourceLabel = (source?: LeadSource) => {
+    const opt = sourceOptions.find(o => o.value === source);
+    return opt || { label: 'AI Search', icon: '🤖' };
+  };
 
   const handleSaveToPipeline = async (ld: Lead) => {
     setSavingId(ld.id);
@@ -316,6 +330,26 @@ export default function DiscoveryEngine({ onSaveLead, savedLeadNames, onInspectL
               )}
             </div>
 
+            {/* Source Selector */}
+            <div>
+              <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1">Data Source</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {sourceOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSearchSource(opt.value)}
+                    className={`px-2 py-1.5 border rounded text-center text-[10px] transition-all cursor-pointer ${
+                      searchSource === opt.value
+                        ? 'bg-blue-950/40 text-blue-400 border-blue-900/40 font-semibold'
+                        : 'bg-[#09090B] border-zinc-800 text-zinc-400 hover:bg-zinc-900'
+                    }`}
+                  >
+                    {opt.icon} {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <button
               onClick={() => triggerSearch()}
               disabled={isSearching}
@@ -324,7 +358,7 @@ export default function DiscoveryEngine({ onSaveLead, savedLeadNames, onInspectL
               {isSearching ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  Querying Maps Grounding...
+                  Discovering Prospects...
                 </>
               ) : (
                 <>
@@ -642,7 +676,10 @@ export default function DiscoveryEngine({ onSaveLead, savedLeadNames, onInspectL
                     <div className="space-y-2">
                       <div className="flex items-start justify-between">
                         <div className="max-w-[70%]">
-                          <h4 className="text-xs font-bold text-white truncate" title={ld.name}>{ld.name}</h4>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="text-xs font-bold text-white truncate" title={ld.name}>{ld.name}</h4>
+                            <span className="text-[10px]" title={getSourceLabel(ld.source).label}>{getSourceLabel(ld.source).icon}</span>
+                          </div>
                           <span className="text-[9.5px] text-zinc-300 font-mono tracking-wider block mt-0.5">{ld.category}</span>
                         </div>
                         {/* Digital Score Badge Gauge */}

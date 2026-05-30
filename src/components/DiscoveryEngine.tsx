@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Lead, SearchQueryConfig, LeadSource } from '../types';
 import MapView from './MapView';
+import IndustryPersonaEngine from './IndustryPersonaEngine';
 
 interface DiscoveryEngineProps {
   onSaveLead: (lead: Lead) => Promise<boolean>;
@@ -625,6 +626,9 @@ export default function DiscoveryEngine({ onSaveLead, savedLeadNames, onInspectL
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* AI Agent Persona Activation — shows when search query matches an industry */}
+        {query && <IndustryPersonaEngine searchQuery={query} />}
 
         {searchNotice && (
           <div className="flex items-center gap-2.5 rounded-xl bg-blue-950/40 border border-blue-900/40 px-4 py-2.5 text-xs text-blue-100 font-medium">

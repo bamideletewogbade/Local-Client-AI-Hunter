@@ -115,6 +115,9 @@ export async function generateWithGroq(
 
       console.error('[Groq] All models exhausted for generateWithGroq');
       return null;
+    } catch (err: any) {
+      console.warn('[Groq] Unexpected error in generateWithGroq:', err.message);
+      return null;
     }
 }
 
@@ -174,6 +177,9 @@ export async function chatWithGroq(
       }
 
       console.error('[Groq] All chat models exhausted');
+      return null;
+    } catch (err: any) {
+      console.warn('[Groq] Unexpected error in chatWithGroq:', err.message);
       return null;
     }
 }

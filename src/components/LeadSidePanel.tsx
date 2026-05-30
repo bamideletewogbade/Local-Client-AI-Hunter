@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   X, Sparkles, Building2, Phone, MapPin, Globe, Star, ShieldAlert,
   Loader2, Check, Copy, Settings, Calendar, Award, Layout, Briefcase, FileText,
   Mail, MessageSquare, Linkedin, Send, RefreshCw, AlertCircle, ArrowUpRight,
-  TrendingUp, BarChart3, Target, Clock, PhoneCall, Footprints
+  TrendingUp, BarChart3, Target, Clock, PhoneCall, Footprints, Megaphone, ChevronDown
 } from 'lucide-react';
-import { Lead, BusinessAnalysis, WebDesignProposal, OutreachPitch, OutreachEntry, ScoreBreakdown, BIReport } from '../types';
+import { Lead, BusinessAnalysis, WebDesignProposal, OutreachPitch, OutreachEntry, ScoreBreakdown, BIReport, Campaign, PriorityScore, AgentPersonaType } from '../types';
 import { useAuth } from './AuthContext';
 import ConfirmationDialog from './ConfirmationDialog';
+import PriorityScoreGauge, { generatePriorityScore } from './PriorityScoreGauge';
+import CampaignSequence from './CampaignSequence';
+import CampaignAnalyticsDashboard from './CampaignAnalyticsDashboard';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface LeadSidePanelProps {
   lead: Lead | null;
@@ -18,7 +23,7 @@ interface LeadSidePanelProps {
 
 export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLead }: LeadSidePanelProps) {
   const { user } = useAuth();
-  const [activeSubTab, setActiveSubTab] = useState<'audit' | 'website_offer' | 'outreach' | 'bi_report'>('audit');
+  const [activeSubTab, setActiveSubTab] = useState<'audit' | 'website_offer' | 'outreach' | 'bi_report' | 'campaigns'>('audit');
 
   
   // Action Loading states
@@ -30,6 +35,22 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [whatsappSending, setWhatsappSending] = useState<{ [key: string]: 'idle' | 'sending' | 'sent' | 'delivered' | 'read' | 'failed' }>({});
   const [whatsappConfigured, setWhatsappConfigured] = useState(false);
+
+  // Campaigns state — persisted per lead
+  const [leadCampaigns, setLeadCampaigns] = useLocalStorage<Campaign[]>(`hunter_campaigns_${lead.id}`, []);
+  const [showCampaignAnalytics, setShowCampaignAnalytics] = useState(false);
+  
+  // Priority score — computed from lead data (recomputed on lead change)
+  const [priorityScore, setPriorityScore] = useState<PriorityScore | null>(null);
+  
+  const computePriorityScore = () => {
+    setPriorityScore(generatePriorityScore(lead));
+  };
+
+  // Recompute when lead changes
+  useEffect(() => {
+    setPriorityScore(generatePriorityScore(lead));
+  }, [lead.id, lead.website, lead.rating, lead.phone, lead.address, lead.category, lead.digitalPresenceScore]);
 
   // Check if WhatsApp API is configured on mount
   useEffect(() => {
@@ -397,7 +418,7 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
             Outreach Channels
           </button>
           <button
-            onClick={() => setActiveSubTab('bi_report')}
+            onClick={() => { setActiveSubTab('bi_report'); computePriorityScore(); }}
             className={`flex-1 py-2 text-center text-xs font-bold cursor-pointer border-b-2 transition-all ${
               activeSubTab === 'bi_report'
                 ? 'border-blue-500 text-white bg-blue-500/5'
@@ -405,6 +426,16 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
             }`}
           >
             BI Report
+          </button>
+          <button
+            onClick={() => { setActiveSubTab('campaigns'); computePriorityScore(); }}
+            className={`flex-1 py-2 text-center text-xs font-bold cursor-pointer border-b-2 transition-all ${
+              activeSubTab === 'campaigns'
+                ? 'border-blue-500 text-white bg-blue-500/5'
+                : 'border-transparent text-zinc-500 hover:text-zinc-200'
+            }`}
+          >
+            Campaigns
           </button>
         </div>
 
@@ -830,6 +861,9 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
 
           {activeSubTab === 'bi_report' && (
             <div className="space-y-4">
+              {/* Priority Score Gauge — always shown */}
+              {priorityScore && <PriorityScoreGauge score={priorityScore} />}
+
               {!lead.biReport ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center bg-[#0C0C0E]/50 border border-dashed border-zinc-800 rounded-xl p-5">
                   <BarChart3 className="h-7 w-7 text-blue-400 animate-pulse mb-2" />
@@ -840,6 +874,7 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
                   <button
                     onClick={async () => {
                       setIsAuditing(true);
+                      computePriorityScore();
                       try {
                         // Fetch both score breakdown and BI report in parallel
                         const [scoreResp, biResp] = await Promise.all([
@@ -955,6 +990,70 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Campaign Sequence Tab */}
+          {activeSubTab === 'campaigns' && (
+            <div className="space-y-4">
+              {/* Priority Score always visible */}
+              {priorityScore && <PriorityScoreGauge score={priorityScore} />}
+              
+              {/* Analytics Toggle */}
+              <button
+                onClick={() => setShowCampaignAnalytics(!showCampaignAnalytics)}
+                className="w-full flex items-center justify-between p-3 rounded-xl border border-zinc-800 bg-[#09090B]/50 hover:bg-[#09090B] transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-blue-400" />
+                  <span className="text-[10px] font-bold text-zinc-400 group-hover:text-white transition-colors uppercase tracking-widest">
+                    Campaign Analytics
+                  </span>
+                  <span className="text-[9px] text-zinc-600 font-mono">{leadCampaigns.length} campaigns</span>
+                </div>
+                <motion.span
+                  animate={{ rotate: showCampaignAnalytics ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="h-3.5 w-3.5 text-zinc-500" />
+                </motion.span>
+              </button>
+
+              <AnimatePresence>
+                {showCampaignAnalytics && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <CampaignAnalyticsDashboard campaigns={leadCampaigns} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="rounded-xl border border-zinc-800 bg-[#09090B]/30 p-3.5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Megaphone className="h-3.5 w-3.5 text-blue-400" />
+                  <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                    Multi-Channel Outreach Campaigns
+                  </h4>
+                </div>
+                <CampaignSequence
+                  campaigns={leadCampaigns}
+                  onUpdateCampaign={(updated) => {
+                    setLeadCampaigns(prev => prev.map(c => c.id === updated.id ? updated : c));
+                  }}
+                  onDeleteCampaign={(id) => {
+                    setLeadCampaigns(prev => prev.filter(c => c.id !== id));
+                  }}
+                  onCreateCampaign={(newCampaign) => {
+                    setLeadCampaigns(prev => [...prev, newCampaign]);
+                  }}
+                  assignedLeadIds={[lead.id]}
+                />
+              </div>
             </div>
           )}
         </div>

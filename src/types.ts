@@ -6,6 +6,154 @@ export type LeadSource = 'google_maps' | 'linkedin' | 'facebook' | 'ai_search' |
 
 export type OutreachChannel = 'whatsapp' | 'email' | 'linkedin_dm' | 'physical_visit' | 'phone_call';
 
+// ─── Industry Agent Personas ───
+
+export type AgentPersonaType =
+  | 'ai_receptionist'
+  | 'ai_admissions'
+  | 'ai_property_consultant'
+  | 'ai_booking_agent'
+  | 'ai_support_agent'
+  | 'ai_sales_agent'
+  | 'ai_fitness_coach'
+  | 'ai_beauty_consultant';
+
+export interface AgentPersona {
+  type: AgentPersonaType;
+  name: string;
+  title: string;
+  description: string;
+  industryKeywords: string[];
+  painPoints: string[];
+  solutions: string[];
+  pitchTemplates: {
+    whatsapp: string;
+    email: string;
+    linkedin: string;
+  };
+  pricing: {
+    starter: number;
+    growth: number;
+    premium: number;
+    enterprise: number;
+  };
+  color: string;
+  gradient: string;
+  icon: string;
+}
+
+// ─── Priority Score ───
+
+export interface PriorityScoreFactor {
+  label: string;
+  score: number;
+  maxScore: number;
+  weight: number;
+  description: string;
+}
+
+export interface PriorityScore {
+  overall: number;
+  probabilityOfClosing: number;
+  revenuePotential: number;
+  aiReadiness: number;
+  whatsappDependence: number;
+  easeOfAccess: number;
+  factors: PriorityScoreFactor[];
+}
+
+// ─── Campaign Sequences ───
+
+export interface CampaignStep {
+  id: string;
+  channel: OutreachChannel;
+  delayDays: number;
+  subject: string;
+  message: string;
+  conditions?: {
+    skipIfReplied: boolean;
+    skipIfInterested: boolean;
+  };
+}
+
+export interface CampaignTemplate {
+  id: string;
+  name: string;
+  description: string;
+  industry: string;
+  steps: CampaignStep[];
+  icon: string;
+  color: string;
+  totalDays: number;
+  totalChannels: number;
+}
+
+export interface AutoAdvanceConfig {
+  enabled: boolean;
+  advanceOnReply: boolean;
+  advanceOnNoResponseAfterDays: number | null;
+  suppressOnInterest: boolean;
+}
+
+export interface CampaignHealth {
+  score: number;       // 0-100
+  label: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  color: string;
+  warnings: string[];
+  suggestions: string[];
+}
+
+export interface ChannelEffectiveness {
+  channel: OutreachChannel;
+  totalSteps: number;
+  totalSent: number;
+  totalDelivered: number;
+  totalReplied: number;
+  totalConverted: number;
+  deliveryRate: number;
+  replyRate: number;
+  conversionRate: number;
+}
+
+export interface TrendComparison {
+  period: '7d' | '30d' | 'all';
+  campaignsCreated: number;
+  campaignsCreatedPrev: number;
+  stepsAdded: number;
+  stepsAddedPrev: number;
+  totalSent: number;
+  totalSentPrev: number;
+  totalConverted: number;
+  totalConvertedPrev: number;
+  sentGrowth: number;    // percentage
+  convertedGrowth: number; // percentage
+}
+
+export interface SmartSendTiming {
+  channel: OutreachChannel;
+  recommendedDay: string;
+  recommendedTime: string;
+  reasoning: string;
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  steps: CampaignStep[];
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+  assignedLeadIds: string[];
+  autoAdvance?: AutoAdvanceConfig;
+  stats?: {
+    sent: number;
+    delivered: number;
+    replied: number;
+    converted: number;
+  };
+}
+
 export type OutreachStatus = 'pending' | 'sent' | 'opened' | 'replied' | 'no_response' | 'interested' | 'not_interested';
 
 export interface OutreachEntry {
@@ -94,6 +242,9 @@ export interface Lead {
   webDesignProposal?: WebDesignProposal | null;
   outreachPitch?: OutreachPitch | null;
   biReport?: BIReport | null;
+  priorityScore?: PriorityScore | null;
+  campaignIds?: string[];
+  assignedPersona?: AgentPersonaType | null;
 }
 
 export interface DashboardStats {

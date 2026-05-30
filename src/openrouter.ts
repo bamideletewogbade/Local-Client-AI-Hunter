@@ -107,6 +107,8 @@ export async function generateContent(
       }
 
       console.warn('[OpenRouter] All models exhausted, falling back to Groq...');
+    } catch (err: any) {
+      console.warn('[OpenRouter] Unexpected error, falling back to Groq:', err.message);
     }
   }
 
@@ -185,6 +187,8 @@ export async function generateChatCompletion(
       }
 
       console.warn('[OpenRouter] All chat models exhausted, falling back to Groq...');
+    } catch (err: any) {
+      console.warn('[OpenRouter] Unexpected chat error, falling back to Groq:', err.message);
     }
   }
 

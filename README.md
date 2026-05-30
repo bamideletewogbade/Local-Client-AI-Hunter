@@ -1,10 +1,35 @@
 <div align="center">
-<img width="1200" alt="AI Client Hunter Banner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
 
 # AI Client Hunter — Agentic Lead Discovery & CRM Platform
 
-An AI-powered platform that discovers local businesses, scores their digital maturity, generates proposals, and manages the sales pipeline through a **5-agent orchestration mesh** orchestrated by **Bishop**.
+**Skip cold outreach. Get real local clients.**
+
+An AI-powered platform that discovers local businesses, scores their digital maturity, generates proposals, and manages the sales pipeline through a **5-agent orchestration mesh** orchestrated by **Bishop** — wrapped in a fully dark, cinematic UI.
+
+[**▶ Live demo**](https://local-client-ai-hunter.vercel.app) · [Architecture](#architecture-overview) · [WhatsApp setup](#whatsapp-integration) · [Agentic system](#agentic-system)
+
+<img alt="AI Client Hunter — dark cinematic UI" src="docs/screenshots/home.jpg" width="900" />
+
+</div>
+
+---
+
+## ✨ UI &amp; Design
+
+The whole product runs on a cohesive **dark, cinematic design system** (defined in `src/index.css`):
+
+- **Deep-space canvas** — an ambient aurora + subtle grid backdrop (`cine-shell`) sits behind every view on a near-black `#06070D` base.
+- **Glassmorphism & neon** — frosted glass cards, neon gradient headings (`neon-text` / `.text-gradient`), animated section headers, and glow accents.
+- **Signature palette** — electric **blue · indigo · cyan · violet**, with per-section accent colors (amber for Agents, violet for Analytics, emerald for "won").
+- **Motion** — Framer Motion transitions, a canvas neural-network hero, scan-sweep and aurora animations — all gated behind `prefers-reduced-motion` for accessibility and performance.
+
+### Screenshots
+
+| Discover | Pipeline | Agents |
+|:---:|:---:|:---:|
+| <img alt="Discover" src="docs/screenshots/discover.jpg" /> | <img alt="Pipeline" src="docs/screenshots/pipeline.jpg" /> | <img alt="Agents" src="docs/screenshots/agents.jpg" /> |
+
+> The Discover / Pipeline / Analytics / Agents tabs are data-driven. The shots above are from the **static demo** (frontend only, no API server), so they show the polished empty states. Run locally with `npm run dev` for live data.
 
 ---
 

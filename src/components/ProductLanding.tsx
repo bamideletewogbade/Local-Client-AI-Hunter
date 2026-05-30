@@ -170,74 +170,60 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
   };
 
   return (
-    <div id="product-landing-root" className="bg-[#FAFAFB] text-zinc-900 selection:bg-blue-600/10 selection:text-blue-600 min-h-screen">
+    <div id="product-landing-root" className="relative text-zinc-200 selection:bg-blue-600/30 selection:text-blue-100">
       
-      {/* 🚀 Iconic Hero Section with Float Widget Block & Mosaic Background */}
-      <section className="relative overflow-hidden pt-16 pb-24 border-b border-zinc-200 bg-linear-to-b from-white via-zinc-50/30 to-zinc-100/40">
-        
-        {/* Subtle geometric line design accents in the background */}
-        <div className="absolute inset-0 opacity-40 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full border-x border-dashed border-zinc-200/60" />
-          <div className="absolute top-1/3 left-0 w-full h-px border-t border-dashed border-zinc-200/60" />
+      {/* 🚀 Cinematic Hero — dark, matches the app shell & NeuralFlowHero */}
+      <section className="relative overflow-hidden pt-20 pb-28 border-b border-white/10">
+
+        {/* Ambient cinematic background: grid + drifting glow orbs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #3b82f6 1px, transparent 0)', backgroundSize: '26px 26px' }} />
+          <div className="absolute -top-24 left-1/5 w-[34rem] h-[34rem] bg-blue-600/10 rounded-full blur-[120px] animate-float" />
+          <div className="absolute top-1/4 -right-10 w-[30rem] h-[30rem] bg-indigo-600/10 rounded-full blur-[120px] animate-float-delayed" />
+          <div className="absolute bottom-0 left-1/3 w-[26rem] h-[26rem] bg-cyan-500/[0.07] rounded-full blur-[120px]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:items-center">
           
           {/* Left Column: Bold Copy and Bullet Indicators */}
           <div className="lg:col-span-7 space-y-8 text-left max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200/60 px-3 py-1 text-xs font-semibold text-blue-700">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-blue-400/30 px-3.5 py-1.5 text-xs font-semibold text-blue-300 backdrop-blur-sm glow-ring">
               <Sparkles className="h-3.5 w-3.5 animate-pulse" />
               <span className="font-display tracking-tight">AscendSME · Lumi · Hone · AI Client Finder</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 font-display leading-[1.08]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white font-display leading-[1.05]">
               Skip cold outreach. <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-700">
-                Get real local clients.
-              </span>
+              <span className="neon-text">Get real local clients.</span>
             </h1>
 
-            <p className="text-zinc-600 text-base sm:text-lg font-light leading-relaxed">
-              Why send thousands of spam emails? Our intelligent radar scans Google Maps, diagnoses slow or missing local business websites, and generates customized redesign mockups to win clients directly.
+            <p className="text-zinc-400 text-base sm:text-lg font-light leading-relaxed">
+              Why blast <span className="text-zinc-200 font-medium">thousands of spam emails</span>? Our intelligent radar scans Google Maps, diagnoses slow or missing local-business websites, and generates customized redesign mockups to <span className="text-zinc-200 font-medium">win clients directly</span>.
             </p>
 
-            {/* Quick Iconic 1-2-3 list, inspired by the reference sites */}
-            <div className="space-y-4 pt-2">
-              <div className="flex items-start gap-3">
-                <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  1
+            {/* Quick 1-2-3 list — glass rows with neon step chips */}
+            <div className="space-y-2.5 pt-2">
+              {[
+                { n: '1', t: 'Scan Google Maps directly', d: 'Pick any city or niche to find real, active businesses with poor online presence.' },
+                { n: '2', t: 'Run a smart design audit', d: 'Find exactly what is broken — raw speed, mobile bugs, or dead links.' },
+                { n: '3', t: 'Present direct, beautiful value', d: 'Generate a personalized redesign pitch with layout structures to start high-ticket deals.' },
+              ].map((s) => (
+                <div key={s.n} className="group flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] hover:border-blue-400/20 hover:bg-white/[0.04] p-3 transition-all duration-300">
+                  <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-blue-300 border border-blue-400/30 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                    {s.n}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-zinc-100">{s.t}</p>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{s.d}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-zinc-800">Scan Google Maps directly</p>
-                  <p className="text-xs text-zinc-500">Pick any city or niche to find real, active businesses with poor online presence.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  2
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-zinc-800">Run a smart design audit</p>
-                  <p className="text-xs text-zinc-500">Find exactly what is broken—whether it is raw speed, mobile bugs, or broken website links.</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  3
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-zinc-800">Present direct, beautiful value</p>
-                  <p className="text-xs text-zinc-500">Create a personalized redesign pitch with layout code structures to start high-ticket relationships.</p>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Credibility logos */}
-            <div className="pt-6 border-t border-zinc-200/80">
+            <div className="pt-6 border-t border-white/10">
               <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-400 font-mono mb-3">TRUSTED BY FREELANCERS & AGENCIES WORLDWIDE</p>
-              <div className="flex flex-wrap gap-4 items-center opacity-70">
+              <div className="flex flex-wrap gap-4 items-center opacity-80">
                 <span className="text-xs font-extrabold text-zinc-400 tracking-wider">STRIPE PIONEER</span>
                 <span className="text-zinc-300">•</span>
                 <span className="text-xs font-extrabold text-zinc-400 tracking-wider">SHOPIFY INSIDER</span>
@@ -250,11 +236,13 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
           {/* Right Column: Sleek Floating Action Controller Widget (Classic @levelsio layout) */}
           <div className="lg:col-span-5 relative mt-4 lg:mt-0">
             {/* Soft decorative background glow */}
-            <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl blur-xl opacity-10" />
+            <div className="absolute -inset-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 rounded-[1.75rem] blur-2xl opacity-25 animate-pulse-glow" />
 
             {/* Main Interactive Floating Widget Container */}
-            <div className="relative bg-zinc-900 text-white rounded-3xl border border-zinc-800 shadow-2xl p-6 sm:p-8">
-              
+            <div className="relative overflow-hidden glass-card text-white rounded-3xl shadow-2xl shadow-blue-950/40 p-6 sm:p-8 glow-ring">
+              {/* cinematic scanning sweep */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-blue-500/10 to-transparent animate-scan-sweep" />
+
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -275,7 +263,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
                       Select target niche
                     </label>
-                    <span className="text-[9px] text-zinc-500">Preset or type custom</span>
+                    <span className="text-[9px] text-zinc-400">Preset or type custom</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-2.5">
                     {[
@@ -306,7 +294,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                       onChange={(e) => setSelectedNiche(e.target.value)}
                       list="niche-autocomplete-hero"
                       placeholder="Or type custom niche (e.g. Dentist, Cafe...)"
-                      className="w-full bg-zinc-850 border border-zinc-750 text-zinc-150 placeholder-zinc-600 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-zinc-500 font-medium font-sans"
+                      className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-600 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-zinc-500 font-medium font-sans"
                     />
                     <datalist id="niche-autocomplete-hero">
                       {['Dentist', 'Cafe', 'Restaurant', 'Barber', 'Salon', 'Bakery', 'Hotel', 'School', 'Hospital', 'Gym', 'Pharmacy', 'Clinic', 'Pizza', 'Laundry', 'Auto Repair', 'Plumber', 'Electrician', 'Lawyer', 'Real Estate', 'Daycare', 'Pet Store', 'Supermarket', 'Boutique', 'Spa'].map(niche => (
@@ -340,14 +328,14 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
 
                   {isCustomHeroLocation ? (
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-3 h-3.5 w-3.5 text-zinc-500" />
+                      <MapPin className="absolute left-3 top-3 h-3.5 w-3.5 text-zinc-400" />
                       <input
                         type="text"
                         value={targetCity}
                         onChange={(e) => setTargetCity(e.target.value)}
                         list="city-autocomplete-hero"
                         placeholder="e.g. Accra, Lagos, London..."
-                        className="w-full bg-zinc-850 border border-zinc-750 rounded-xl pl-9 pr-4 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 font-medium"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl pl-9 pr-4 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 font-medium"
                       />
                       <datalist id="city-autocomplete-hero">
                         {ALL_CITIES.map(city => (
@@ -358,7 +346,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] text-zinc-500 block mb-0.5">Country</label>
+                        <label className="text-[9px] text-zinc-400 block mb-0.5">Country</label>
                         <select
                           value={targetCountry}
                           onChange={(e) => {
@@ -369,7 +357,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                               setTargetCity(match.cities[0]);
                             }
                           }}
-                          className="w-full bg-zinc-850 border border-zinc-750 text-zinc-200 rounded-xl text-xs px-2 py-2 cursor-pointer font-sans outline-none focus:border-zinc-600"
+                          className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-xl text-xs px-2 py-2 cursor-pointer font-sans outline-none focus:border-zinc-600"
                         >
                           {COUNTRIES_AND_CITIES.map(c => (
                             <option key={c.code} value={c.code} className="bg-zinc-900 text-zinc-200">
@@ -380,19 +368,19 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                       </div>
 
                       <div>
-                        <label className="text-[9px] text-zinc-500 block mb-0.5">City Hub</label>
+                        <label className="text-[9px] text-zinc-400 block mb-0.5">City Hub</label>
                         <select
                           value={targetCity}
                           onChange={(e) => {
                             setTargetCity(e.target.value);
                           }}
-                          className="w-full bg-zinc-850 border border-zinc-750 text-zinc-200 rounded-xl text-xs px-2 py-2 cursor-pointer font-sans outline-none focus:border-zinc-600"
+                          className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-xl text-xs px-2 py-2 cursor-pointer font-sans outline-none focus:border-zinc-600"
                         >
                           {COUNTRIES_AND_CITIES.find(c => c.code === targetCountry)?.cities.map(ct => (
                             <option key={ct} value={ct} className="bg-zinc-900 text-zinc-200">
                               {ct}
                             </option>
-                          )) || <option value="Accra" className="bg-zinc-900 text-zinc-205">Accra</option>}
+                          )) || <option value="Accra" className="bg-zinc-900 text-zinc-200">Accra</option>}
                         </select>
                       </div>
                     </div>
@@ -421,7 +409,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                 {/* Database Backup indicator link */}
                 <div className="pt-2 flex justify-between items-center text-[10px] font-mono text-zinc-400">
                   <span className="flex items-center gap-1.5">
-                    <Database className="h-3 w-3 text-zinc-500" />
+                    <Database className="h-3 w-3 text-zinc-400" />
                     <span>Mode: {isFirebaseConfigured ? 'Cloud Live Firestore' : 'Offline Local Backup'}</span>
                   </span>
                   {!isFirebaseConfigured && (
@@ -598,7 +586,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                         className={`rounded-xl border py-2 text-[10px] font-bold transition-all cursor-pointer ${
                           discoveryForm.budget === range
                             ? 'bg-emerald-600/15 border-emerald-500/50 text-emerald-300'
-                            : 'bg-zinc-900/60 border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                            : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                         }`}
                       >
                         {range}
@@ -624,7 +612,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                       }, 2000);
                     }}
                     disabled={!discoveryForm.businessName || !discoveryForm.industry || discoveryForm.isSubmitting}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-600 text-white font-bold rounded-xl py-3 text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-blue-600/20 active:scale-[0.98] disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-zinc-800 disabled:to-zinc-800 disabled:text-zinc-400 text-white font-bold rounded-xl py-3 text-xs uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-blue-600/20 active:scale-[0.98] disabled:cursor-not-allowed"
                   >
                     {discoveryForm.isSubmitting ? (
                       <div className="flex items-center justify-center gap-2">
@@ -638,7 +626,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                       </div>
                     )}
                   </button>
-                  <p className="text-[9px] text-zinc-600 mt-2 font-mono text-center">
+                  <p className="text-[9px] text-zinc-400 mt-2 font-mono text-center">
                     {discoveryForm.isComplete ? '✓ Report ready — scroll to Step 3' : 'All fields are optional except Business Name & Industry'}
                   </p>
                 </div>
@@ -678,7 +666,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-zinc-200">{agent.name}</p>
-                        <p className="text-[10px] text-zinc-500 truncate">{agent.detail}</p>
+                        <p className="text-[10px] text-zinc-400 truncate">{agent.detail}</p>
                       </div>
                       <div>
                         {agent.status === 'complete' ? (
@@ -726,7 +714,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                           <p className="text-xs text-zinc-400">{generatedReport.industry} • {generatedReport.location}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] font-mono text-zinc-500">Digital Presence Score</p>
+                          <p className="text-[10px] font-mono text-zinc-400">Digital Presence Score</p>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="h-2 w-24 bg-zinc-800 rounded-full overflow-hidden">
                               <div
@@ -762,14 +750,14 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                             </div>
                             <div>
                               <p className="text-xs font-bold text-zinc-200">{finding.title}</p>
-                              <p className="text-[10px] text-zinc-500">{finding.severity === 'critical' ? '🔴 Critical' : finding.severity === 'high' ? '🟠 High Priority' : '🟡 Improvement'}</p>
+                              <p className="text-[10px] text-zinc-400">{finding.severity === 'critical' ? '🔴 Critical' : finding.severity === 'high' ? '🟠 High Priority' : '🟡 Improvement'}</p>
                             </div>
                           </div>
                           <p className="text-[11px] text-zinc-400 leading-relaxed">{finding.description}</p>
                           <div className="mt-2.5 flex items-center gap-2">
-                            <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase tracking-wider">Fix effort:</span>
+                            <span className="text-[10px] font-bold font-mono text-zinc-400 uppercase tracking-wider">Fix effort:</span>
                             <span className="text-[10px] text-zinc-400">{finding.effort}</span>
-                            <span className="text-zinc-700">•</span>
+                            <span className="text-zinc-300">•</span>
                             <span className="text-[10px] font-bold font-mono text-emerald-500 uppercase tracking-wider">Value: {finding.value}</span>
                           </div>
                         </div>
@@ -788,9 +776,9 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                   </div>
                 ) : (
                   <div className="text-center py-10 bg-zinc-900/20 border border-dashed border-zinc-800 rounded-xl">
-                    <FileText className="h-10 w-10 text-zinc-700 mx-auto mb-3" />
-                    <p className="text-sm text-zinc-500 font-medium">Complete Step 1 to generate a discovery report</p>
-                    <p className="text-[10px] text-zinc-600 mt-1">Fill in the questionnaire and click "Generate Discovery Report"</p>
+                    <FileText className="h-10 w-10 text-zinc-300 mx-auto mb-3" />
+                    <p className="text-sm text-zinc-400 font-medium">Complete Step 1 to generate a discovery report</p>
+                    <p className="text-[10px] text-zinc-400 mt-1">Fill in the questionnaire and click "Generate Discovery Report"</p>
                   </div>
                 )}
               </div>
@@ -800,39 +788,45 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
         </div>
       </section>
 
-      {/* 🚀 Sleek Monetization Checklist Layout (Minimalist Card Tiers) */}
-      <section className="py-24 bg-white border-b border-zinc-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
+      {/* 💎 Pricing — dark cinematic tiers */}
+      <section className="relative overflow-hidden py-24 border-b border-white/10">
+        {/* Ambient background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #8b5cf6 1px, transparent 0)', backgroundSize: '26px 26px' }} />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[42rem] h-[24rem] bg-blue-600/10 rounded-full blur-[130px]" />
+          <div className="absolute bottom-0 right-1/4 w-[26rem] h-[22rem] bg-violet-600/10 rounded-full blur-[120px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 font-mono">Value Tiering</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight text-zinc-900 mt-2">
-              Start finding local leads free
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-emerald-300 font-mono">Value Tiering</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold font-display tracking-tight text-white mt-4">
+              Start finding local leads <span className="neon-text">free</span>
             </h2>
-            <p className="text-sm text-zinc-500 mt-2">
+            <p className="text-sm text-zinc-400 mt-3 leading-relaxed">
               Begin searching local Google Map listings and check their ratings instantly. Upgrade to Pro when you need live Firebase backup, unlimited smart audits, and layout suggestions.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
             
             {/* Tier 1: Free */}
-            <div className="bg-[#FAFAFB] border border-zinc-200 rounded-3xl p-8 flex flex-col justify-between hover:border-zinc-300 transition-all">
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col justify-between hover:border-white/20 transition-all">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-400 font-mono bg-zinc-200 px-2 py-0.5 rounded-md">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-400 font-mono bg-white/10 px-2 py-0.5 rounded-md">
                   Basic
                 </span>
-                <h3 className="text-xl font-bold font-display text-zinc-950 mt-4">Free Starter</h3>
-                <p className="text-zinc-500 text-xs mt-1.5 leading-relaxed">Perfect for freelance web designers starting out locally.</p>
+                <h3 className="text-xl font-bold font-display text-zinc-100 mt-4">Free Starter</h3>
+                <p className="text-zinc-400 text-xs mt-1.5 leading-relaxed">Perfect for freelance web designers starting out locally.</p>
                 
                 <div className="mt-6 flex items-baseline">
-                  <span className="text-3xl font-extrabold font-display text-zinc-950">$0</span>
+                  <span className="text-3xl font-extrabold font-display text-zinc-100">$0</span>
                   <span className="text-zinc-400 text-xs ml-1">/ forever</span>
                 </div>
 
-                <div className="border-t border-zinc-200/60 my-6" />
+                <div className="border-t border-white/10 my-6" />
 
-                <ul className="space-y-3.5 text-xs text-zinc-600">
+                <ul className="space-y-3.5 text-xs text-zinc-400">
                   <li className="flex items-start gap-2.5">
                     <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                     <span>Scan Unlimited Google Map Listings</span>
@@ -857,44 +851,44 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
               <button
                 type="button"
                 onClick={onStartApp}
-                className="w-full rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold py-3 transition-all cursor-pointer text-center mt-8 active:scale-98"
+                className="w-full rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-bold py-3 transition-all cursor-pointer text-center mt-8 active:scale-[0.98]"
               >
                 Start Scanning Free
               </button>
             </div>
 
             {/* Tier 2: Pro */}
-            <div className="bg-white border-2 border-blue-600 rounded-3xl p-8 flex flex-col justify-between relative shadow-xl shadow-blue-600/5 transition-transform hover:scale-[1.01]">
+            <div className="relative overflow-hidden bg-gradient-to-b from-blue-950/40 to-zinc-900/80 border border-blue-500/50 rounded-3xl p-8 flex flex-col justify-between shadow-2xl shadow-blue-600/25 lg:-translate-y-3 glow-ring transition-transform duration-300 hover:-translate-y-4">
               <div className="absolute top-4 right-4 bg-blue-600 text-white text-[9px] uppercase font-bold tracking-widest font-mono rounded-full px-2.5 py-1">
                 Best Choice
               </div>
 
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-blue-600 font-mono bg-blue-50 px-2.5 py-1 rounded-md">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-blue-300 font-mono bg-blue-500/15 px-2.5 py-1 rounded-md">
                   Professional
                 </span>
-                <h3 className="text-xl font-bold font-display text-zinc-950 mt-4">Pro Hunter</h3>
-                <p className="text-zinc-500 text-xs mt-1.5 leading-relaxed">Advanced tools for busy designers and agency builders.</p>
+                <h3 className="text-xl font-bold font-display text-zinc-100 mt-4">Pro Hunter</h3>
+                <p className="text-zinc-400 text-xs mt-1.5 leading-relaxed">Advanced tools for busy designers and agency builders.</p>
                 
                 <div className="mt-6 flex items-baseline">
-                  <span className="text-3xl font-extrabold font-display text-zinc-950">$29</span>
+                  <span className="text-3xl font-extrabold font-display text-zinc-100">$29</span>
                   <span className="text-zinc-400 text-xs ml-1 font-sans">/ month</span>
                 </div>
 
-                <div className="border-t border-zinc-200/60 my-6" />
+                <div className="border-t border-white/10 my-6" />
 
-                <ul className="space-y-3.5 text-xs text-zinc-600 font-medium">
+                <ul className="space-y-3.5 text-xs text-zinc-400 font-medium">
                   <li className="flex items-start gap-2.5">
                     <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span className="text-zinc-950"><strong>Everything in Free</strong></span>
+                    <span className="text-zinc-100"><strong>Everything in Free</strong></span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span className="text-zinc-950"><strong>Unlimited smart audits</strong> (find website flaws and checklist improvements)</span>
+                    <span className="text-zinc-100"><strong>Unlimited smart audits</strong> (find website flaws and checklist improvements)</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span className="text-zinc-950"><strong>Live Cloud Database integration</strong> (save data securely to backup)</span>
+                    <span className="text-zinc-100"><strong>Live Cloud Database integration</strong> (save data securely to backup)</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -917,22 +911,22 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
             </div>
 
             {/* Tier 3: Agency */}
-            <div className="bg-[#FAFAFB] border border-zinc-200 rounded-3xl p-8 flex flex-col justify-between hover:border-zinc-300 transition-all">
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col justify-between hover:border-white/20 transition-all">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-400 font-mono bg-zinc-200 px-2 py-0.5 rounded-md">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-400 font-mono bg-white/10 px-2 py-0.5 rounded-md">
                   Scale
                 </span>
-                <h3 className="text-xl font-bold font-display text-zinc-950 mt-4">Agency Plan</h3>
-                <p className="text-zinc-500 text-xs mt-1.5 leading-relaxed">Built for teams and busy agencies scaling client acquisition.</p>
+                <h3 className="text-xl font-bold font-display text-zinc-100 mt-4">Agency Plan</h3>
+                <p className="text-zinc-400 text-xs mt-1.5 leading-relaxed">Built for teams and busy agencies scaling client acquisition.</p>
                 
                 <div className="mt-6 flex items-baseline">
-                  <span className="text-3xl font-extrabold font-display text-zinc-950">$89</span>
+                  <span className="text-3xl font-extrabold font-display text-zinc-100">$89</span>
                   <span className="text-zinc-400 text-xs ml-1">/ month</span>
                 </div>
 
-                <div className="border-t border-zinc-200/60 my-6" />
+                <div className="border-t border-white/10 my-6" />
 
-                <ul className="space-y-3.5 text-xs text-zinc-600">
+                <ul className="space-y-3.5 text-xs text-zinc-400">
                   <li className="flex items-start gap-2.5">
                     <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                     <span><strong>Everything in Pro</strong></span>
@@ -955,7 +949,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
               <button
                 type="button"
                 onClick={onStartApp}
-                className="w-full rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold py-3 transition-all cursor-pointer text-center mt-8 active:scale-98"
+                className="w-full rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-bold py-3 transition-all cursor-pointer text-center mt-8 active:scale-[0.98]"
               >
                 Contact Agency Sales
               </button>
@@ -966,14 +960,14 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
       </section>
 
       {/* 💌 Bottom Footer */}
-      <footer className="py-16 border-t border-zinc-200 bg-zinc-50/50">
+      <footer className="py-16 border-t border-white/10 bg-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex flex-col items-center justify-center gap-6">
             
             {/* Attribution */}
             <div className="space-y-1">
-              <p className="text-zinc-800 text-[11px] font-bold tracking-widest uppercase font-sans">
-                Built with ❤️ by <span className="text-blue-600 hover:underline">Bamidele Tewogbade</span>
+              <p className="text-zinc-200 text-[11px] font-bold tracking-widest uppercase font-sans">
+                Built with ❤️ by <span className="text-blue-300 hover:underline">Bamidele Tewogbade</span>
               </p>
               <p className="text-[10px] text-zinc-400 font-light max-w-md mx-auto">
                 Helping modern agencies target, discover, analyze, and automate local client contracts seamlessly across the full project portfolio.
@@ -984,7 +978,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <a 
                 href="mailto:bishoptewogbade@gmail.com" 
-                className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-blue-600 transition-colors font-medium border border-zinc-200 px-3 py-1.5 bg-white rounded-full shadow-xs"
+                className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-blue-200 transition-colors font-medium border border-white/10 px-3 py-1.5 bg-zinc-900/70 rounded-full shadow-xs"
                 title="Send official email"
               >
                 <Mail className="h-3.5 w-3.5 text-blue-500" />
@@ -996,7 +990,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                   href="https://twitter.com/btewogbade" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="p-2 text-zinc-500 hover:text-sky-500 hover:border-sky-200 transition-all border border-zinc-200 bg-white rounded-full shadow-xs flex items-center justify-center"
+                  className="p-2 text-zinc-400 hover:text-sky-500 hover:border-sky-400/50 transition-all border border-white/10 bg-zinc-900/70 rounded-full shadow-xs flex items-center justify-center"
                   title="Follow Bamidele on Twitter"
                 >
                   <Twitter className="h-4 w-4" />
@@ -1006,7 +1000,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                   href="https://linkedin.com/in/btewogbade" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="p-2 text-zinc-500 hover:text-blue-700 hover:border-blue-200 transition-all border border-zinc-200 bg-white rounded-full shadow-xs flex items-center justify-center"
+                  className="p-2 text-zinc-400 hover:text-blue-200 hover:border-blue-400/50 transition-all border border-white/10 bg-zinc-900/70 rounded-full shadow-xs flex items-center justify-center"
                   title="Connect on LinkedIn"
                 >
                   <Linkedin className="h-4 w-4" />
@@ -1015,8 +1009,8 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
             </div>
 
             {/* Platform Brand */}
-            <div className="pt-4 border-t border-zinc-200/80 w-full max-w-sm">
-              <p className="text-[10px] font-extrabold tracking-wider text-zinc-450 font-mono uppercase">
+            <div className="pt-4 border-t border-white/10 w-full max-w-sm">
+              <p className="text-[10px] font-extrabold tracking-wider text-zinc-400 font-mono uppercase">
                 AscendSME · Lumi · Hone · AI Client Finder © {new Date().getFullYear()}
               </p>
             </div>
@@ -1079,7 +1073,7 @@ function DiscoveryStep({
               {subtitle}
             </span>
           </div>
-          <p className="text-[11px] text-zinc-500 font-light mt-0.5 max-w-xl">{description}</p>
+          <p className="text-[11px] text-zinc-400 font-light mt-0.5 max-w-xl">{description}</p>
         </div>
         <button
           type="button"
@@ -1115,7 +1109,7 @@ function DiscoveryStep({
               </div>
               <div>
                 <p className="text-xs font-bold text-zinc-200">{title}</p>
-                <p className="text-[10px] text-zinc-500">{subtitle}</p>
+                <p className="text-[10px] text-zinc-400">{subtitle}</p>
               </div>
             </div>
             {children}

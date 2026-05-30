@@ -11,8 +11,8 @@
 }
 
 body {
-  background-color: #FAFAFB;
-  color: #18181B;
+  background-color: #06070D;
+  color: #E4E4E7;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -49,21 +49,22 @@ body {
   box-shadow: 0 0 12px rgba(59, 130, 246, 0.1);
 }
 
-/* Custom premium scrollbar (light) */
+/* Custom premium scrollbar (dark, global) */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAFAFB;
+  background: #0A0B12;
 }
 ::-webkit-scrollbar-thumb {
-  background: #E4E4E7;
+  background: #27272A;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #D4D4D8;
+  background: #3F3F46;
 }
+html { scrollbar-color: #27272A #0A0B12; }
 
 /* Dark premium scrollbar — refined for polished dark UIs */
 .dark-scrollbar::-webkit-scrollbar {
@@ -366,4 +367,150 @@ body {
   font-family: 'JetBrains Mono', monospace;
   border: 1px solid rgba(255,255,255,0.1);
   background: rgba(0,0,0,0.3);
+}
+
+/* ════════════════════════════════════════════════════════════
+   CINEMATIC DESIGN SYSTEM — shared dark/neon language so every
+   working view matches the Home hero + agent-flow aesthetic.
+   ════════════════════════════════════════════════════════════ */
+
+/* App shell: layered deep-space canvas with a slow aurora + grid.
+   Pseudo-layers are fixed and pointer-events:none; page content
+   should sit in a `relative z-10` container above them. */
+.cine-shell {
+  position: relative;
+  background:
+    radial-gradient(1200px 620px at 12% -12%, rgba(37, 99, 235, 0.16), transparent 60%),
+    radial-gradient(1100px 720px at 112% 6%, rgba(139, 92, 246, 0.13), transparent 55%),
+    radial-gradient(900px 640px at 50% 124%, rgba(6, 182, 212, 0.10), transparent 60%),
+    #06070D;
+}
+.cine-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 25%, transparent 80%);
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 25%, transparent 80%);
+}
+.cine-shell::after {
+  content: '';
+  position: fixed;
+  inset: -25%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 38% at 18% 28%, rgba(59, 130, 246, 0.12), transparent 70%),
+    radial-gradient(34% 34% at 82% 18%, rgba(168, 85, 247, 0.11), transparent 70%),
+    radial-gradient(42% 42% at 62% 82%, rgba(6, 182, 212, 0.09), transparent 70%);
+  filter: blur(36px);
+  animation: aurora-drift 24s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes aurora-drift {
+  0%   { transform: translate3d(-3%, -2%, 0) scale(1); }
+  50%  { transform: translate3d(2%, 3%, 0) scale(1.08); }
+  100% { transform: translate3d(3%, -1%, 0) scale(1.04); }
+}
+
+/* Frosted glass surface for cards/panels on the dark canvas */
+.glass-card {
+  background: linear-gradient(180deg, rgba(24, 24, 31, 0.72), rgba(10, 11, 18, 0.72));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 40px -12px rgba(0, 0, 0, 0.6);
+}
+.glass-card-hover {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.glass-card-hover:hover {
+  transform: translateY(-3px);
+  border-color: rgba(96, 165, 250, 0.35);
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.12), 0 18px 50px -16px rgba(37, 99, 235, 0.35);
+}
+
+/* Cinematic section header band (echoes the home hero panels) */
+.cine-header {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(37, 99, 235, 0.14), transparent 55%),
+    linear-gradient(180deg, rgba(18, 18, 24, 0.9), rgba(8, 9, 14, 0.9));
+}
+.cine-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0);
+  background-size: 22px 22px;
+  opacity: 0.5;
+  -webkit-mask-image: linear-gradient(90deg, #000, transparent 80%);
+  mask-image: linear-gradient(90deg, #000, transparent 80%);
+}
+
+/* Neon gradient text (heading accent) */
+.neon-text {
+  background: linear-gradient(135deg, #93C5FD 0%, #A78BFA 50%, #67E8F9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animated gradient underline for active section titles */
+.neon-underline {
+  position: relative;
+}
+.neon-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, #60A5FA, #A78BFA, transparent);
+  background-size: 200% 100%;
+  animation: shimmer 3.5s linear infinite;
+  border-radius: 999px;
+}
+
+/* Soft neon ring used on key CTAs / focused cards */
+.glow-ring {
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25), 0 0 24px -6px rgba(59, 130, 246, 0.45);
+}
+
+/* Conic spinning border accent (e.g., live/scanning state) */
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spin-slow 8s linear infinite; }
+
+/* Scanning sweep line for discovery/agent states */
+@keyframes scan-sweep {
+  0% { transform: translateY(-100%); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateY(220%); opacity: 0; }
+}
+.animate-scan-sweep { animation: scan-sweep 2.4s ease-in-out infinite; }
+
+/* Accessibility + performance: respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .cine-shell::after,
+  .animate-float,
+  .animate-float-delayed,
+  .animate-pulse-glow,
+  .animate-shimmer,
+  .animate-border-dance,
+  .animate-spin-slow,
+  .animate-scan-sweep,
+  .neon-underline::after {
+    animation: none !important;
+  }
+  * { scroll-behavior: auto !important; }
 }

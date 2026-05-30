@@ -110,13 +110,13 @@ function SimpleMarkdownRenderer({ content }: { content: string }) {
         const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
         
         return (
-          <li key={idx} className="flex items-start gap-2.5 text-xs text-zinc-700 leading-relaxed font-sans">
+          <li key={idx} className="flex items-start gap-2.5 text-xs text-zinc-300 leading-relaxed font-sans">
             <span className="h-1.5 w-1.5 rounded-full bg-blue-600 mt-2 shrink-0"></span>
             <div className="flex-1">
               {parts.map((part, pIdx) => {
                 if (part.startsWith('**') && part.endsWith('**')) {
                   return (
-                    <strong key={pIdx} className="font-bold text-zinc-950 font-sans mr-0.5">
+                    <strong key={pIdx} className="font-bold text-zinc-100 font-sans mr-0.5">
                       {part.slice(2, -2)}
                     </strong>
                   );
@@ -567,19 +567,19 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
       label: 'New Opportunities', 
       shortLabel: 'New', 
       emoji: '🆕', 
-      color: 'border-slate-205 border-slate-200 bg-slate-50/40', 
-      badgeColor: 'bg-slate-100 text-slate-700 border-slate-200/80',
-      headerColor: 'border-slate-200/80 bg-slate-50/40',
-      indicatorColor: 'bg-slate-400'
+      color: 'border-white/10 border-white/10 bg-white/5', 
+      badgeColor: 'bg-white/10 text-zinc-300 border-white/10',
+      headerColor: 'border-white/10 bg-white/5',
+      indicatorColor: 'bg-zinc-600'
     },
     { 
       id: 'contacted', 
       label: 'Outreach Sent', 
       shortLabel: 'Outreach', 
       emoji: '🔄', 
-      color: 'border-amber-200/60 bg-amber-50/30', 
-      badgeColor: 'bg-amber-100/80 text-amber-800 border-amber-200/60',
-      headerColor: 'border-amber-200/50 bg-amber-50/10',
+      color: 'border-amber-500/30 bg-amber-500/15', 
+      badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+      headerColor: 'border-amber-500/30 bg-amber-500/15',
       indicatorColor: 'bg-amber-500'
     },
     { 
@@ -587,9 +587,9 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
       label: 'Replied Back', 
       shortLabel: 'Replied', 
       emoji: '💬', 
-      color: 'border-purple-200/60 bg-purple-50/30', 
-      badgeColor: 'bg-purple-100/80 text-purple-750 text-purple-705 text-purple-700 border-purple-200/60',
-      headerColor: 'border-purple-200/50 bg-purple-50/10',
+      color: 'border-purple-500/30 bg-purple-500/15', 
+      badgeColor: 'bg-purple-500/20 text-purple-300 text-purple-705 text-purple-300 border-purple-500/30',
+      headerColor: 'border-purple-500/30 bg-purple-500/15',
       indicatorColor: 'bg-purple-500'
     },
     { 
@@ -597,9 +597,9 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
       label: 'Meeting Booked', 
       shortLabel: 'Meeting', 
       emoji: '🔥', 
-      color: 'border-emerald-200/60 bg-emerald-50/30', 
-      badgeColor: 'bg-emerald-100/80 text-emerald-800 border-emerald-200/60',
-      headerColor: 'border-emerald-200/50 bg-emerald-50/10',
+      color: 'border-emerald-500/30 bg-emerald-500/15', 
+      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      headerColor: 'border-emerald-500/30 bg-emerald-500/15',
       indicatorColor: 'bg-emerald-500'
     },
     { 
@@ -607,18 +607,18 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
       label: 'Closed Won', 
       shortLabel: 'Closed', 
       emoji: '💼', 
-      color: 'border-blue-200/70 bg-blue-50/40', 
-      badgeColor: 'bg-blue-100/70 text-blue-800 border-blue-200/60',
-      headerColor: 'border-blue-200/50 bg-blue-50/10',
+      color: 'border-blue-500/30 bg-blue-500/15', 
+      badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+      headerColor: 'border-blue-500/30 bg-blue-500/15',
       indicatorColor: 'bg-blue-600'
     }
   ];
 
   const getServiceLabel = (type: Lead['serviceType']) => {
     switch (type) {
-      case 'web_design': return { text: '🎨 Web Design Offer', style: 'text-amber-800 bg-amber-50 border-amber-200/50' };
-      case 'ai_automation': return { text: '🤖 AI Automation', style: 'text-sky-700 bg-sky-50 border-sky-200/50' };
-      case 'hybrid': return { text: '💠 Hybrid Bundle', style: 'text-indigo-700 bg-indigo-50 border-indigo-200/50' };
+      case 'web_design': return { text: '🎨 Web Design Offer', style: 'text-amber-300 bg-amber-500/15 border-amber-500/30' };
+      case 'ai_automation': return { text: '🤖 AI Automation', style: 'text-sky-300 bg-sky-500/15 border-sky-500/30' };
+      case 'hybrid': return { text: '💠 Hybrid Bundle', style: 'text-indigo-300 bg-indigo-500/15 border-indigo-500/30' };
     }
   };
 
@@ -783,6 +783,42 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
   return (
     <div id="crm-pipeline-matrix" className="space-y-4">
+      {/* Cinematic section header — matches Home hero / Discovery / Analytics */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="cine-header p-5"
+      >
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-600/30 ring-1 ring-blue-400/30">
+              <Briefcase className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold font-display text-white tracking-tight">
+                Pipeline <span className="neon-text">Command</span>
+              </h2>
+              <p className="text-[11px] text-zinc-400 font-mono">
+                Move deals through the funnel · {leads.length} prospect{leads.length === 1 ? '' : 's'} in play
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5">
+            {[
+              { label: 'Total', value: leads.length, color: 'text-blue-300' },
+              { label: 'No Website', value: leads.filter(l => !l.website).length, color: 'text-rose-300' },
+              { label: 'Closed Won', value: leads.filter(l => l.status === 'closed').length, color: 'text-emerald-300' },
+            ].map((s) => (
+              <div key={s.label} className="glass-card rounded-xl px-3.5 py-2 text-center min-w-[78px]">
+                <p className={`text-xl font-bold font-display ${s.color}`}>{s.value}</p>
+                <p className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
       {/* Revert last import batch processing loader banner */}
       <AnimatePresence>
         {isRevertingBatch && (
@@ -791,18 +827,18 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-center justify-between text-zinc-900 leading-normal"
+            className="bg-rose-500/15 border border-rose-500/30 rounded-xl p-4 flex items-center justify-between text-zinc-100 leading-normal"
           >
             <div className="flex items-center gap-3">
-              <div className="relative h-9 w-9 flex items-center justify-center bg-rose-100 rounded-full border border-rose-200">
-                <Trash2 className="h-4 w-4 text-rose-600 animate-pulse" />
+              <div className="relative h-9 w-9 flex items-center justify-center bg-rose-500/20 rounded-full border border-rose-500/30">
+                <Trash2 className="h-4 w-4 text-rose-300 animate-pulse" />
               </div>
               <div className="space-y-0.5">
-                <h4 className="text-xs font-sans font-black text-rose-900 uppercase tracking-wider">Reverting Last Import Batch</h4>
-                <p className="text-[10.5px] text-rose-700">Deleting imported customer prospects and purging pipeline entries ({revertProgress}% completed)...</p>
+                <h4 className="text-xs font-sans font-black text-rose-300 uppercase tracking-wider">Reverting Last Import Batch</h4>
+                <p className="text-[10.5px] text-rose-300">Deleting imported customer prospects and purging pipeline entries ({revertProgress}% completed)...</p>
               </div>
             </div>
-            <div className="w-32 bg-rose-100 rounded-full h-2 overflow-hidden border border-rose-200">
+            <div className="w-32 bg-rose-500/20 rounded-full h-2 overflow-hidden border border-rose-500/30">
               <div className="bg-rose-600 h-full transition-all duration-200 ease-out" style={{ width: `${revertProgress}%` }} />
             </div>
           </motion.div>
@@ -810,7 +846,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
       </AnimatePresence>
 
       {/* Dynamic Text-based Prospect Search Bar */}
-      <div id="crm-search-bar" className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white border border-zinc-200/85 p-3 rounded-xl shadow-sm">
+      <div id="crm-search-bar" className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-zinc-900/70 border border-white/10 p-3 rounded-xl shadow-sm">
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <Search className="h-4 w-4 text-zinc-400" />
@@ -821,7 +857,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search prospects by name, industry category, or tags..."
-            className="w-full text-xs font-medium text-zinc-800 bg-zinc-50/50 hover:bg-zinc-50 focus:bg-white border border-zinc-200 focus:border-blue-500 rounded-xl pl-8.5 pr-10 py-2.5 transition-all outline-none focus:ring-1 focus:ring-blue-500/10 placeholder-zinc-400"
+            className="w-full text-xs font-medium text-zinc-200 bg-white/5 hover:bg-white/5 focus:bg-zinc-900/70 border border-white/10 focus:border-blue-500 rounded-xl pl-8.5 pr-10 py-2.5 transition-all outline-none focus:ring-1 focus:ring-blue-500/10 placeholder-zinc-400"
           />
           {searchQuery && (
             <button
@@ -830,7 +866,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
               className="absolute inset-y-0 right-0 flex items-center pr-3 group cursor-pointer"
               title="Clear search"
             >
-              <span className="p-1 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-rose-600 transition-colors">
+              <span className="p-1 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-rose-200 transition-colors">
                 <X className="h-3 w-3" />
               </span>
             </button>
@@ -839,7 +875,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
         
         {searchQuery && (
           <div className="flex items-center justify-between sm:justify-end gap-2.5 px-1 sm:px-0 animate-fade-in">
-            <span className="text-[10.5px] font-sans font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1.5 rounded-lg whitespace-nowrap">
+            <span className="text-[10.5px] font-sans font-bold text-blue-300 bg-blue-500/15 border border-blue-500/30 px-2.5 py-1.5 rounded-lg whitespace-nowrap">
               Found {filteredLeads.length} of {leads.length} matches
             </span>
           </div>
@@ -847,10 +883,10 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
       </div>
 
       {/* Short Pipeline Summary stats row / Sort Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-zinc-200/80 px-4 py-3 rounded-xl shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-900/70 border border-white/10 px-4 py-3 rounded-xl shadow-sm">
         <div className="flex items-center gap-2">
-          <CalendarRange className="h-4 w-4 text-blue-600" />
-          <span className="text-xs font-sans font-bold text-zinc-700 tracking-wide uppercase">Pipeline Deal Progression</span>
+          <CalendarRange className="h-4 w-4 text-blue-300" />
+          <span className="text-xs font-sans font-bold text-zinc-300 tracking-wide uppercase">Pipeline Deal Progression</span>
         </div>
         
         <div id="crm-sort-controls" className="flex flex-wrap items-center gap-2.5 self-end sm:self-auto">
@@ -862,12 +898,12 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                   id="crm-column-filter-btn"
                   type="button"
                   onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-zinc-200 hover:border-zinc-300 text-zinc-705 text-zinc-700 hover:text-zinc-900 transition-all text-[11px] font-sans font-bold uppercase cursor-pointer tracking-wider shadow-xs"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-900/70 border border-white/10 hover:border-white/20 text-zinc-300 text-zinc-300 hover:text-white transition-all text-[11px] font-sans font-bold uppercase cursor-pointer tracking-wider shadow-xs"
                   title="Filter Pipeline stage columns"
                 >
-                  <Filter className="h-3.5 w-3.5 text-blue-600" />
+                  <Filter className="h-3.5 w-3.5 text-blue-300" />
                   <span>Stages:</span>
-                  <span className="bg-blue-50 text-blue-700 px-1.5 py-px rounded text-[10px] font-mono leading-none border border-blue-200/80 font-black">
+                  <span className="bg-blue-500/15 text-blue-300 px-1.5 py-px rounded text-[10px] font-mono leading-none border border-blue-500/30 font-black">
                     {visibleColumns.length}/5
                   </span>
                   <ChevronDown className={`h-3 w-3 text-zinc-400 transition-transform duration-200 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
@@ -880,14 +916,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                       onClick={() => setIsFilterDropdownOpen(false)} 
                     />
                     
-                    <div className="absolute right-0 mt-1.5 w-56 rounded-xl border border-zinc-200 bg-white py-2 shadow-xl z-20 animate-fade-in">
-                      <div className="px-3 py-1.5 border-b border-zinc-150 flex items-center justify-between text-[9px] font-sans font-black text-zinc-400 uppercase tracking-widest bg-zinc-50">
+                    <div className="absolute right-0 mt-1.5 w-56 rounded-xl border border-white/10 bg-zinc-900/70 py-2 shadow-xl z-20 animate-fade-in">
+                      <div className="px-3 py-1.5 border-b border-white/10 flex items-center justify-between text-[9px] font-sans font-black text-zinc-400 uppercase tracking-widest bg-white/5">
                         <span>Column Visibility</span>
                         <div className="flex gap-2">
                           <button
                             type="button"
                             onClick={() => setVisibleColumns(['new', 'contacted', 'replied', 'interested', 'closed'])}
-                            className="text-[9px] font-bold text-blue-600 hover:text-blue-700 uppercase cursor-pointer hover:underline"
+                            className="text-[9px] font-bold text-blue-300 hover:text-blue-200 uppercase cursor-pointer hover:underline"
                           >
                             all
                           </button>
@@ -895,7 +931,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                           <button
                             type="button"
                             onClick={() => setVisibleColumns(['contacted', 'replied', 'interested'])}
-                            className="text-[9px] font-bold text-amber-600 hover:text-amber-700 uppercase cursor-pointer hover:underline"
+                            className="text-[9px] font-bold text-amber-300 hover:text-amber-200 uppercase cursor-pointer hover:underline"
                             title="Hide New opportunities and Closed Won stages"
                           >
                             active
@@ -919,13 +955,13 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                     setVisibleColumns([...visibleColumns, col.id]);
                                 }
                               }}
-                              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[10.5px] font-sans font-medium transition-colors hover:bg-zinc-50 text-left cursor-pointer text-zinc-700 hover:text-zinc-950"
+                              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[10.5px] font-sans font-medium transition-colors hover:bg-white/5 text-left cursor-pointer text-zinc-300 hover:text-white"
                             >
                               <div className="flex items-center gap-2">
                                 <span className="text-xs select-none">{col.emoji}</span>
-                                <span className="font-sans font-semibold text-zinc-800">{col.shortLabel}</span>
+                                <span className="font-sans font-semibold text-zinc-200">{col.shortLabel}</span>
                               </div>
-                              <div className={`h-4 w-4 rounded border flex items-center justify-center transition-all shadow-xs ${isChecked ? 'bg-blue-600 border-blue-500 text-white' : 'border-zinc-200 bg-white'}`}>
+                              <div className={`h-4 w-4 rounded border flex items-center justify-center transition-all shadow-xs ${isChecked ? 'bg-blue-600 border-blue-500 text-white' : 'border-white/10 bg-zinc-900/70'}`}>
                                 {isChecked && <Check className="h-2.5 w-2.5 stroke-[3]" />}
                               </div>
                             </button>
@@ -937,7 +973,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                 )}
               </div>
 
-              <div className="h-4 w-px bg-zinc-200 self-center hidden sm:block" />
+              <div className="h-4 w-px bg-white/10 self-center hidden sm:block" />
 
               <span className="text-[10px] text-zinc-400 font-sans font-bold uppercase tracking-wider">Sort List:</span>
               
@@ -946,7 +982,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                   id="crm-sort-select"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="appearance-none bg-white border border-zinc-200 rounded-lg px-3 py-1.5 pr-8 text-[11px] font-medium text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer"
+                  className="appearance-none bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 pr-8 text-[11px] font-medium text-zinc-300 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/50 cursor-pointer"
                 >
                   <option value="date_added">📅 Date Added</option>
                   <option value="digital_maturity">📊 Digital Maturity</option>
@@ -962,11 +998,11 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
               <button
                 id="crm-sort-order-btn"
                 onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                className="flex items-center justify-center p-1.5 rounded-lg bg-white border border-zinc-200 hover:border-zinc-300 text-zinc-500 hover:text-zinc-90 w-fit transition-colors cursor-pointer text-xs gap-1 px-2.5"
+                className="flex items-center justify-center p-1.5 rounded-lg bg-zinc-900/70 border border-white/10 hover:border-white/20 text-zinc-400 hover:text-white w-fit transition-colors cursor-pointer text-xs gap-1 px-2.5"
                 title={sortOrder === 'asc' ? 'Ascending Order' : 'Descending Order'}
               >
-                <ArrowUpDown className="h-3 w-3 text-blue-600" />
-                <span className="text-[9px] uppercase font-mono font-bold text-zinc-600">{sortOrder}</span>
+                <ArrowUpDown className="h-3 w-3 text-blue-300" />
+                <span className="text-[9px] uppercase font-mono font-bold text-zinc-400">{sortOrder}</span>
               </button>
             </>
           )}
@@ -984,7 +1020,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
             id="crm-header-import-csv-btn"
             type="button"
             onClick={() => document.getElementById('crm-csv-import-file-input')?.click()}
-            className="flex items-center justify-center p-1.5 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 hover:border-emerald-300 text-emerald-750 text-emerald-700 hover:text-emerald-800 transition-all cursor-pointer text-xs gap-1.5 border-dashed"
+            className="flex items-center justify-center p-1.5 px-2.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 hover:border-emerald-400/50 text-emerald-300 text-emerald-300 hover:text-emerald-200 transition-all cursor-pointer text-xs gap-1.5 border-dashed"
             title="Import prospects from a CSV spreadsheet file"
           >
             <Upload className="h-3.5 w-3.5" />
@@ -997,10 +1033,10 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
               type="button"
               disabled={isRevertingBatch}
               onClick={handleRevertLastImport}
-              className="flex items-center justify-center p-1.5 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 hover:border-rose-300 text-rose-750 text-rose-700 hover:text-rose-800 transition-all cursor-pointer text-xs gap-1.5 border-dashed disabled:opacity-40"
+              className="flex items-center justify-center p-1.5 px-2.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 hover:border-rose-400/50 text-rose-300 text-rose-300 hover:text-rose-200 transition-all cursor-pointer text-xs gap-1.5 border-dashed disabled:opacity-40"
               title={`Permanent rollback for all ${latestBatch.leads.length} leads imported on ${new Date(latestBatch.timestamp).toLocaleString()}`}
             >
-              <Trash2 className={`h-3.5 w-3.5 text-rose-600 ${isRevertingBatch ? 'animate-pulse' : ''}`} />
+              <Trash2 className={`h-3.5 w-3.5 text-rose-300 ${isRevertingBatch ? 'animate-pulse' : ''}`} />
               <span className="text-[9px] uppercase font-bold tracking-wider">
                 {isRevertingBatch ? `Reverting (${revertProgress}%)` : `Revert Last Import (${latestBatch.leads.length})`}
               </span>
@@ -1011,7 +1047,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
             <button
               id="crm-export-csv-btn"
               onClick={handleExportToCsv}
-              className="flex items-center justify-center p-1.5 px-2.5 rounded-lg bg-blue-50/50 hover:bg-blue-55 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 text-blue-700 hover:text-blue-800 transition-all duration-155 cursor-pointer text-xs gap-1.5 border-dashed"
+              className="flex items-center justify-center p-1.5 px-2.5 rounded-lg bg-blue-500/15 hover:bg-blue-55 hover:bg-blue-500/25 border border-blue-500/30 hover:border-blue-400/50 text-blue-300 hover:text-blue-200 transition-all duration-155 cursor-pointer text-xs gap-1.5 border-dashed"
               title="Export all sorted leads to CSV"
             >
               <Download className="h-3.5 w-3.5" />
@@ -1022,10 +1058,10 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
       </div>
 
       {leads.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-14 text-center bg-white border border-zinc-200/80 rounded-xl shadow-xs">
+        <div className="flex flex-col items-center justify-center p-14 text-center bg-zinc-900/70 border border-white/10 rounded-xl shadow-xs">
           <CalendarRange className="h-10 w-10 text-zinc-300 mb-3 animate-pulse" />
-          <h4 className="text-sm font-semibold text-zinc-900">Your Deal CRM is empty</h4>
-          <p className="text-xs text-zinc-500 mt-1 max-w-sm">
+          <h4 className="text-sm font-semibold text-zinc-100">Your Deal CRM is empty</h4>
+          <p className="text-xs text-zinc-400 mt-1 max-w-sm">
             Upload a local prospect list or search for local businesses in the "Search Leads" tab, check digital deficits, and build your pipeline.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-5">
@@ -1044,9 +1080,9 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
             <button
               type="button"
               onClick={() => document.getElementById('crm-csv-import-file-input')?.click()}
-              className="px-4 py-2 text-[11px] font-bold text-zinc-700 hover:text-zinc-900 bg-emerald-50 hover:bg-emerald-100 hover:shadow-sm rounded-lg border border-emerald-200 cursor-pointer flex items-center gap-1.5 uppercase tracking-wide transition-all"
+              className="px-4 py-2 text-[11px] font-bold text-zinc-300 hover:text-white bg-emerald-500/15 hover:bg-emerald-500/25 hover:shadow-sm rounded-lg border border-emerald-500/30 cursor-pointer flex items-center gap-1.5 uppercase tracking-wide transition-all"
             >
-              <Upload className="h-3.5 w-3.5 text-emerald-600 animate-bounce" />
+              <Upload className="h-3.5 w-3.5 text-emerald-300 animate-bounce" />
               Upload Prospects CSV
             </button>
           </div>
@@ -1054,9 +1090,9 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
       ) : (
         <div className="space-y-4">
           {/* Quick Stage Visibility & Column Selection Row (Multi-Select Filter) */}
-          <div id="crm-quick-status-filter" className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl border border-zinc-200 bg-white shadow-sm">
+          <div id="crm-quick-status-filter" className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl border border-white/10 bg-zinc-900/70 shadow-sm">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="text-[10px] text-zinc-500 font-sans font-bold uppercase tracking-wider">Visible Stage Columns:</span>
+              <span className="text-[10px] text-zinc-400 font-sans font-bold uppercase tracking-wider">Visible Stage Columns:</span>
               <div className="flex flex-wrap items-center gap-1.5">
                 {COLUMNS.map((col) => {
                   const isChecked = visibleColumns.includes(col.id);
@@ -1075,8 +1111,8 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                       }}
                       className={`px-3 py-1.5 rounded-full text-[10.5px] font-semibold font-sans flex items-center gap-2 border cursor-pointer transition-all hover:scale-102 active:scale-98 ${
                         isChecked 
-                          ? 'bg-blue-50 text-blue-700 border-blue-200/60 font-bold shadow-xs' 
-                          : 'bg-zinc-50 text-zinc-500 border-zinc-205 border-zinc-200 hover:bg-zinc-100 hover:text-zinc-700'
+                          ? 'bg-blue-500/15 text-blue-300 border-blue-500/30 font-bold shadow-xs' 
+                          : 'bg-white/5 text-zinc-400 border-white/10 border-white/10 hover:bg-white/10 hover:text-zinc-200'
                       }`}
                       title={`${isChecked ? 'Hide' : 'Show'} status column: ${col.label}`}
                     >
@@ -1091,20 +1127,20 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
             {/* Quick Presets list */}
             <div className="flex items-center gap-2 font-sans">
-              <span className="text-[10px] text-zinc-500 font-sans font-bold uppercase tracking-wider">Quick Presets:</span>
-              <div className="flex items-center bg-zinc-50 border border-zinc-200 p-1 rounded-lg">
+              <span className="text-[10px] text-zinc-400 font-sans font-bold uppercase tracking-wider">Quick Presets:</span>
+              <div className="flex items-center bg-white/5 border border-white/10 p-1 rounded-lg">
                 <button
                   type="button"
                   onClick={() => setVisibleColumns(['new', 'contacted', 'replied', 'interested', 'closed'])}
-                  className={`px-2.5 py-0.5 rounded text-[9px] font-sans font-extrabold uppercase tracking-wide transition-all cursor-pointer ${visibleColumns.length === 5 ? 'bg-blue-50 text-blue-700 border border-blue-100 font-black' : 'text-zinc-500 hover:text-zinc-800'}`}
+                  className={`px-2.5 py-0.5 rounded text-[9px] font-sans font-extrabold uppercase tracking-wide transition-all cursor-pointer ${visibleColumns.length === 5 ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30 font-black' : 'text-zinc-400 hover:text-white'}`}
                 >
                   Show All (5)
                 </button>
-                <div className="h-3.5 w-px bg-zinc-200 mx-1.5" />
+                <div className="h-3.5 w-px bg-white/10 mx-1.5" />
                 <button
                   type="button"
                   onClick={() => setVisibleColumns(['contacted', 'replied', 'interested'])}
-                  className={`px-2.5 py-0.5 rounded text-[9px] font-sans font-extrabold uppercase tracking-wide transition-all cursor-pointer ${visibleColumns.length === 3 && !visibleColumns.includes('new') && !visibleColumns.includes('closed') ? 'bg-amber-50 text-amber-700 border border-amber-150 font-black' : 'text-zinc-500 hover:text-zinc-800'}`}
+                  className={`px-2.5 py-0.5 rounded text-[9px] font-sans font-extrabold uppercase tracking-wide transition-all cursor-pointer ${visibleColumns.length === 3 && !visibleColumns.includes('new') && !visibleColumns.includes('closed') ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 font-black' : 'text-zinc-400 hover:text-white'}`}
                   title="Hide 'New' prospects and 'Closed Won' stages to focus strictly on active engagements"
                 >
                   Active Only
@@ -1126,12 +1162,12 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
             return (
               <div key={column.id} className="flex flex-col space-y-2.5 min-w-[210px] first:ml-0">
                 {/* Clearly Visible Stage Header above each status column */}
-                <div className={`flex items-center justify-between px-3.5 py-3 border rounded-xl select-none relative overflow-hidden bg-white shadow-xs ${column.headerColor}`}>
+                <div className={`flex items-center justify-between px-3.5 py-3 border rounded-xl select-none relative overflow-hidden bg-zinc-900/70 shadow-xs ${column.headerColor}`}>
                   {/* Color accent bar on left */}
                   <div className={`absolute top-0 bottom-0 left-0 w-[4px] ${column.indicatorColor}`} />
                   <div className="flex items-center gap-2 truncate pl-1">
                     <span className="text-xs select-none shrink-0">{column.emoji}</span>
-                    <h4 className="text-[11px] font-extrabold text-zinc-900 tracking-wider font-sans uppercase">
+                    <h4 className="text-[11px] font-extrabold text-zinc-100 tracking-wider font-sans uppercase">
                       {column.shortLabel}
                     </h4>
                   </div>
@@ -1154,10 +1190,10 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                         });
                         setValidationError(null);
                       }}
-                      className="p-1 rounded bg-white border border-zinc-200 hover:border-zinc-350 hover:bg-zinc-50 text-zinc-500 hover:text-blue-600 transition-all cursor-pointer flex items-center justify-center shadow-xs"
+                      className="p-1 rounded bg-zinc-900/70 border border-white/10 hover:border-white/20 hover:bg-white/5 text-zinc-400 hover:text-blue-200 transition-all cursor-pointer flex items-center justify-center shadow-xs"
                       title={`Quick Add Lead to ${column.label}`}
                     >
-                      <Plus className="h-3 w-3 text-blue-600 hover:text-blue-700" />
+                      <Plus className="h-3 w-3 text-blue-300 hover:text-blue-200" />
                     </button>
                     <span className={`h-4.5 px-2 flex items-center justify-center rounded text-[9.5px] font-mono leading-none font-black border ${column.badgeColor}`}>
                       {columnLeads.length}
@@ -1170,7 +1206,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                   className={`rounded-xl border p-3 flex flex-col min-h-[520px] transition-all duration-300 ${column.color}`}
                 >
                   {/* Column Detail Head */}
-                  <div className="flex items-center justify-between pb-2.5 border-b border-zinc-200 mb-3 select-none">
+                  <div className="flex items-center justify-between pb-2.5 border-b border-white/10 mb-3 select-none">
                     <span className="text-[9px] font-mono tracking-wider font-bold text-zinc-400 uppercase">
                       {column.label}
                     </span>
@@ -1193,10 +1229,10 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                         });
                         setValidationError(null);
                       }}
-                      className="p-1 rounded bg-white border border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50 text-zinc-500 hover:text-zinc-800 transition-all cursor-pointer flex items-center justify-center shadow-xs"
+                      className="p-1 rounded bg-zinc-900/70 border border-white/10 hover:border-white/20 hover:bg-white/5 text-zinc-400 hover:text-white transition-all cursor-pointer flex items-center justify-center shadow-xs"
                       title={`Quick Add Lead to ${column.label}`}
                     >
-                      <PlusCircle className="h-3.5 w-3.5 text-blue-600 hover:text-blue-705" />
+                      <PlusCircle className="h-3.5 w-3.5 text-blue-300 hover:text-blue-705" />
                     </button>
                   </div>
 
@@ -1209,7 +1245,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-zinc-200/80 rounded-lg bg-zinc-50/20"
+                          className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-white/10 rounded-lg bg-white/[0.03]"
                         >
                           <span className="text-[10px] text-zinc-400 italic">Empty Stage</span>
                         </motion.div>
@@ -1231,7 +1267,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                 damping: 30,
                                 layout: { duration: 0.3, type: "spring" }
                               }}
-                              className="group relative flex flex-col justify-between rounded-xl border border-zinc-200 bg-white p-3.5 hover:border-zinc-300 transition-all duration-150 shadow-xs hover:shadow-md cursor-pointer"
+                              className="group relative flex flex-col justify-between rounded-xl border border-white/10 bg-zinc-900/70 p-3.5 hover:border-white/20 transition-all duration-150 shadow-xs hover:shadow-md cursor-pointer"
                             >
                               <div onClick={() => {
                                 if (editingLeadId !== item.id) {
@@ -1256,7 +1292,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                           }
                                         }}
                                         onBlur={() => handleSaveName(item)}
-                                        className="flex-1 text-[11px] font-bold text-zinc-900 border border-blue-500 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                        className="flex-1 text-[11px] font-bold text-zinc-100 border border-blue-500 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-zinc-900/70"
                                         autoFocus
                                       />
                                       <div className="flex items-center gap-0.5 shrink-0">
@@ -1270,7 +1306,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                             e.stopPropagation();
                                             await handleSaveName(item);
                                           }}
-                                          className="p-1 text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200 transition-colors cursor-pointer"
+                                          className="p-1 text-emerald-300 hover:text-emerald-200 bg-emerald-500/15 hover:bg-emerald-500/25 rounded border border-emerald-500/30 transition-colors cursor-pointer"
                                           title="Save changes"
                                         >
                                           <Check className="h-2.5 w-2.5 font-bold" />
@@ -1284,7 +1320,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                             e.stopPropagation();
                                             setEditingLeadId(null);
                                           }}
-                                          className="p-1 text-zinc-500 hover:text-rose-600 bg-zinc-50 hover:bg-rose-50 rounded border border-zinc-200 transition-colors cursor-pointer"
+                                          className="p-1 text-zinc-400 hover:text-rose-200 bg-white/5 hover:bg-rose-500/20 rounded border border-white/10 transition-colors cursor-pointer"
                                           title="Cancel"
                                         >
                                           <X className="h-2.5 w-2.5" />
@@ -1293,7 +1329,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                     </div>
                                   ) : (
                                     <div className="flex items-center justify-between w-full group/header">
-                                      <h4 className="text-[11.5px] font-bold text-zinc-900 truncate max-w-[80%] group-hover:text-blue-600 transition-colors" title={item.name}>
+                                      <h4 className="text-[11.5px] font-bold text-zinc-100 truncate max-w-[80%] group-hover:text-blue-300 transition-colors" title={item.name}>
                                         {item.name}
                                       </h4>
                                       <button
@@ -1304,7 +1340,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                           setEditingLeadId(item.id);
                                           setEditingNameValue(item.name);
                                         }}
-                                        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-zinc-100 rounded text-zinc-400 hover:text-blue-600 transition-all cursor-pointer"
+                                        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-white/10 rounded text-zinc-400 hover:text-blue-200 transition-all cursor-pointer"
                                         title="Quick edit lead name"
                                       >
                                         <Pencil className="h-2.5 w-2.5" />
@@ -1313,14 +1349,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                   )}
                                 </div>
 
-                                <p className="text-[9.5px] text-zinc-450 text-zinc-500 font-mono truncate">{item.category}</p>
+                                <p className="text-[9.5px] text-zinc-400 text-zinc-400 font-mono truncate">{item.category}</p>
 
                                 <div className="flex items-center justify-between pt-1">
                                   <span className={`rounded-sm px-1.5 py-px text-[8.5px] font-bold border ${service.style}`}>
                                     {service.text}
                                   </span>
                                   
-                                  <div className="flex items-center gap-1 text-[9px] font-bold font-mono text-zinc-505 text-zinc-500">
+                                  <div className="flex items-center gap-1 text-[9px] font-bold font-mono text-zinc-400 text-zinc-400">
                                     <span className={`h-1.5 w-1.5 rounded-full ${item.website ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`}></span>
                                     <span>{item.digitalPresenceScore}%</span>
                                   </div>
@@ -1329,7 +1365,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                 {item.tags.length > 0 && (
                                   <div className="flex flex-wrap gap-1 pt-1.5">
                                     {item.tags.slice(0, 2).map((tg) => (
-                                      <span key={tg} className="text-[8.5px] rounded bg-zinc-50 px-1 py-px text-zinc-500 border border-zinc-200/50 font-mono">
+                                      <span key={tg} className="text-[8.5px] rounded bg-white/5 px-1 py-px text-zinc-400 border border-white/10 font-mono">
                                         {tg}
                                       </span>
                                     ))}
@@ -1338,7 +1374,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                               </div>
 
                               {/* Quick Card status controllers */}
-                              <div className="border-t border-zinc-100 mt-3 pt-2.5 flex items-center justify-between shrink-0 select-none">
+                              <div className="border-t border-white/5 mt-3 pt-2.5 flex items-center justify-between shrink-0 select-none">
                                 <div className="flex items-center gap-1">
                                   <button
                                     onClick={(e) => {
@@ -1346,7 +1382,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                       handleMove(item, 'left');
                                     }}
                                     disabled={item.status === 'new'}
-                                    className="p-1 rounded bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+                                    className="p-1 rounded bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
                                   >
                                     <ArrowLeft className="h-2.5 w-2.5" />
                                   </button>
@@ -1356,7 +1392,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                       handleMove(item, 'right');
                                     }}
                                     disabled={item.status === 'closed'}
-                                    className="p-1 rounded bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+                                    className="p-1 rounded bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
                                   >
                                     <ArrowRight className="h-2.5 w-2.5" />
                                   </button>
@@ -1368,10 +1404,10 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                     e.stopPropagation();
                                     handleOpenSummaryPopup(item);
                                   }}
-                                  className="p-1 px-1.5 rounded bg-blue-50 border border-blue-200 hover:bg-blue-100/80 text-blue-700 hover:text-blue-800 transition-colors cursor-pointer flex items-center gap-1.5 text-[8.5px] font-sans font-bold shadow-xs uppercase tracking-wide"
+                                  className="p-1 px-1.5 rounded bg-blue-500/15 border border-blue-500/30 hover:bg-blue-500/25 text-blue-300 hover:text-blue-200 transition-colors cursor-pointer flex items-center gap-1.5 text-[8.5px] font-sans font-bold shadow-xs uppercase tracking-wide"
                                   title={`AI Summarize status and notes for ${item.name}`}
                                 >
-                                  <Sparkles className="h-2.5 w-2.5 text-blue-600 animate-pulse" />
+                                  <Sparkles className="h-2.5 w-2.5 text-blue-300 animate-pulse" />
                                   <span>SUMMARIZE</span>
                                 </button>
 
@@ -1380,7 +1416,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                                     e.stopPropagation();
                                     triggerDeleteConfirm(item.id, item.name);
                                   }}
-                                  className="p-1 rounded hover:bg-rose-50 text-zinc-400 hover:text-rose-600 transition-colors cursor-pointer border border-transparent"
+                                  className="p-1 rounded hover:bg-rose-500/20 text-zinc-400 hover:text-rose-200 transition-colors cursor-pointer border border-transparent"
                                 >
                                   <Trash2 className="h-2.5 w-2.5" />
                                 </button>
@@ -1402,12 +1438,12 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
       {/* Simplified Custom Quick Add CRM Lead Modal overlay */}
       {activeQuickAdd && (
         <div id="crm-quick-add-modal-backdrop" className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 backdrop-blur-xs p-4 overflow-y-auto animate-fade-in">
-          <div id="crm-quick-add-modal-container" className="relative w-full max-w-md rounded-xl border border-zinc-200 bg-white shadow-2xl overflow-hidden my-8">
+          <div id="crm-quick-add-modal-container" className="relative w-full max-w-md rounded-xl border border-white/10 bg-zinc-900/70 shadow-2xl overflow-hidden my-8">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-zinc-150 px-5 py-4 bg-zinc-55 bg-zinc-50/80">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 bg-white/5 bg-white/5">
               <div className="flex items-center gap-1.5">
-                <PlusCircle className="h-4 w-4 text-blue-600" />
-                <span className="text-xs font-sans font-bold text-zinc-800 uppercase tracking-wider">
+                <PlusCircle className="h-4 w-4 text-blue-300" />
+                <span className="text-xs font-sans font-bold text-zinc-200 uppercase tracking-wider">
                   Quick Add Lead to {COLUMNS.find(c => c.id === activeQuickAdd)?.label}
                 </span>
               </div>
@@ -1417,52 +1453,52 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                   setActiveQuickAdd(null);
                   setValidationError(null);
                 }}
-                className="p-1 rounded bg-white border border-zinc-200 text-zinc-400 hover:text-zinc-800 hover:border-zinc-300 transition-all cursor-pointer"
+                className="p-1 rounded bg-zinc-900/70 border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 transition-all cursor-pointer"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmitQuickAdd} className="p-5 space-y-3 pb-6 bg-white">
+            <form onSubmit={handleSubmitQuickAdd} className="p-5 space-y-3 pb-6 bg-zinc-900/70">
               {validationError && (
-                <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[10px] text-rose-600 flex items-start gap-1.5 animate-fade-in">
+                <div className="p-2.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-[10px] text-rose-300 flex items-start gap-1.5 animate-fade-in">
                   <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                   <span>{validationError}</span>
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Business Name <span className="text-blue-500 font-bold">*</span></label>
+                <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Business Name <span className="text-blue-500 font-bold">*</span></label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Acme Health Clinic"
                   value={quickLeadForm.name}
                   onChange={(e) => setQuickLeadForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-850 text-zinc-805 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition"
+                  className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-100 text-zinc-100 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Category <span className="text-blue-500 font-bold">*</span></label>
+                  <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Category <span className="text-blue-500 font-bold">*</span></label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Clinic, Restaurant"
                     value={quickLeadForm.category}
                     onChange={(e) => setQuickLeadForm(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition"
+                    className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Service Proposal</label>
+                  <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Service Proposal</label>
                   <select
                     value={quickLeadForm.serviceType}
                     onChange={(e) => setQuickLeadForm(prev => ({ ...prev, serviceType: e.target.value as any }))}
-                    className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-700 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition cursor-pointer"
+                    className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition cursor-pointer"
                   >
                     <option value="web_design">🎨 Web Design Offer</option>
                     <option value="ai_automation">🤖 AI Automation</option>
@@ -1472,43 +1508,43 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Website URL (Optional)</label>
+                <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Website URL (Optional)</label>
                 <input
                   type="url"
                   placeholder="e.g. https://www.example.com"
                   value={quickLeadForm.website}
                   onChange={(e) => setQuickLeadForm(prev => ({ ...prev, website: e.target.value }))}
-                  className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition"
+                  className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Phone (Optional)</label>
+                  <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Phone (Optional)</label>
                   <input
                     type="text"
                     placeholder="e.g. +233 24 123 456"
                     value={quickLeadForm.phone}
                     onChange={(e) => setQuickLeadForm(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition"
+                    className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Address (Optional)</label>
+                  <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Address (Optional)</label>
                   <input
                     type="text"
                     placeholder="e.g. Ikeja, Lagos"
                     value={quickLeadForm.address}
                     onChange={(e) => setQuickLeadForm(prev => ({ ...prev, address: e.target.value }))}
-                    className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition"
+                    className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Rating (optional)</label>
+                  <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Rating (optional)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -1517,53 +1553,53 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                     placeholder="e.g. 4.2"
                     value={quickLeadForm.rating}
                     onChange={(e) => setQuickLeadForm(prev => ({ ...prev, rating: e.target.value }))}
-                    className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition"
+                    className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Reviews (optional)</label>
+                  <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Reviews (optional)</label>
                   <input
                     type="number"
                     min="0"
                     placeholder="e.g. 55"
                     value={quickLeadForm.reviewsCount}
                     onChange={(e) => setQuickLeadForm(prev => ({ ...prev, reviewsCount: e.target.value }))}
-                    className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition"
+                    className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Tags (comma-separated)</label>
+                <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Tags (comma-separated)</label>
                 <input
                   type="text"
                   placeholder="e.g. Manual Flow, Busy Clinics"
                   value={quickLeadForm.tagsRaw}
                   onChange={(e) => setQuickLeadForm(prev => ({ ...prev, tagsRaw: e.target.value }))}
-                  className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition"
+                  className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-sans font-bold text-zinc-500 uppercase tracking-wide">Internal Notes</label>
+                <label className="text-[10px] font-sans font-bold text-zinc-400 uppercase tracking-wide">Internal Notes</label>
                 <textarea
                   placeholder="Key notes regarding this prospect..."
                   rows={2}
                   value={quickLeadForm.notes}
                   onChange={(e) => setQuickLeadForm(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-850 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-zinc-300 transition resize-none"
+                  className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-zinc-100 text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500/50 hover:border-white/20 transition resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-150 mt-1">
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-white/10 mt-1">
                 <button
                   type="button"
                   onClick={() => {
                     setActiveQuickAdd(null);
                     setValidationError(null);
                   }}
-                  className="px-3 py-1.5 text-[10px] font-bold text-zinc-500 hover:text-zinc-800 uppercase transition-all rounded-md bg-white border border-zinc-200 hover:border-zinc-300 cursor-pointer"
+                  className="px-3 py-1.5 text-[10px] font-bold text-zinc-400 hover:text-white uppercase transition-all rounded-md bg-zinc-900/70 border border-white/10 hover:border-white/20 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1601,54 +1637,54 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", duration: 0.4 }}
-              className="relative w-full max-w-md rounded-xl border border-zinc-200 bg-white shadow-2xl overflow-hidden my-8"
+              className="relative w-full max-w-md rounded-xl border border-white/10 bg-zinc-900/70 shadow-2xl overflow-hidden my-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-zinc-150 px-5 py-4 bg-zinc-50/80">
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 bg-white/5">
                 <div className="flex items-center gap-2">
-                  <div className="h-5 w-5 rounded-md bg-blue-50 border border-blue-200 flex items-center justify-center shadow-xs">
-                    <Sparkles className="h-3 w-3 text-blue-600 animate-pulse" />
+                  <div className="h-5 w-5 rounded-md bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shadow-xs">
+                    <Sparkles className="h-3 w-3 text-blue-300 animate-pulse" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs font-sans font-bold text-zinc-800 uppercase tracking-wider">AI Sales Briefing</span>
-                    <span className="text-[9px] font-mono text-zinc-450 uppercase font-black tracking-widest">Sales Intelligence Engine</span>
+                    <span className="text-xs font-sans font-bold text-zinc-200 uppercase tracking-wider">AI Sales Briefing</span>
+                    <span className="text-[9px] font-mono text-zinc-400 uppercase font-black tracking-widest">Sales Intelligence Engine</span>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSummarizedLead(null)}
-                  className="p-1 rounded bg-white border border-zinc-200 text-zinc-400 hover:text-zinc-800 hover:border-zinc-300 transition-all cursor-pointer"
+                  className="p-1 rounded bg-zinc-900/70 border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 transition-all cursor-pointer"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
 
               {/* Dynamic Content */}
-              <div className="p-5 space-y-4 bg-white">
+              <div className="p-5 space-y-4 bg-zinc-900/70">
                 {/* Lead Header Info Card */}
-                <div className="bg-zinc-50 border border-zinc-200/80 rounded-lg p-3.5">
+                <div className="bg-white/5 border border-white/10 rounded-lg p-3.5">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="text-xs font-bold text-zinc-900 tracking-wide">{summarizedLead.name}</h4>
+                      <h4 className="text-xs font-bold text-zinc-100 tracking-wide">{summarizedLead.name}</h4>
                       <p className="text-[10px] text-zinc-400 font-mono mt-0.5">{summarizedLead.category}</p>
                     </div>
-                    <span className="px-2 py-0.5 rounded text-[8.5px] font-mono font-bold uppercase border border-blue-205 border-blue-200 bg-blue-50 text-blue-700">
+                    <span className="px-2 py-0.5 rounded text-[8.5px] font-mono font-bold uppercase border border-blue-205 border-blue-500/30 bg-blue-500/15 text-blue-300">
                       STATUS: {summarizedLead.status.toUpperCase()}
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-zinc-200/60">
+                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/10">
                     <div>
                       <span className="text-[8px] font-mono uppercase text-zinc-400 block font-bold">DIGITAL PRESENCE SCORE</span>
-                      <span className="text-xs font-mono font-bold text-zinc-700 flex items-center gap-1.5 mt-0.5">
+                      <span className="text-xs font-mono font-bold text-zinc-300 flex items-center gap-1.5 mt-0.5">
                         <span className={`h-1.5 w-1.5 rounded-full ${summarizedLead.website ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`}></span>
                         {summarizedLead.digitalPresenceScore}% Strength
                       </span>
                     </div>
                     <div>
                       <span className="text-[8px] font-mono uppercase text-zinc-400 block font-bold">RECOMMENDED OFFER</span>
-                      <span className="text-[10px] font-sans font-bold text-zinc-700 mt-0.5 block truncate">
+                      <span className="text-[10px] font-sans font-bold text-zinc-300 mt-0.5 block truncate">
                         {summarizedLead.serviceType === 'web_design' ? '🎨 Custom Web Platform' : summarizedLead.serviceType === 'ai_automation' ? '🤖 AI Systems' : '💠 Hybrid Systems Box'}
                       </span>
                     </div>
@@ -1657,26 +1693,26 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
                 {/* Summarization Output Block */}
                 <div id="crm-summary-output-block" className="space-y-2.5">
-                  <span className="text-[10px] font-sans font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5 border-b border-zinc-150 pb-1 mr-1">
-                    <FileText className="h-3 w-3 text-blue-600" />
+                  <span className="text-[10px] font-sans font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-white/10 pb-1 mr-1">
+                    <FileText className="h-3 w-3 text-blue-300" />
                     STATUS ANALYSIS & PROGRESS BRIEF
                   </span>
 
                   {isLoadingSummary ? (
-                    <div className="flex flex-col items-center justify-center py-10 space-y-2.5 bg-zinc-50/50 rounded-lg border border-zinc-200/85">
-                      <RefreshCw className="h-5 w-5 text-blue-600 animate-spin" />
+                    <div className="flex flex-col items-center justify-center py-10 space-y-2.5 bg-white/5 rounded-lg border border-white/10">
+                      <RefreshCw className="h-5 w-5 text-blue-300 animate-spin" />
                       <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest animate-pulse font-bold">Analyzing lead progression...</span>
                     </div>
                   ) : summaryError ? (
-                    <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-[10px] text-rose-600 flex items-start gap-1.5">
+                    <div className="p-3 rounded-lg bg-rose-500/15 border border-rose-500/30 text-[10px] text-rose-300 flex items-start gap-1.5">
                       <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                       <div>
-                        <span className="font-bold block text-rose-700 uppercase font-mono tracking-wider">Error Loading Summary</span>
+                        <span className="font-bold block text-rose-300 uppercase font-mono tracking-wider">Error Loading Summary</span>
                         <p className="mt-0.5 opacity-90">{summaryError}</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-lg bg-zinc-50/50 border border-zinc-200 text-zinc-800">
+                    <div className="p-4 rounded-lg bg-white/5 border border-white/10 text-zinc-200">
                       <SimpleMarkdownRenderer content={aiSummaryText} />
                     </div>
                   )}
@@ -1684,11 +1720,11 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
               </div>
 
               {/* Action Bar Footer */}
-              <div className="flex items-center justify-end border-t border-zinc-150 px-5 py-3.5 bg-zinc-50/80 gap-2">
+              <div className="flex items-center justify-end border-t border-white/10 px-5 py-3.5 bg-white/5 gap-2">
                 <button
                   type="button"
                   onClick={() => setSummarizedLead(null)}
-                  className="px-3 py-1.5 text-[10px] font-bold text-zinc-505 text-zinc-500 hover:text-zinc-800 transition-colors rounded-md bg-white border border-zinc-205 border-zinc-200 hover:border-zinc-300 cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 text-[10px] font-bold text-zinc-400 text-zinc-400 hover:text-white transition-colors rounded-md bg-zinc-900/70 border border-white/10 border-white/10 hover:border-white/20 cursor-pointer shadow-xs"
                 >
                   Close Briefing
                 </button>
@@ -1725,19 +1761,19 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", duration: 0.4 }}
-              className="relative w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white shadow-2xl overflow-hidden my-8"
+              className="relative w-full max-w-4xl rounded-2xl border border-white/10 bg-zinc-900/70 shadow-2xl overflow-hidden my-8"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-zinc-150 px-6 py-4 bg-zinc-50/80">
+              <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-white/5">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center shadow-xs">
-                    <Upload className="h-4 w-4 text-emerald-600" />
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shadow-xs">
+                    <Upload className="h-4 w-4 text-emerald-300" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-sans font-extrabold text-zinc-900 uppercase tracking-wider">CSV Pipeline Import Wizard</h3>
-                    <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-0.5">
-                      File: <span className="font-bold text-zinc-700">{importFileName || "Unknown"}</span> ({importRows.length} prospects parsed)
+                    <h3 className="text-sm font-sans font-extrabold text-zinc-100 uppercase tracking-wider">CSV Pipeline Import Wizard</h3>
+                    <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mt-0.5">
+                      File: <span className="font-bold text-zinc-300">{importFileName || "Unknown"}</span> ({importRows.length} prospects parsed)
                     </p>
                   </div>
                 </div>
@@ -1745,7 +1781,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                   <button
                     type="button"
                     onClick={() => setIsImportModalOpen(false)}
-                    className="p-1 rounded-md bg-white border border-zinc-200 text-zinc-400 hover:text-zinc-800 hover:border-zinc-300 transition-all cursor-pointer"
+                    className="p-1 rounded-md bg-zinc-900/70 border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 transition-all cursor-pointer"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -1755,15 +1791,15 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
               {/* Error State */}
               {csvParseError ? (
                 <div className="p-8 text-center space-y-4">
-                  <div className="h-12 w-12 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600">
+                  <div className="h-12 w-12 rounded-full bg-rose-500/15 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-300">
                     <AlertCircle className="h-6 w-6" />
                   </div>
                   <div className="space-y-1 max-w-md mx-auto">
-                    <h4 className="text-sm font-bold text-zinc-900 tracking-wide uppercase">File Format Parsing Failure</h4>
-                    <p className="text-xs text-zinc-500">
+                    <h4 className="text-sm font-bold text-zinc-100 tracking-wide uppercase">File Format Parsing Failure</h4>
+                    <p className="text-xs text-zinc-400">
                       We were unable to process the selected CSV. The spreadsheet structure might be damaged or empty.
                     </p>
-                    <div className="p-3 bg-rose-50 rounded-lg text-left text-xs font-mono text-rose-700 border border-rose-150 mt-3 break-all">
+                    <div className="p-3 bg-rose-500/15 rounded-lg text-left text-xs font-mono text-rose-300 border border-rose-500/30 mt-3 break-all">
                       {csvParseError}
                     </div>
                   </div>
@@ -1771,7 +1807,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                     <button
                       type="button"
                       onClick={() => document.getElementById('crm-csv-import-file-input')?.click()}
-                      className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white hover:bg-zinc-50 rounded-lg border border-zinc-200 shadow-xs cursor-pointer transition"
+                      className="px-4 py-2 text-xs font-bold text-zinc-300 bg-zinc-900/70 hover:bg-white/5 rounded-lg border border-white/10 shadow-xs cursor-pointer transition"
                     >
                       Choose Another CSV File
                     </button>
@@ -1781,17 +1817,17 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                 /* Progress Display */
                 <div className="p-10 text-center space-y-6">
                   <div className="relative h-16 w-16 mx-auto flex items-center justify-center">
-                    <div className="absolute inset-0 rounded-full border-4 border-emerald-100 animate-pulse" />
-                    <RefreshCw className="h-7 w-7 text-emerald-600 animate-spin" />
+                    <div className="absolute inset-0 rounded-full border-4 border-emerald-500/30 animate-pulse" />
+                    <RefreshCw className="h-7 w-7 text-emerald-300 animate-spin" />
                   </div>
                   <div className="space-y-2 max-w-sm mx-auto">
-                    <h4 className="text-sm font-extrabold text-zinc-900 tracking-wider uppercase font-sans font-bold">
+                    <h4 className="text-sm font-extrabold text-zinc-100 tracking-wider uppercase font-sans font-bold">
                       Importing Pipeline Prospects
                     </h4>
-                    <span className="text-xs font-mono text-zinc-500 block">
+                    <span className="text-xs font-mono text-zinc-400 block">
                       Importing row {importCurrentIndex} of {importTotal} ({importProgress}%)
                     </span>
-                    <div className="w-full bg-zinc-100 rounded-full h-2.5 overflow-hidden border border-zinc-150 mt-2">
+                    <div className="w-full bg-white/10 rounded-full h-2.5 overflow-hidden border border-white/10 mt-2">
                       <div
                         className="bg-emerald-600 h-full transition-all duration-300 ease-out"
                         style={{ width: `${importProgress}%` }}
@@ -1802,24 +1838,24 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
               ) : importResults ? (
                 /* Import Report Card Summary */
                 <div className="p-8 text-center space-y-5">
-                  <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-emerald-600">
+                  <div className="h-12 w-12 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-300">
                     <Check className="h-6 w-6 stroke-[3]" />
                   </div>
                   <div className="space-y-1">
-                    <h4 className="text-sm font-extrabold text-zinc-900 tracking-wide uppercase font-bold">Import Operation Completed</h4>
-                    <p className="text-xs text-zinc-500">
+                    <h4 className="text-sm font-extrabold text-zinc-100 tracking-wide uppercase font-bold">Import Operation Completed</h4>
+                    <p className="text-xs text-zinc-400">
                       Your CSV pipeline mapping has finished executing.
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto p-4 bg-zinc-50 rounded-xl border border-zinc-200 mt-4">
-                    <div className="p-3 bg-white rounded-lg border border-zinc-150 shadow-xs">
+                  <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto p-4 bg-white/5 rounded-xl border border-white/10 mt-4">
+                    <div className="p-3 bg-zinc-900/70 rounded-lg border border-white/10 shadow-xs">
                       <span className="text-[10px] font-sans font-bold text-zinc-400 block uppercase">Added Accounts</span>
-                      <span className="text-xl font-mono font-black text-emerald-600">{importResults.success}</span>
+                      <span className="text-xl font-mono font-black text-emerald-300">{importResults.success}</span>
                     </div>
-                    <div className="p-3 bg-white rounded-lg border border-zinc-150 shadow-xs">
+                    <div className="p-3 bg-zinc-900/70 rounded-lg border border-white/10 shadow-xs">
                       <span className="text-[10px] font-sans font-bold text-zinc-400 block uppercase">Skipped Rows</span>
-                      <span className="text-xl font-mono font-black text-zinc-500">{importResults.failed}</span>
+                      <span className="text-xl font-mono font-black text-zinc-400">{importResults.failed}</span>
                     </div>
                   </div>
 
@@ -1840,16 +1876,16 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                 </div>
               ) : (
                 /* Standard Mapping Workbench Column Config */
-                <div className="flex flex-col md:grid md:grid-cols-12 md:divide-x md:divide-zinc-150 min-h-[460px]">
+                <div className="flex flex-col md:grid md:grid-cols-12 md:divide-x md:divide-white/10 min-h-[460px]">
                   
                   {/* Left block (7 Columns Width): Mapping Configurations */}
                   <div className="col-span-12 md:col-span-7 p-6 overflow-y-auto max-h-[500px] space-y-5">
-                    <div className="border-b border-zinc-150 pb-3 flex items-center justify-between">
+                    <div className="border-b border-white/10 pb-3 flex items-center justify-between">
                       <div>
-                        <h4 className="text-xs font-sans font-bold text-zinc-800 uppercase tracking-wide">Map CSV Fields to Lead Attributes</h4>
-                        <p className="text-[10px] text-zinc-500 mt-0.5">Select corresponding column header keys found inside your CSV.</p>
+                        <h4 className="text-xs font-sans font-bold text-zinc-200 uppercase tracking-wide">Map CSV Fields to Lead Attributes</h4>
+                        <p className="text-[10px] text-zinc-400 mt-0.5">Select corresponding column header keys found inside your CSV.</p>
                       </div>
-                      <span className="text-[9px] font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-150 uppercase tracking-widest">
+                      <span className="text-[9px] font-mono font-bold bg-blue-500/15 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30 uppercase tracking-widest">
                         Required *
                       </span>
                     </div>
@@ -1857,14 +1893,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                     <div className="space-y-4">
                       {/* Name mapping */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                        <label className="text-[10.5px] font-sans font-bold text-zinc-600">
+                        <label className="text-[10.5px] font-sans font-bold text-zinc-400">
                           Business Name <span className="text-rose-500 font-bold">*</span>
                         </label>
                         <div className="sm:col-span-2">
                           <select
                             value={importMapping.name}
                             onChange={(e) => setImportMapping(prev => ({ ...prev, name: e.target.value }))}
-                            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
+                            className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
                           >
                             <option value="">-- Do Not Map --</option>
                             {importHeaders.map(h => (
@@ -1876,14 +1912,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
                       {/* Category mapping */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                        <label className="text-[10.5px] font-sans font-bold text-zinc-600">
+                        <label className="text-[10.5px] font-sans font-bold text-zinc-400">
                           Niche / Category
                         </label>
                         <div className="sm:col-span-2">
                           <select
                             value={importMapping.category}
                             onChange={(e) => setImportMapping(prev => ({ ...prev, category: e.target.value }))}
-                            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
+                            className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
                           >
                             <option value="">-- Do Not Map (Local Business) --</option>
                             {importHeaders.map(h => (
@@ -1895,14 +1931,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
                       {/* Website mapping */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                        <label className="text-[10.5px] font-sans font-bold text-zinc-600">
+                        <label className="text-[10.5px] font-sans font-bold text-zinc-400">
                           Website URL
                         </label>
                         <div className="sm:col-span-2">
                           <select
                             value={importMapping.website}
                             onChange={(e) => setImportMapping(prev => ({ ...prev, website: e.target.value }))}
-                            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
+                            className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
                           >
                             <option value="">-- Do Not Map --</option>
                             {importHeaders.map(h => (
@@ -1914,14 +1950,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
                       {/* Phone mapping */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                        <label className="text-[10.5px] font-sans font-bold text-zinc-600">
+                        <label className="text-[10.5px] font-sans font-bold text-zinc-400">
                           Phone Number
                         </label>
                         <div className="sm:col-span-2">
                           <select
                             value={importMapping.phone}
                             onChange={(e) => setImportMapping(prev => ({ ...prev, phone: e.target.value }))}
-                            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
+                            className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
                           >
                             <option value="">-- Do Not Map --</option>
                             {importHeaders.map(h => (
@@ -1933,14 +1969,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
                       {/* Address mapping */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                        <label className="text-[10.5px] font-sans font-bold text-zinc-600">
+                        <label className="text-[10.5px] font-sans font-bold text-zinc-400">
                           Location / Address
                         </label>
                         <div className="sm:col-span-2">
                           <select
                             value={importMapping.address}
                             onChange={(e) => setImportMapping(prev => ({ ...prev, address: e.target.value }))}
-                            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-700 hover:border-zinc-350 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
+                            className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
                           >
                             <option value="">-- Do Not Map (Unknown Location) --</option>
                             {importHeaders.map(h => (
@@ -1952,14 +1988,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
                       {/* Rating mapping */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                        <label className="text-[10.5px] font-sans font-bold text-zinc-600">
+                        <label className="text-[10.5px] font-sans font-bold text-zinc-400">
                           Google Rating
                         </label>
                         <div className="sm:col-span-2">
                           <select
                             value={importMapping.rating}
                             onChange={(e) => setImportMapping(prev => ({ ...prev, rating: e.target.value }))}
-                            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
+                            className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
                           >
                             <option value="">-- Do Not Map --</option>
                             {importHeaders.map(h => (
@@ -1971,14 +2007,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
                       {/* Reviews Count mapping */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                        <label className="text-[10.5px] font-sans font-bold text-zinc-600">
+                        <label className="text-[10.5px] font-sans font-bold text-zinc-400">
                           Reviews Count
                         </label>
                         <div className="sm:col-span-2">
                           <select
                             value={importMapping.reviewsCount}
                             onChange={(e) => setImportMapping(prev => ({ ...prev, reviewsCount: e.target.value }))}
-                            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
+                            className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
                           >
                             <option value="">-- Do Not Map --</option>
                             {importHeaders.map(h => (
@@ -1990,14 +2026,14 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
                       {/* Internal Notes Map */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                        <label className="text-[10.5px] font-sans font-bold text-zinc-600">
+                        <label className="text-[10.5px] font-sans font-bold text-zinc-400">
                           Internal Notes
                         </label>
                         <div className="sm:col-span-2">
                           <select
                             value={importMapping.notes}
                             onChange={(e) => setImportMapping(prev => ({ ...prev, notes: e.target.value }))}
-                            className="w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
+                            className="w-full bg-zinc-900/70 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 hover:border-white/20 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
                           >
                             <option value="">-- Do Not Map (Preset note) --</option>
                             {importHeaders.map(h => (
@@ -2008,20 +2044,20 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                       </div>
 
                       {/* Advanced Overrides or Pipeline defaults split section */}
-                      <div className="pt-3 border-t border-dashed border-zinc-150">
+                      <div className="pt-3 border-t border-dashed border-white/10">
                         <span className="text-[10px] font-sans font-black text-zinc-400 block uppercase tracking-wider mb-2.5 font-bold">
                           Advanced Overrides & Stage Presets
                         </span>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                           <div className="space-y-1">
-                            <label className="text-[9.5px] font-sans font-bold text-zinc-500 uppercase tracking-wider">
+                            <label className="text-[9.5px] font-sans font-bold text-zinc-400 uppercase tracking-wider">
                               Initial Pipeline Stage
                             </label>
                             <select
                               value={importMapping.status}
                               onChange={(e) => setImportMapping(prev => ({ ...prev, status: e.target.value }))}
-                              className="w-full bg-zinc-50 border border-zinc-200/80 rounded-lg px-2 py-1 text-xs text-zinc-700 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer font-medium"
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer font-medium"
                             >
                               <optgroup label="Static Value Overrides">
                                 <option value="static:new">Static Option: New opportunity</option>
@@ -2041,13 +2077,13 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[9.5px] font-sans font-bold text-zinc-500 uppercase tracking-wider">
+                            <label className="text-[9.5px] font-sans font-bold text-zinc-400 uppercase tracking-wider">
                               Proposed Service System
                             </label>
                             <select
                               value={importMapping.serviceType}
                               onChange={(e) => setImportMapping(prev => ({ ...prev, serviceType: e.target.value }))}
-                              className="w-full bg-zinc-50 border border-zinc-200/80 rounded-lg px-2 py-1 text-xs text-zinc-700 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer font-medium"
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer font-medium"
                             >
                               <optgroup label="Static Overrides">
                                 <option value="static:web_design">🎨 Web Design System</option>
@@ -2067,13 +2103,13 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
                         <div className="grid grid-cols-1 gap-2.5 mt-2.5">
                           <div className="space-y-1">
-                            <label className="text-[9.5px] font-sans font-bold text-zinc-500 uppercase tracking-wider">
+                            <label className="text-[9.5px] font-sans font-bold text-zinc-400 uppercase tracking-wider">
                               Digital Presence Score
                             </label>
                             <select
                               value={importMapping.digitalPresenceScore}
                               onChange={(e) => setImportMapping(prev => ({ ...prev, digitalPresenceScore: e.target.value }))}
-                              className="w-full bg-zinc-50 border border-zinc-200/80 rounded-lg px-2 py-1 text-xs text-zinc-700 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer font-medium"
+                              className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer font-medium"
                             >
                               <optgroup label="Standard Scores (Presets)">
                                 <option value="static:30">30% (Critical online presence gap)</option>
@@ -2097,30 +2133,30 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                   </div>
 
                   {/* Right block (5 Columns Width): Verification Stage Previews */}
-                  <div className="col-span-12 md:col-span-5 p-6 bg-zinc-50/70 overflow-y-auto max-h-[500px] flex flex-col justify-between space-y-4">
+                  <div className="col-span-12 md:col-span-5 p-6 bg-white/5 overflow-y-auto max-h-[500px] flex flex-col justify-between space-y-4">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between border-b border-zinc-155 pb-2.5">
-                        <span className="text-xs font-sans font-bold text-zinc-700 uppercase tracking-wider">Mapping Verification Preview</span>
+                      <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                        <span className="text-xs font-sans font-bold text-zinc-300 uppercase tracking-wider">Mapping Verification Preview</span>
                         
                         {/* Pagination Selector */}
-                        <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-zinc-200 shadow-3xs">
+                        <div className="flex items-center gap-1 bg-zinc-900/70 p-1 rounded-lg border border-white/10 shadow-3xs">
                           <button
                             type="button"
                             disabled={previewRowIndex === 0}
                             onClick={() => setPreviewRowIndex(prev => Math.max(0, prev - 1))}
-                            className="p-1 rounded bg-white hover:bg-zinc-100 border border-zinc-200 disabled:opacity-40 disabled:hover:bg-white text-zinc-650 cursor-pointer transition text-[9px] font-black leading-none"
+                            className="p-1 rounded bg-zinc-900/70 hover:bg-white/10 border border-white/10 disabled:opacity-40 disabled:hover:bg-zinc-800/70 text-zinc-300 cursor-pointer transition text-[9px] font-black leading-none"
                             title="Previous Row"
                           >
                             ◀
                           </button>
-                          <span className="text-[10px] font-mono font-bold text-zinc-500 select-none px-1">
+                          <span className="text-[10px] font-mono font-bold text-zinc-400 select-none px-1">
                             {previewRowIndex + 1} / {Math.min(importRows.length, 5)}
                           </span>
                           <button
                             type="button"
                             disabled={previewRowIndex >= Math.min(importRows.length - 1, 4)}
                             onClick={() => setPreviewRowIndex(prev => Math.min(importRows.length - 1, prev + 1))}
-                            className="p-1 rounded bg-white hover:bg-zinc-100 border border-zinc-200 disabled:opacity-40 disabled:hover:bg-white text-zinc-650 cursor-pointer transition text-[9px] font-black leading-none"
+                            className="p-1 rounded bg-zinc-900/70 hover:bg-white/10 border border-white/10 disabled:opacity-40 disabled:hover:bg-zinc-800/70 text-zinc-300 cursor-pointer transition text-[9px] font-black leading-none"
                             title="Next Row"
                           >
                             ▶
@@ -2128,7 +2164,7 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                         </div>
                       </div>
 
-                      <p className="text-[10.5px] text-zinc-500 leading-normal">
+                      <p className="text-[10.5px] text-zinc-400 leading-normal">
                         Verify how row data translates into a structured prospect before importing. Analyzing row #{previewRowIndex + 1} of spreadsheet.
                       </p>
 
@@ -2136,25 +2172,25 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                       {(() => {
                         const currentRow = importRows[previewRowIndex];
                         if (!currentRow) {
-                          return <div className="p-4 bg-white rounded-lg border border-zinc-200 text-xs text-zinc-400 font-mono text-center">No parsed row loaded.</div>;
+                          return <div className="p-4 bg-zinc-900/70 rounded-lg border border-white/10 text-xs text-zinc-400 font-mono text-center">No parsed row loaded.</div>;
                         }
                         const testLead = createLeadFromRow(currentRow);
                         const isNameMapped = !!importMapping.name;
 
                         return (
-                          <div className="bg-white border border-zinc-200 rounded-xl shadow-xs overflow-hidden leading-normal">
+                          <div className="bg-zinc-900/70 border border-white/10 rounded-xl shadow-xs overflow-hidden leading-normal">
                             {/* Card top bar */}
-                            <div className="p-3.5 bg-zinc-50/50 border-b border-zinc-150/80 flex items-start justify-between">
+                            <div className="p-3.5 bg-white/5 border-b border-white/10 flex items-start justify-between">
                               <div className="space-y-0.5 truncate max-w-[70%]">
-                                <span className="text-[8px] font-mono uppercase bg-zinc-200 text-zinc-700 px-1.5 py-px rounded font-bold">
+                                <span className="text-[8px] font-mono uppercase bg-white/10 text-zinc-300 px-1.5 py-px rounded font-bold">
                                   {testLead.category || "Local Business"}
                                 </span>
-                                <h5 className={`text-xs font-bold ${isNameMapped ? 'text-zinc-900' : 'text-rose-600 animate-pulse'} truncate mt-1`}>
+                                <h5 className={`text-xs font-bold ${isNameMapped ? 'text-zinc-100' : 'text-rose-300 animate-pulse'} truncate mt-1`}>
                                   {isNameMapped ? testLead.name : "(⚠️ Choose Name mapping)"}
                                 </h5>
                               </div>
 
-                              <span className="text-[8.5px] font-mono font-bold text-blue-700 uppercase bg-blue-50 border border-blue-100/50 px-2 py-0.5 rounded shadow-3xs shrink-0">
+                              <span className="text-[8.5px] font-mono font-bold text-blue-300 uppercase bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 rounded shadow-3xs shrink-0">
                                 {testLead.status.toUpperCase()}
                               </span>
                             </div>
@@ -2162,11 +2198,11 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                             {/* Card Content parameters */}
                             <div className="p-3.5 space-y-2.5 text-[10.5px]">
                               {/* Website details */}
-                              <div className="flex items-center gap-1.5 text-zinc-600">
+                              <div className="flex items-center gap-1.5 text-zinc-400">
                                 <Globe className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
                                 <span className="truncate">
                                   {testLead.website ? (
-                                    <span className="text-blue-600 font-semibold underline">{testLead.website}</span>
+                                    <span className="text-blue-300 font-semibold underline">{testLead.website}</span>
                                   ) : (
                                     <span className="text-zinc-400 italic">No website (Triggers web design offer)</span>
                                   )}
@@ -2174,53 +2210,53 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                               </div>
 
                               {/* Phone details */}
-                              <div className="flex items-center gap-1.5 text-zinc-600">
+                              <div className="flex items-center gap-1.5 text-zinc-400">
                                 <span className="text-[10px] select-none text-zinc-400 shrink-0 font-bold font-mono">📞</span>
                                 <span>{testLead.phone || <span className="text-zinc-400 italic">Not set</span>}</span>
                               </div>
 
                               {/* Location details */}
-                              <div className="flex items-center gap-1.5 text-zinc-600">
+                              <div className="flex items-center gap-1.5 text-zinc-400">
                                 <span className="text-[10px] select-none text-zinc-400 shrink-0 font-bold font-mono">📍</span>
                                 <span className="truncate">{testLead.address}</span>
                               </div>
 
                               {/* Rating stars and counts */}
-                              <div className="grid grid-cols-2 gap-2 bg-zinc-50 p-2 rounded-lg border border-zinc-150/60 font-medium">
+                              <div className="grid grid-cols-2 gap-2 bg-white/5 p-2 rounded-lg border border-white/10 font-medium">
                                 <div>
                                   <span className="text-[7.5px] text-zinc-400 font-sans font-bold block uppercase tracking-wide">Google Rating</span>
-                                  <span className="text-zinc-700 flex items-center gap-1 font-mono text-[10.5px] font-bold mt-0.5">
+                                  <span className="text-zinc-300 flex items-center gap-1 font-mono text-[10.5px] font-bold mt-0.5">
                                     ⭐ {testLead.rating !== null ? testLead.rating : 'N/A'}
                                   </span>
                                 </div>
                                 <div>
                                   <span className="text-[7.5px] text-zinc-400 font-sans font-bold block uppercase tracking-wide">Reviews</span>
-                                  <span className="text-zinc-700 font-mono text-[10.5px] font-bold mt-0.5">
+                                  <span className="text-zinc-300 font-mono text-[10.5px] font-bold mt-0.5">
                                     💬 {testLead.reviewsCount !== null ? testLead.reviewsCount : 'N/A'}
                                   </span>
                                 </div>
                               </div>
 
                               {/* Proposal details */}
-                              <div className="pt-2 border-t border-zinc-150 text-[10px] space-y-1.5">
-                                <div className="flex justify-between items-center bg-blue-50/20 border border-blue-100/50 p-1.5 rounded-md">
-                                  <span className="text-zinc-450 uppercase font-mono font-bold text-[8px] tracking-wide">Recommended Proposal</span>
-                                  <span className="font-sans font-semibold text-zinc-700">
+                              <div className="pt-2 border-t border-white/10 text-[10px] space-y-1.5">
+                                <div className="flex justify-between items-center bg-blue-500/15 border border-blue-500/30 p-1.5 rounded-md">
+                                  <span className="text-zinc-400 uppercase font-mono font-bold text-[8px] tracking-wide">Recommended Proposal</span>
+                                  <span className="font-sans font-semibold text-zinc-300">
                                     {testLead.serviceType === 'web_design' ? 'Custom Web Platform' : testLead.serviceType === 'ai_automation' ? 'AI Systems' : 'Hybrid Systems Box'}
                                   </span>
                                 </div>
 
-                                <div className="flex justify-between items-center bg-emerald-50/20 border border-emerald-100/50 p-1.5 rounded-md">
-                                  <span className="text-zinc-455 text-zinc-400 uppercase font-mono font-bold text-[8px] tracking-wide">Presence Score</span>
-                                  <span className="font-mono font-bold text-emerald-700 flex items-center gap-1">
+                                <div className="flex justify-between items-center bg-emerald-500/15 border border-emerald-500/30 p-1.5 rounded-md">
+                                  <span className="text-zinc-400 text-zinc-400 uppercase font-mono font-bold text-[8px] tracking-wide">Presence Score</span>
+                                  <span className="font-mono font-bold text-emerald-300 flex items-center gap-1">
                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                     {testLead.digitalPresenceScore}% strength
                                   </span>
                                 </div>
 
-                                <div className="p-1.5 bg-zinc-50 rounded border border-zinc-150/80">
+                                <div className="p-1.5 bg-white/5 rounded border border-white/10">
                                   <span className="text-zinc-400 font-mono font-bold text-[7.5px] block uppercase tracking-wide">Internal Notes preview</span>
-                                  <p className="text-[9.5px] text-zinc-650 line-clamp-2 mt-0.5 italic">{testLead.notes}</p>
+                                  <p className="text-[9.5px] text-zinc-300 line-clamp-2 mt-0.5 italic">{testLead.notes}</p>
                                 </div>
                               </div>
                             </div>
@@ -2230,11 +2266,11 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
                     </div>
 
                     {/* Quick validation warnings */}
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1">
-                      <span className="text-[9px] font-mono font-bold text-amber-800 uppercase tracking-widest flex items-center gap-1">
+                    <div className="bg-amber-500/15 border border-amber-500/30 rounded-lg p-3 space-y-1">
+                      <span className="text-[9px] font-mono font-bold text-amber-300 uppercase tracking-widest flex items-center gap-1">
                         ⚠️ Data Format Advisory
                       </span>
-                      <p className="text-[9.5px] text-amber-700 leading-normal font-medium">
+                      <p className="text-[9.5px] text-amber-300 leading-normal font-medium">
                         Rows missing a mapped Business Name value are skipped automatically. Web Designing deficits are activated for prospects missing Website URLs.
                       </p>
                     </div>
@@ -2245,19 +2281,19 @@ export default function CrmPipeline({ leads, onUpdateStatus, onSelectLead, onDel
 
               {/* Footer action bar */}
               {!isImporting && !importResults && (
-                <div className="flex items-center justify-between border-t border-zinc-150 px-6 py-4 bg-zinc-50/80">
+                <div className="flex items-center justify-between border-t border-white/10 px-6 py-4 bg-white/5">
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => document.getElementById('crm-csv-import-file-input')?.click()}
-                      className="px-3 py-1.5 text-[10px] font-sans font-bold text-zinc-600 hover:text-zinc-800 uppercase transition bg-white border border-zinc-200 hover:border-zinc-300 rounded-lg cursor-pointer"
+                      className="px-3 py-1.5 text-[10px] font-sans font-bold text-zinc-400 hover:text-white uppercase transition bg-zinc-900/70 border border-white/10 hover:border-white/20 rounded-lg cursor-pointer"
                     >
                       Change File
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsImportModalOpen(false)}
-                      className="px-3 py-1.5 text-[10px] font-sans font-semibold text-zinc-500 hover:text-zinc-700 uppercase transition bg-transparent hover:bg-zinc-100/50 rounded-lg cursor-pointer"
+                      className="px-3 py-1.5 text-[10px] font-sans font-semibold text-zinc-400 hover:text-zinc-200 uppercase transition bg-transparent hover:bg-white/10 rounded-lg cursor-pointer"
                     >
                       Cancel
                     </button>

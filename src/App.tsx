@@ -299,7 +299,7 @@ export default function App() {
   const savedLeadNames = crmLeads.map((item) => item.name);
 
   return (
-    <div id="hunter-app-viewport" className="min-h-screen bg-[#FAFAFB] font-sans text-zinc-800 antialiased selection:bg-blue-600/10 selection:text-blue-600">
+    <div id="hunter-app-viewport" className="min-h-screen cine-shell font-sans text-zinc-200 antialiased selection:bg-blue-600/30 selection:text-blue-100">
       
       <Header
         activeTab={activeTab}
@@ -309,7 +309,7 @@ export default function App() {
       />
 
       {activeTab === 'guide' ? (
-        <div>
+        <div className="relative z-10">
           {/* Full-screen cinematic hero — scroll down to explore */}
           <NeuralFlowHero onScrollDown={() => {
             document.getElementById('agent-process-flow')?.scrollIntoView({ behavior: 'smooth' });
@@ -326,14 +326,14 @@ export default function App() {
           />
         </div>
       ) : (
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 dark-scrollbar">
-          
+        <main className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 dark-scrollbar">
+
           {globalError && (
-            <div className="mb-4 flex items-start gap-3 rounded-xl bg-orange-50 border border-orange-200/60 p-4 text-xs text-orange-850">
-              <AlertCircle className="h-4.5 w-4.5 text-orange-500 shrink-0 mt-0.5" />
+            <div className="mb-4 flex items-start gap-3 rounded-xl bg-amber-950/30 border border-amber-500/25 p-4 text-xs text-amber-200 backdrop-blur-sm">
+              <AlertCircle className="h-4.5 w-4.5 text-amber-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-orange-950">System Analytics Status</p>
-                <p className="mt-0.5 text-zinc-600">{globalError}</p>
+                <p className="font-semibold text-amber-100">System Analytics Status</p>
+                <p className="mt-0.5 text-amber-200/70">{globalError}</p>
               </div>
             </div>
           )}
@@ -376,16 +376,16 @@ export default function App() {
           </div>
 
           {/* 💌 Integrated Compact Attribution Footer */}
-          <footer className="mt-16 py-8 border-t border-zinc-200/50 text-center">
-            <p className="text-zinc-700 text-[10.5px] font-bold tracking-widest uppercase font-sans">
-              Built with ❤️ by <span className="text-blue-600 font-extrabold hover:underline">Bamidele Tewogbade</span>
+          <footer className="mt-16 py-8 border-t border-white/10 text-center">
+            <p className="text-zinc-300 text-[10.5px] font-bold tracking-widest uppercase font-sans">
+              Built with ❤️ by <span className="neon-text font-extrabold hover:underline">Bamidele Tewogbade</span>
             </p>
             <div className="flex justify-center items-center gap-3.5 mt-2.5 text-[10px] font-semibold text-zinc-500 font-sans">
-              <a href="mailto:bishoptewogbade@gmail.com" className="hover:text-blue-600 transition-colors">bishoptewogbade@gmail.com</a>
-              <span className="text-zinc-200">•</span>
-              <a href="https://twitter.com/btewogbade" target="_blank" rel="noreferrer" className="hover:text-sky-500 transition-colors">Twitter</a>
-              <span className="text-zinc-200">•</span>
-              <a href="https://linkedin.com/in/btewogbade" target="_blank" rel="noreferrer" className="hover:text-blue-700 transition-colors">LinkedIn</a>
+              <a href="mailto:bishoptewogbade@gmail.com" className="hover:text-blue-400 transition-colors">bishoptewogbade@gmail.com</a>
+              <span className="text-zinc-700">•</span>
+              <a href="https://twitter.com/btewogbade" target="_blank" rel="noreferrer" className="hover:text-sky-400 transition-colors">Twitter</a>
+              <span className="text-zinc-700">•</span>
+              <a href="https://linkedin.com/in/btewogbade" target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors">LinkedIn</a>
             </div>
           </footer>
         </main>

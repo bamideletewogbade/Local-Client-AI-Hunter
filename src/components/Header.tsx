@@ -9,13 +9,14 @@ import {
   Database,
   LayoutList,
   Search,
-  MessageSquare
+  MessageSquare,
+  Activity
 } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 interface HeaderProps {
-  activeTab: 'guide' | 'discovery' | 'crm' | 'analytics';
-  setActiveTab: (tab: 'guide' | 'discovery' | 'crm' | 'analytics') => void;
+  activeTab: 'guide' | 'discovery' | 'crm' | 'analytics' | 'agents';
+  setActiveTab: (tab: 'guide' | 'discovery' | 'crm' | 'analytics' | 'agents') => void;
   crmCount: number;
   onOpenChat?: () => void;
 }
@@ -53,7 +54,7 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenChat }
           </div>
           <div className="hidden min-[370px]:block">
             <span className="text-xs font-bold tracking-tight text-zinc-900 font-display flex items-center gap-1 uppercase">
-              Client <span className="hidden min-[400px]:inline">Hunter</span>
+              AscendSME <span className="hidden min-[400px]:inline">· Lumi · Hone</span>
               <span className={`rounded-md px-1 py-0.5 text-[8px] font-bold border font-mono tracking-widest leading-none ${
                 isFallbackActive 
                   ? 'bg-amber-50 text-amber-600 border-amber-200' 
@@ -62,7 +63,7 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenChat }
                 {isFallbackActive ? 'Local' : 'AI'}
               </span>
             </span>
-            <p className="text-[9px] font-medium text-zinc-400 font-mono tracking-wider hidden sm:block">Acquisition Engine</p>
+            <p className="text-[9px] font-medium text-zinc-400 font-mono tracking-wider hidden sm:block">Project Portfolio</p>
           </div>
         </div>
 
@@ -123,6 +124,19 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenChat }
           >
             <BarChart3 className="h-3.5 w-3.5 text-zinc-700 shrink-0" />
             <span className="font-display hidden sm:inline">Analytics</span>
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('agents')}
+            className={`flex items-center gap-1 rounded-lg px-2 sm:px-3 py-1.5 text-xs font-medium tracking-tight transition-all duration-150 cursor-pointer ${
+              activeTab === 'agents'
+                ? 'bg-white text-amber-600 shadow-xs border border-zinc-200/50'
+                : 'text-zinc-500 hover:text-zinc-900 border border-transparent'
+            }`}
+            title="Agent Dashboard"
+          >
+            <Activity className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+            <span className="font-display hidden sm:inline">Agents</span>
           </button>
         </nav>
 

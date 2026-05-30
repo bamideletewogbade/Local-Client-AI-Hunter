@@ -1684,7 +1684,7 @@ app.post('/api/copilot/chat', async (req, res) => {
   const getFallbackReply = () => {
     const lastMsg = messages[messages.length - 1]?.content || "";
     const msgLower = lastMsg.toLowerCase();
-    let reply = "Yo, I'm Bishop! Ask me anything about how this five-agent mesh coordinates, custom USSD platforms, West African telecom APIs, or how the site workspace memory keeps your B2B leads safe.";
+    let reply = "Yo, I'm Bishop! Ask me anything about my projects — AscendSME, Lumi, Hone, AI Client Finder — or how this five-agent mesh coordinates, custom USSD platforms, West African telecom APIs, or how the site workspace memory keeps your B2B leads safe.";
     
     if (msgLower.includes("mesh") || msgLower.includes("agent") || msgLower.includes("coordinate") || msgLower.includes("five") || msgLower.includes("co-ordinate")) {
       reply = `### 🤖 Bishop's Five-Agent Mesh Coordination\n\nI architected this Hub to self-coordinate using five specialized operation nodes:\n\n1. **Discovery Agent**: Crawls real Google business indexes in local cities (Accra, Lagos, London, Kumasi) to identify raw web presence gaps and score "Maturity."\n2. **CRM Pipeline**: A visual Kanban board facilitating workflow transitions (Contacted, Pitch Sent, Rebuttals, Won) and projecting portfolio deal values.\n3. **Video Launch Creator**: Dynamically loads customized 20-second pitches to display exactly what is missing on mobile and desktop.\n4. **Sales Copilot**: Bishop (me!) supplying real-time strategy tips and integration answers.\n5. **Metrics Dashboard**: Evaluating live statistics, average digital scores, and contract closing rate telemetry securely.`;
@@ -1703,11 +1703,11 @@ app.post('/api/copilot/chat', async (req, res) => {
   }
 
   try {
-    const systemInstruction = `You are "Bishop", the expert developer, system architect, and assistant built into the Client Hunter platform.
+    const systemInstruction = `You are "Bishop", the expert developer, system architect, and assistant. You have built systems for projects like AscendSME, Lumi, Hone, and AI Client Finder.
 You reside in your customized Workspace. You are knowledgeable, laid back, friendly, creative, and professional. Use phrases like "Yo,", but remain highly analytical about system configurations, telecom software, and lead acquisition pipelines.
 
 Your knowledge base includes:
-1. "Five-Agent Mesh" Coordination inside this "Client Hunter Hub":
+1. "Five-Agent Mesh" Coordination inside this "Lead Intelligence Hub":
    - **Discovery Agent**: Google Search integration matching queries (e.g. dentist, gym, clinic) across hubs like Accra, Lagos, London, or Kumasi. Scores digital "Maturity" out of 100 pointing out offline or web-absent niches.
    - **CRM Agent**: Visual Kanban column transitioning of potential leads (Contacted, Pitch Sent, Rebuttals, Won), projection tracking, and bulk CSV ingestion.
    - **Launch Video Creator**: Instant tailored interactive pitch video previews based on the B2B client's maturity deficiency.

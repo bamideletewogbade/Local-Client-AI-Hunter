@@ -3,7 +3,8 @@ import { Player, PlayerRef } from '@remotion/player';
 import { useCurrentFrame, useVideoConfig, spring, interpolate, AbsoluteFill } from 'remotion';
 import { 
   Sparkles, CalendarRange, Search, Download, Play, Pause, RotateCcw, 
-  Settings, Check, Compass, ArrowRight, ArrowLeft, Filter, RefreshCw
+  Settings, Check, Compass, ArrowRight, ArrowLeft, Filter, RefreshCw,
+  MapPin, Target as TargetIcon, Send
 } from 'lucide-react';
 
 // ==========================================================
@@ -139,20 +140,19 @@ function SceneTitle() {
           className="text-4xl font-black text-white tracking-widest font-sans uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-200 to-zinc-400 select-none"
           style={{ transform: `scale(${titleSpring})` }}
         >
-          CLIENT HUNTER
+          ASCENDSME · LUMI · HONE · AI CLIENT FINDER
         </h1>
 
         <p 
           className="text-sm text-zinc-400 font-mono tracking-wider max-w-md mx-auto uppercase font-bold"
           style={{ opacity: subTitleSpring, transform: `translateY(${interpolate(frame - 15, [0, 30], [20, 0], { extrapolateLeft: 'clamp' })}px)` }}
         >
-          Automated Prospecting & CRM Intelligence Pipeline
+          Multi-Project Portfolio — Lead Intelligence & Automation
         </p>
 
-        <div className="pt-8 flex justify-center gap-3">
-          <span className="text-[9px] font-mono rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 font-bold uppercase tracking-widest">
-            🤖 AI Sales agent
-          </span>
+        <div className="pt-8 flex justify-center gap-3">              <span className="text-[9px] font-mono rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 font-bold uppercase tracking-widest">
+                🤖 AI Sales Agent Kit
+              </span>
           <span className="text-[9px] font-mono rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 px-3 py-1 font-bold uppercase tracking-widest">
             ⚡ Vite + Remotion
           </span>
@@ -162,8 +162,8 @@ function SceneTitle() {
   );
 }
 
-// 3. Scene: Feature 1 - Prospect Discovery
-function SceneDiscovery() {
+// 3. Scene: Step 1 - Scanner Agent (Google Maps Discovery)
+function SceneScanner() {
   const frame = useCurrentFrame();
   const config = useVideoConfig();
 
@@ -177,214 +177,167 @@ function SceneDiscovery() {
 
   return (
     <div className="w-full h-full flex flex-col justify-between bg-[#09090B] p-6 relative font-sans overflow-hidden">
-      {"/* Scenario Info Header */"}
       <div className="flex items-center justify-between border-b border-zinc-850 pb-3 z-10">
         <div>
-          <span className="text-[8.5px] font-mono text-blue-400 uppercase tracking-widest font-bold">CHAPTER 01</span>
-          <h2 className="text-sm font-black uppercase text-white tracking-wider">Dynamic Lead Generation</h2>
+          <span className="text-[8.5px] font-mono text-emerald-400 uppercase tracking-widest font-bold">STEP 1 OF 5</span>
+          <h2 className="text-sm font-black uppercase text-white tracking-wider">Scanner Agent — Find Leads</h2>
         </div>
         <div className="flex items-center gap-2 bg-[#0C0C0E] px-2.5 py-1 rounded border border-zinc-800">
-          <Search className="h-3 w-3 text-blue-400 animate-pulse" />
-          <span className="text-[9px] font-mono text-zinc-400 uppercase font-black">Scanning Location...</span>
+          <Search className="h-3 w-3 text-emerald-400 animate-pulse" />
+          <span className="text-[9px] font-mono text-zinc-400 uppercase font-black">Scanning Google Maps...</span>
         </div>
       </div>
 
-      {/* Inner Screen Mockup */}
-      <div className="grid grid-cols-5 gap-4 flex-1 mt-4 items-stretch relative">
-        {/* Left Simulated Maps viewport */}
-        <div 
-          className="col-span-2 rounded-xl border border-zinc-850 bg-zinc-900/30 overflow-hidden relative flex items-center justify-center p-2"
-          style={{ transform: `scale(${mapScale})` }}
-        >
-          {/* Mock Map grid graphic */}
-          <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
-          <div className="h-28 w-28 rounded-full bg-blue-500/5 absolute border border-blue-500/20 animate-pulse" />
-          <div className="h-16 w-16 rounded-full bg-blue-500/10 absolute border border-blue-500/10" />
-          
-          <div className="h-3 w-3 rounded-full bg-blue-400 absolute border-2 border-white shadow-lg animate-bounce" style={{ top: '40%', left: '50%' }} />
-          <div className="h-3 w-3 rounded-full bg-emerald-400 absolute border-2 border-white shadow-lg animate-ping" style={{ top: '65%', left: '30%' }} />
-          <div className="h-3 w-3 rounded-full bg-rose-500 absolute border-2 border-white shadow-lg" style={{ top: '25%', left: '70%' }} />
-
-          <div className="absolute bottom-2 left-2 bg-[#0C0C0E] border border-zinc-800 px-2 py-0.5 rounded text-[8px] font-mono text-zinc-500 uppercase font-bold">
-            Maps Radar Module
-          </div>
-        </div>
-
-        {/* Right Lead Search Cards */}
-        <div 
-          className="col-span-3 flex flex-col justify-center space-y-3 relative"
-          style={{ transform: `translateY(${cardsY}px)` }}
-        >
-          {/* Mock Search Input field */}
-          <div className="bg-[#0C0C0E] border border-zinc-800 rounded-lg p-2 flex items-center justify-between text-[9px] font-mono text-zinc-500">
-            <span>Query: Dentist - London</span>
-            <span className="text-blue-400">STATUS: COMPLETE</span>
-          </div>
-
-          {/* Lead Card 1 */}
-          <div className="bg-[#0C0C0E]/70 border border-zinc-800 rounded-lg p-3 space-y-1.5 shadow-md relative">
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="text-[11px] font-bold text-white tracking-wide">Harley Dental Center</h4>
-                <p className="text-[8.5px] text-zinc-500 font-mono">Cosmetic Dentistry • Clinic</p>
+      <div className="flex-1 flex items-center justify-center mt-2">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-lg">
+          {/* Left: Input form */}
+          <div 
+            className="flex-1 bg-[#0C0C0E] border border-zinc-800 rounded-xl p-4 space-y-3"
+            style={{ transform: `scale(${mapScale})` }}
+          >
+            <div className="space-y-2">
+              <label className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Enter City</label>
+              <div className="flex items-center gap-1.5 bg-[#09090B] border border-zinc-800 rounded-lg px-2.5 py-2">
+                <MapPin className="h-3 w-3 text-zinc-500 shrink-0" />
+                <span className="text-[10px] text-white font-bold font-mono">London</span>
+                <span className="text-[8px] text-zinc-500 ml-auto font-mono">UK</span>
               </div>
-              <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded px-1.5 font-bold font-mono py-0.5">
-                Saved to CRM
-              </span>
             </div>
-            
-            <div className="flex justify-between items-center pt-2 border-t border-zinc-850">
-              <span className="text-[8px] text-red-400 font-mono flex items-center gap-1 font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                NO SITE DETECTED
-              </span>
-              <span className="text-[9px] font-mono text-zinc-400 font-bold">Presence: 35% Weak</span>
+            <div className="space-y-2">
+              <label className="text-[8px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Business Niche</label>
+              <div className="flex items-center gap-1.5 bg-[#09090B] border border-zinc-800 rounded-lg px-2.5 py-2">
+                <TargetIcon className="h-3 w-3 text-zinc-500 shrink-0" />
+                <span className="text-[10px] text-white font-bold font-mono">Dentist</span>
+              </div>
+            </div>
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2 text-center">
+              <span className="text-[9px] font-mono text-emerald-400 font-bold">Scanning 127 businesses...</span>
             </div>
           </div>
 
-          {/* Lead Card 2 */}
-          <div className="bg-[#0C0C0E]/70 border border-zinc-800 rounded-lg p-3 space-y-1.5 shadow-md">
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="text-[11px] font-bold text-white tracking-wide">Elite Dental Clinic</h4>
-                <p className="text-[8.5px] text-zinc-500 font-mono">Orthodontic Group • WestEnd</p>
+          {/* Right: Results preview */}
+          <div 
+            className="flex-1 space-y-2 w-full"
+            style={{ transform: `translateY(${cardsY}px)` }}
+          >
+            <div className="bg-[#0C0C0E] border border-zinc-800 rounded-lg p-2.5 space-y-1">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="text-[10px] font-bold text-white">Harley Dental Center</h4>
+                  <p className="text-[7px] text-zinc-500 font-mono">Cosmetic Dentistry</p>
+                </div>
+                <span className="text-[7px] bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded px-1 font-bold font-mono">NO WEBSITE</span>
               </div>
-              <span className="text-[8px] bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded px-1.5 font-bold font-mono py-0.5">
-                New Prospect
-              </span>
+              <div className="flex items-center gap-2 text-[7px] text-zinc-500">
+                <MapPin className="h-2.5 w-2.5" />
+                <span>Oxford St, London</span>
+                <span className="ml-auto">★ 4.2</span>
+              </div>
             </div>
-            
-            <div className="flex justify-between items-center pt-2 border-t border-zinc-850">
-              <span className="text-[8px] text-emerald-400 font-mono flex items-center gap-1 font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                WEBSITE ALIGNED
-              </span>
-              <span className="text-[9px] font-mono text-white font-bold">Presence: 72% Medium</span>
+            <div className="bg-[#0C0C0E] border border-zinc-800 rounded-lg p-2.5 space-y-1">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="text-[10px] font-bold text-white">Elite Dental Clinic</h4>
+                  <p className="text-[7px] text-zinc-500 font-mono">Orthodontic Group</p>
+                </div>
+                <span className="text-[7px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded px-1 font-bold font-mono">HAS WEBSITE</span>
+              </div>
+              <div className="flex items-center gap-2 text-[7px] text-zinc-500">
+                <MapPin className="h-2.5 w-2.5" />
+                <span>West End, London</span>
+                <span className="ml-auto">★ 4.5</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Feature pointing alert arrow */}
       <FeaturePointerArrow 
         startFrame={40} 
-        arrowPath="M 120,200 C 130,130 180,95 240,110" 
-        label="Automated Local Presence Audit!" 
+        arrowPath="M 120,180 C 130,130 180,95 240,110" 
+        label="Scanner scrapes Google Maps in real-time!" 
       />
     </div>
   );
 }
 
-// 4. Scene: Feature 2 - Kanban Board & Columns Filtering
-function SceneKanban() {
+// 4. Scene: Step 2 - Analyzer Agent (Digital Presence Audit)
+function SceneAnalyzer() {
   const frame = useCurrentFrame();
   const config = useVideoConfig();
 
-  const slideFactor = spring({
-    frame,
+  const fadeIn = spring({
+    frame: frame - 10,
     fps: config.fps,
-    config: { damping: 15 }
+    config: { damping: 14 }
   });
 
-  const hideFirstCol = frame > 45; // Simulated toggling action
+  const scoreSpring = spring({
+    frame: frame - 30,
+    fps: config.fps,
+    config: { damping: 12 }
+  });
 
   return (
     <div className="w-full h-full flex flex-col justify-between bg-[#09090B] p-6 relative font-sans overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-zinc-850 pb-3 z-10">
         <div>
-          <span className="text-[8.5px] font-mono text-blue-400 uppercase tracking-widest font-bold">CHAPTER 02</span>
-          <h2 className="text-sm font-black uppercase text-white tracking-wider">Visual CRM Pipeline & Filter controls</h2>
+          <span className="text-[8.5px] font-mono text-blue-400 uppercase tracking-widest font-bold">STEP 2 OF 5</span>
+          <h2 className="text-sm font-black uppercase text-white tracking-wider">Analyzer Agent — Audit Digital Presence</h2>
         </div>
-        
-        {/* Mock Stage toggle controller */}
-        <div className="flex items-center gap-1.5 bg-[#0C0C0E] border border-zinc-800 p-1 rounded-lg">
-          <Filter className="h-3 w-3 text-blue-400" />
-          <span className="text-[9px] font-mono text-zinc-400 font-bold uppercase mr-1">Toggled:</span>
-          <span className={`text-[8.5px] font-mono px-1.5 rounded border transition-colors ${hideFirstCol ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
-            {hideFirstCol ? '3 Columns Active' : 'All 5 columns'}
-          </span>
-        </div>
+        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
       </div>
 
-      {"/* Simulated Kanban grid panel */"}
-      <div className="grid grid-cols-3 gap-3 flex-1 mt-4 items-stretch relative">
-        {/* Columns */}
-        
-        {/* Column 1 - New (Hides during filter toggle demo) */}
-        {!hideFirstCol ? (
-          <div className="bg-[#0C0C0E]/50 border border-zinc-850 rounded-xl p-2.5 flex flex-col justify-between h-full transition-all duration-200">
-            <div className="flex items-center justify-between pb-1.5 border-b border-zinc-850">
-              <span className="text-[9px] font-mono uppercase font-black text-white">🆕 New Leads</span>
-              <span className="bg-zinc-900 border border-zinc-800 text-zinc-400 h-4 px-1 rounded flex items-center justify-center text-[9px]">2</span>
+      <div className="flex-1 flex items-center justify-center mt-2" style={{ opacity: fadeIn }}>
+        <div className="grid grid-cols-2 gap-3 max-w-md w-full">
+          {/* Score gauge */}
+          <div className="bg-[#0C0C0E] border border-zinc-800 rounded-xl p-4 flex flex-col items-center justify-center">
+            <div className="relative h-20 w-20 flex items-center justify-center">
+              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="#1f2937" strokeWidth="4" />
+                <circle cx="40" cy="40" r="34" fill="none" stroke="#3b82f6" strokeWidth="4" 
+                  strokeDasharray={`${2 * Math.PI * 34}`}
+                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - 0.35 * scoreSpring)}`}
+                  strokeLinecap="round"
+                  style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                />
+              </svg>
+              <span className="text-lg font-bold font-mono text-white">{Math.round(35 * scoreSpring)}%</span>
             </div>
-            
-            <div className="bg-[#09090B] border border-zinc-850 rounded p-2 text-[9px] space-y-1">
-              <div className="text-white font-bold leading-none">Apex Orthos</div>
-              <p className="text-[8px] text-zinc-500 font-mono">Category: Medical</p>
-            </div>
-            <div className="bg-[#09090B] border border-zinc-850 rounded p-2 text-[9px] space-y-1">
-              <div className="text-white font-bold leading-none">Bridge Lawyers</div>
-              <p className="text-[8px] text-zinc-500 font-mono">Category: Legal</p>
-            </div>
-          </div>
-        ) : (
-          <div className="border border-dashed border-zinc-850/40 rounded-xl flex items-center justify-center p-4 bg-[#09090B]/10">
-            <span className="text-[8px] font-mono text-zinc-650 italic">Column Hidden by Filter Toggle</span>
-          </div>
-        )}
-
-        {/* Column 2 - Contacted */}
-        <div className="bg-[#0C0C0E]/50 border border-zinc-850 rounded-xl p-2.5 flex flex-col justify-between h-full">
-          <div className="flex items-center justify-between pb-1.5 border-b border-zinc-850">
-            <span className="text-[9px] font-mono uppercase font-black text-amber-400">🔄 Contacted</span>
-            <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 h-4 px-1 rounded flex items-center justify-center text-[9px]">1</span>
-          </div>
-          
-          <div className="bg-[#09090B] border border-zinc-700/60 rounded p-2 text-[9px] space-y-1 shadow-md">
-            <div className="text-white font-bold leading-none flex items-center justify-between">
-              <span>Harley Dental</span>
-              <span className="text-[7.5px] bg-red-500/15 border border-red-500/20 text-red-400 px-1 rounded">Urgent</span>
-            </div>
-            <p className="text-[8px] text-zinc-500 font-mono">Mail Sent: 1 day ago</p>
+            <p className="text-[8px] text-zinc-500 font-mono mt-2 uppercase font-bold">Digital Score</p>
+            <span className="text-[7px] bg-rose-500/10 text-rose-400 px-1.5 py-0.5 rounded font-bold mt-1">CRITICAL</span>
           </div>
 
-          <div className="h-10 text-[8px] text-zinc-650 italic flex items-center justify-center border border-dashed border-zinc-850/40 rounded">
-            Stage Container Empty
-          </div>
-        </div>
-
-        {/* Column 3 - Interested / Meeting */}
-        <div className="bg-[#0C0C0E]/50 border border-zinc-850 rounded-xl p-2.5 flex flex-col justify-between h-full">
-          <div className="flex items-center justify-between pb-1.5 border-b border-zinc-850">
-            <span className="text-[9px] font-mono uppercase font-black text-emerald-400">🔥 Meeting</span>
-            <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 h-4 px-1.5 rounded flex items-center justify-center text-[9px] font-mono font-black">1</span>
-          </div>
-          
-          <div className="bg-[#09090B] border border-zinc-800 rounded p-2 text-[9px] space-y-1">
-            <div className="text-white font-bold leading-none">Global Tech Ltd</div>
-            <p className="text-[8px] text-zinc-500 font-mono">Proposal Draft Ready</p>
-          </div>
-
-          <div className="h-10 text-[8px] text-zinc-650 italic flex items-center justify-center border border-dashed border-zinc-850/40 rounded">
-            Stage Container Empty
+          {/* Audit findings */}
+          <div className="bg-[#0C0C0E] border border-zinc-800 rounded-xl p-3 space-y-2" style={{ opacity: scoreSpring }}>
+            <h4 className="text-[9px] font-bold text-white uppercase tracking-wider">Findings</h4>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-[8px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0" />
+                <span className="text-zinc-300">No SSL certificate</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[8px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0" />
+                <span className="text-zinc-300">Not mobile optimized</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[8px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                <span className="text-zinc-300">No Google Maps listing</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[8px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-zinc-300">Active social media</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Pointing visual pointer on column toggler filter */}
-      <FeaturePointerArrow 
-        startFrame={30} 
-        arrowPath="M 240,60 C 265,35 285,15 285,25" 
-        label="Hide stages with visual Multi-Select toggle!" 
-        badgeColor="text-amber-450 border-amber-500/30 bg-amber-950/20"
-      />
     </div>
   );
 }
 
-// 5. Scene: Feature 3 - AI Status Summarizer Overlay
-function SceneSummary() {
+// 5. Scene: Step 3 - Pitcher Agent (AI Pitch Generation)
+function ScenePitcher() {
   const frame = useCurrentFrame();
   const config = useVideoConfig();
 
@@ -398,53 +351,41 @@ function SceneSummary() {
 
   return (
     <div className="w-full h-full flex flex-col justify-between bg-[#09090B] p-6 relative font-sans overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
         <div>
-          <span className="text-[8.5px] font-mono text-blue-400 uppercase tracking-widest font-bold">CHAPTER 03</span>
-          <h2 className="text-sm font-black uppercase text-white tracking-wider">AI Sales Briefing Insights</h2>
+          <span className="text-[8.5px] font-mono text-violet-400 uppercase tracking-widest font-bold">STEP 3 OF 5</span>
+          <h2 className="text-sm font-black uppercase text-white tracking-wider">Pitcher Agent — AI Pitch Generation</h2>
         </div>
-        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
       </div>
 
-      {/* Main Container showing simulated card trigger clicking */}
-      <div className="flex-1 flex items-center justify-center mt-4 relative">
-        {/* Background Card representation */}
-        <div className="blur-[1px] opacity-40 bg-[#0C0C0E] border border-zinc-800 rounded-xl p-4 w-60 space-y-2 text-[9px]">
+      <div className="flex-1 flex items-center justify-center mt-2 relative">
+        {/* Background card */}
+        <div className="blur-[1px] opacity-30 bg-[#0C0C0E] border border-zinc-800 rounded-xl p-4 w-60 space-y-2 text-[9px]">
           <h5 className="font-bold text-white">Harley Dental</h5>
-          <p className="text-zinc-500 font-mono leading-relaxed">Local SEO strategy is completely missing. Website needs update. Contacted last week.</p>
+          <p className="text-zinc-500 font-mono leading-relaxed">Needs website redesign, mobile optimization, and local SEO.</p>
         </div>
 
-        {/* AI briefing floating modal pops up in center */}
+        {/* AI pitch modal */}
         {frame >= 20 && (
           <div 
-            className="absolute rounded-xl border border-blue-900/40 bg-[#0C0C0E] shadow-[0_0_35px_rgba(0,0,0,0.8)] max-w-sm w-9/12 overflow-hidden"
-            style={{ transform: `scale(${modalScale})`, filter: 'drop-shadow(0 0 15px rgba(59,130,246,0.15))' }}
+            className="absolute rounded-xl border border-violet-900/40 bg-[#0C0C0E] shadow-[0_0_35px_rgba(0,0,0,0.8)] max-w-sm w-10/12 overflow-hidden"
+            style={{ transform: `scale(${modalScale})`, filter: 'drop-shadow(0 0 15px rgba(139,92,246,0.15))' }}
           >
-            {/* Modal Header */}
             <div className="flex items-center justify-between bg-zinc-950 border-b border-zinc-850 px-3.5 py-2">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-blue-400 animate-pulse" />
-                <span className="text-[9.5px] font-mono text-zinc-100 uppercase tracking-wider font-black">AI Briefing Generated</span>
+                <Sparkles className="h-3 w-3 text-violet-400 animate-pulse" />
+                <span className="text-[9.5px] font-mono text-zinc-100 uppercase tracking-wider font-black">AI Pitch Generated</span>
               </div>
-              <span className="text-[7.5px] bg-blue-500/10 text-blue-400 px-1.5 rounded uppercase font-bold border border-blue-500/20 font-mono scale-90">LIVE ENGINE</span>
+              <span className="text-[7.5px] bg-violet-500/10 text-violet-400 px-1.5 rounded uppercase font-bold border border-violet-500/20 font-mono scale-90">PERSONALIZED</span>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-3.5 space-y-2.5">
-              <div className="text-[10px] text-zinc-200 leading-relaxed font-sans space-y-2" style={{ opacity: textOpacity }}>
-                <div className="flex items-start gap-1.5">
-                  <span className="h-1 w-1 bg-blue-400 rounded-full mt-1.5 shrink-0" />
-                  <p><strong>Stage Diagnostics:</strong> Staged in <strong>OUTREACH</strong> stage with a weak presence of 35%.</p>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="h-1 w-1 bg-blue-400 rounded-full mt-1.5 shrink-0" />
-                  <p><strong>Bottleneck:</strong> Lacks valid SSL and mobile layout, which represents an immediate visual hook.</p>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="h-1 w-1 bg-blue-400 rounded-full mt-1.5 shrink-0" />
-                  <p><strong>Proposed Action:</strong> Pitch a mobile web platform with custom integration tools.</p>
-                </div>
+            <div className="p-3.5 space-y-2.5" style={{ opacity: textOpacity }}>
+              <div className="text-[9px] text-zinc-200 leading-relaxed font-sans space-y-2 border-l-2 border-violet-500/30 pl-2">
+                <p><em>"Hi there, I noticed Harley Dental Center doesn't have a website yet. In today's digital world, 78% of patients search online before booking. We can build you a modern, mobile-friendly site with appointment booking starting at $0 down. Would you be open to a quick chat?"</em></p>
+              </div>
+              <div className="flex items-center gap-2 pt-1 text-[8px] text-zinc-500 font-mono">
+                <span className="bg-violet-500/10 text-violet-400 px-1.5 py-0.5 rounded border border-violet-500/20">WhatsApp</span>
+                <span>Channel: Auto-selected</span>
               </div>
             </div>
           </div>
@@ -454,15 +395,96 @@ function SceneSummary() {
       <FeaturePointerArrow 
         startFrame={22} 
         arrowPath="M 235,135 C 210,135 150,115 150,125" 
-        label="Generate instant sales insights in 1-Click!" 
-        badgeColor="text-blue-400 border-blue-500/30 bg-blue-950/20"
+        label="AI crafts personalized outreach messages!" 
+        badgeColor="text-violet-400 border-violet-500/30 bg-violet-950/20"
       />
     </div>
   );
 }
 
-// 6. Scene: Feature 4 - Export CSV
-function SceneExport() {
+// 6. Scene: Step 4 - Converter Agent (CRM Pipeline)
+function SceneConverter() {
+  const frame = useCurrentFrame();
+  const config = useVideoConfig();
+
+  const slideFactor = spring({
+    frame,
+    fps: config.fps,
+    config: { damping: 15 }
+  });
+
+  return (
+    <div className="w-full h-full flex flex-col justify-between bg-[#09090B] p-6 relative font-sans overflow-hidden">
+      <div className="flex items-center justify-between border-b border-zinc-850 pb-3 z-10">
+        <div>
+          <span className="text-[8.5px] font-mono text-amber-400 uppercase tracking-widest font-bold">STEP 4 OF 5</span>
+          <h2 className="text-sm font-black uppercase text-white tracking-wider">Converter Agent — CRM Pipeline</h2>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 flex-1 mt-3 items-stretch relative">
+        {/* Column 1 - New */}
+        <div className="bg-[#0C0C0E]/50 border border-zinc-850 rounded-xl p-2 flex flex-col" style={{ transform: `scale(${slideFactor})` }}>
+          <div className="flex items-center justify-between pb-1 border-b border-zinc-850">
+            <span className="text-[7px] font-mono uppercase font-black text-white">🆕 New</span>
+            <span className="bg-zinc-900 border border-zinc-800 text-zinc-400 h-3.5 px-1 rounded flex items-center text-[7px]">2</span>
+          </div>
+          <div className="mt-1 bg-[#09090B] border border-zinc-850 rounded p-1.5 text-[7px]">
+            <div className="text-white font-bold leading-none">Harley Dental</div>
+            <p className="text-[6px] text-zinc-500 font-mono mt-0.5">No website</p>
+          </div>
+        </div>
+
+        {/* Column 2 - Contacted */}
+        <div className="bg-[#0C0C0E]/50 border border-zinc-850 rounded-xl p-2 flex flex-col" style={{ transform: `scale(${slideFactor})` }}>
+          <div className="flex items-center justify-between pb-1 border-b border-zinc-850">
+            <span className="text-[7px] font-mono uppercase font-black text-amber-400">🔄 Contacted</span>
+            <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 h-3.5 px-1 rounded flex items-center text-[7px]">1</span>
+          </div>
+          <div className="mt-1 bg-[#09090B] border border-zinc-800 rounded p-1.5 text-[7px]">
+            <div className="text-white font-bold leading-none flex items-center justify-between">
+              <span>Elite Dental</span>
+              <span className="text-[6px] bg-emerald-500/10 text-emerald-400 px-0.5 rounded">Sent</span>
+            </div>
+            <p className="text-[6px] text-zinc-500 font-mono mt-0.5">WhatsApp DM sent</p>
+          </div>
+        </div>
+
+        {/* Column 3 - Interested / Won */}
+        <div className="bg-[#0C0C0E]/50 border border-zinc-850 rounded-xl p-2 flex flex-col" style={{ transform: `scale(${slideFactor})` }}>
+          <div className="flex items-center justify-between pb-1 border-b border-zinc-850">
+            <span className="text-[7px] font-mono uppercase font-black text-emerald-400">🔥 Won</span>
+            <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 h-3.5 px-1 rounded flex items-center text-[7px]">1</span>
+          </div>
+          <div className="mt-1 bg-[#09090B] border border-zinc-800 rounded p-1.5 text-[7px]">
+            <div className="text-white font-bold leading-none">Global Tech</div>
+            <p className="text-[6px] text-zinc-500 font-mono mt-0.5">Contract signed: $3,400</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats bar */}
+      <div className="mt-2 flex items-center justify-between bg-[#0C0C0E] border border-zinc-800 rounded-lg px-3 py-1.5 text-[7px] font-mono">
+        <span className="text-zinc-500">Pipeline Value:</span>
+        <span className="text-emerald-400 font-bold">$8,900 projected</span>
+        <span className="text-zinc-600">|</span>
+        <span className="text-blue-400 font-bold">4 active deals</span>
+        <span className="text-zinc-600">|</span>
+        <span className="text-zinc-500">25% conversion</span>
+      </div>
+
+      <FeaturePointerArrow 
+        startFrame={20} 
+        arrowPath="M 280,120 C 280,100 260,80 240,85" 
+        label="Drag leads across stages to update status!" 
+        badgeColor="text-amber-400 border-amber-500/30 bg-amber-950/20"
+      />
+    </div>
+  );
+}
+
+// 7. Scene: Step 5 - Campaign & Outreach Automation
+function SceneCampaign() {
   const frame = useCurrentFrame();
   const config = useVideoConfig();
 
@@ -472,7 +494,6 @@ function SceneExport() {
     config: { damping: 15 }
   });
 
-  const arrowY = interpolate(frame, [30, 60], [-40, 0], { extrapolateLeft: 'clamp' });
   const checkScale = spring({
     frame: frame - 40,
     fps: config.fps,
@@ -481,71 +502,68 @@ function SceneExport() {
 
   return (
     <div className="w-full h-full flex flex-col justify-between bg-[#09090B] p-6 relative font-sans overflow-hidden">
-      {"/* Header */"}
       <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
         <div>
-          <span className="text-[8.5px] font-mono text-blue-400 uppercase tracking-widest font-bold">CHAPTER 04</span>
-          <h2 className="text-sm font-black uppercase text-white tracking-wider">Spreadsheet Compilations</h2>
+          <span className="text-[8.5px] font-mono text-emerald-400 uppercase tracking-widest font-bold">STEP 5 OF 5</span>
+          <h2 className="text-sm font-black uppercase text-white tracking-wider">Automated Campaign Delivery</h2>
         </div>
-        <div className="flex items-center gap-1.5 bg-blue-950/25 px-2.5 py-1 rounded border border-blue-900/30">
-          <Download className="h-3 w-3 text-blue-400 animate-bounce" />
-          <span className="text-[9px] font-mono text-blue-400 font-bold uppercase uppercase">Export CSV</span>
+        <div className="flex items-center gap-1.5 bg-emerald-950/25 px-2.5 py-1 rounded border border-emerald-900/30">
+          <Send className="h-3 w-3 text-emerald-400 animate-bounce" />
+          <span className="text-[9px] font-mono text-emerald-400 font-bold uppercase">Auto-Send</span>
         </div>
       </div>
 
-      {/* Main visualization Grid compiler */}
-      <div className="flex-1 flex flex-col justify-center items-center space-y-4 relative">
+      <div className="flex-1 flex flex-col justify-center items-center space-y-3 relative">
         <div className="text-center font-mono space-y-1">
-          <span className="text-[8.5px] text-zinc-500 tracking-wider">COMPILING DYNAMIC ACTIVE ROWS</span>
-          <div className="text-xs text-white font-bold font-mono">
+          <span className="text-[8px] text-zinc-500 tracking-wider">MULTI-CHANNEL CAMPAIGN PROGRESS</span>
+          <div className="text-[10px] text-white font-bold font-mono">
             {compileProgress < 0.95 
-              ? `Processing Lead matrix: ${Math.round(compileProgress * 100)}% ...` 
-              : 'COMPILE COMPLETED SUCCESSFUL'}
+              ? `Processing outreach queue: ${Math.round(compileProgress * 100)}%` 
+              : 'ALL MESSAGES QUEUED & SCHEDULED'}
           </div>
         </div>
 
-        {/* Mock spreadsheet UI drawing in */}
-        <div className="w-[85%] border border-zinc-800 bg-[#0C0C0E] rounded-xl overflow-hidden p-2 shadow-2xl space-y-1 bg-opacity-70">
-          <div className="grid grid-cols-4 gap-2 bg-zinc-950 border-b border-zinc-850 p-1.5 rounded-lg text-[8px] font-mono text-zinc-500 font-bold uppercase select-none">
-            <span>CLIENT COMPANY</span>
-            <span>STAGE</span>
-            <span>PRESENCE</span>
-            <span>EST POTENTIAL</span>
+        <div className="w-[85%] border border-zinc-800 bg-[#0C0C0E] rounded-xl overflow-hidden p-2 shadow-2xl space-y-1">
+          <div className="grid grid-cols-4 gap-2 bg-zinc-950 border-b border-zinc-850 p-1.5 rounded-lg text-[7px] font-mono text-zinc-500 font-bold uppercase">
+            <span>Lead</span>
+            <span>Channel</span>
+            <span>Status</span>
+            <span>Send On</span>
           </div>
 
-          <div 
-            className="grid grid-cols-4 gap-2 p-1.5 rounded text-[8px] font-mono text-zinc-300 border border-zinc-900 transition-colors"
-            style={{ opacity: compileProgress > 0.25 ? 1 : 0.15 }}
-          >
+          <div className="grid grid-cols-4 gap-2 p-1.5 rounded text-[7px] font-mono text-zinc-300 border border-zinc-900" style={{ opacity: compileProgress > 0.2 ? 1 : 0.15 }}>
             <span className="text-white font-bold">Harley Dental</span>
-            <span className="text-amber-400">OUTREACH</span>
-            <span>35%</span>
-            <span className="text-emerald-400">$3,400</span>
+            <span className="text-emerald-400">WhatsApp</span>
+            <span className="text-amber-400">Queued</span>
+            <span className="text-zinc-400">Today 3pm</span>
           </div>
 
-          <div 
-            className="grid grid-cols-4 gap-2 p-1.5 rounded text-[8px] font-mono text-zinc-300 border border-zinc-900"
-            style={{ opacity: compileProgress > 0.55 ? 1 : 0.15 }}
-          >
+          <div className="grid grid-cols-4 gap-2 p-1.5 rounded text-[7px] font-mono text-zinc-300 border border-zinc-900" style={{ opacity: compileProgress > 0.45 ? 1 : 0.15 }}>
+            <span className="text-white font-bold">Elite Dental</span>
+            <span className="text-blue-400">Email</span>
+            <span className="text-zinc-500">Scheduled</span>
+            <span className="text-zinc-400">Tomorrow 10am</span>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2 p-1.5 rounded text-[7px] font-mono text-zinc-300 border border-zinc-900" style={{ opacity: compileProgress > 0.7 ? 1 : 0.15 }}>
             <span className="text-white font-bold">Global Tech</span>
-            <span className="text-emerald-400">MEETING</span>
-            <span>72%</span>
-            <span className="text-emerald-400">$9,500</span>
+            <span className="text-violet-400">LinkedIn</span>
+            <span className="text-emerald-400">✓ Sent</span>
+            <span className="text-zinc-400">Complete</span>
           </div>
 
-          {/* Download Completion Banner pop up */}
           {frame >= 40 && (
             <div 
-              className="mt-4 p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-900/40 text-[9.5px] leading-relaxed text-emerald-400 flex items-center justify-between"
+              className="mt-2 p-2 rounded-lg bg-emerald-950/20 border border-emerald-900/40 text-[8px] leading-relaxed text-emerald-400 flex items-center justify-between"
               style={{ transform: `scale(${checkScale})` }}
             >
               <div className="flex items-center gap-1.5">
-                <div className="h-4.5 w-4.5 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold shrink-0">
-                  <Check className="h-3 w-3 stroke-[3]" />
+                <div className="h-4 w-4 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold shrink-0">
+                  <Check className="h-2.5 w-2.5 stroke-[3]" />
                 </div>
-                <span>Compiled & exported: <strong>crm_pipeline_export_2026.csv</strong></span>
+                <span>Campaign <strong>Q4 Outreach</strong> — 12 leads, 3 channels</span>
               </div>
-              <span className="text-[8px] border border-emerald-500/25 px-1.5 py-0.5 rounded font-mono font-bold uppercase shrink-0">SAVED</span>
+              <span className="text-[7px] border border-emerald-500/25 px-1 py-0.5 rounded font-mono font-bold uppercase shrink-0">ACTIVE</span>
             </div>
           )}
         </div>
@@ -554,13 +572,13 @@ function SceneExport() {
       <FeaturePointerArrow 
         startFrame={15} 
         arrowPath="M 230,140 C 270,140 290,120 290,90" 
-        label="Download all filtered lead listings in 1 second!" 
+        label="Set & forget — automated multi-channel sequences!" 
       />
     </div>
   );
 }
 
-// 7. Scene: Outro sleek branding card
+// 8. Scene: Outro sleek branding card
 function SceneOutro() {
   const frame = useCurrentFrame();
   const config = useVideoConfig();
@@ -609,19 +627,19 @@ export function LaunchVideoComposition() {
       {/* 0s - 4s (Frames 0 - 120): Intro */}
       {frame >= 0 && frame < 120 && <SceneTitle />}
 
-      {"/* 4s - 8s (Frames 121 - 240): Discovery Engine search */"}
-      {frame >= 120 && frame < 240 && <SceneDiscovery />}
+      {/* 4s - 8s (Frames 120 - 240): Scanner Agent — Google Maps Discovery */}
+      {frame >= 120 && frame < 240 && <SceneScanner />}
 
-      {/* 8s - 12s (Frames 241 - 360): Pipeline and Multi select Filter */}
-      {frame >= 240 && frame < 360 && <SceneKanban />}
+      {/* 8s - 12s (Frames 240 - 360): Analyzer Agent — Digital Presence Audit */}
+      {frame >= 240 && frame < 360 && <SceneAnalyzer />}
 
-      {/* 12s - 16s (Frames 361 - 480): AI Summarizers */}
-      {frame >= 360 && frame < 480 && <SceneSummary />}
+      {/* 12s - 16s (Frames 360 - 480): Pitcher Agent — AI Pitch Generation */}
+      {frame >= 360 && frame < 480 && <ScenePitcher />}
 
-      {/* 16s - 20s (Frames 481 - 600): CSV Exporter & Outro */}
+      {/* 16s - 20s (Frames 480 - 600): Converter + Campaign & Outro */}
       {frame >= 480 && frame <= 600 && (
         <>
-          {frame < 550 ? <SceneExport /> : <SceneOutro />}
+          {frame < 540 ? <SceneConverter /> : frame < 570 ? <SceneCampaign /> : <SceneOutro />}
         </>
       )}
     </AbsoluteFill>
@@ -639,11 +657,11 @@ interface LaunchVideoPlayerProps {
 }
 
 const CHAPTERS = [
-  { id: 'intro', label: '01. Intro & Concept', startFrame: 0, description: 'Overview of Hunter automation' },
-  { id: 'discovery', label: '02. Presence Radar', startFrame: 120, description: 'Local Map data lead generation' },
-  { id: 'kanban', label: '03. Matrix Pipeline', startFrame: 240, description: 'Sleek pipeline toggling filter' },
-  { id: 'summary', label: '04. AI Sales Briefing', startFrame: 360, description: '1-Click CRM intelligence generation' },
-  { id: 'export', label: '05. Spreadsheet Export', startFrame: 480, description: 'CompileVisible visible CSV records' }
+  { id: 'intro', label: '01. Intro & Overview', startFrame: 0, description: 'Welcome to the project portfolio — AI prospecting toolkit' },
+  { id: 'scanner', label: '02. Scanner Agent', startFrame: 120, description: 'Google Maps lead discovery & extraction' },
+  { id: 'analyzer', label: '03. Analyzer Agent', startFrame: 240, description: 'Digital presence scoring & audit' },
+  { id: 'pitcher', label: '04. Pitcher Agent', startFrame: 360, description: 'AI-powered personalized pitch generation' },
+  { id: 'converter', label: '05. Converter + Campaigns', startFrame: 480, description: 'CRM pipeline & automated outreach' }
 ];
 
 export default function LaunchVideoPlayer({ isOpen, onClose }: LaunchVideoPlayerProps) {
@@ -865,11 +883,11 @@ export default function LaunchVideoPlayer({ isOpen, onClose }: LaunchVideoPlayer
               <span className="text-[8.5px] font-mono text-zinc-600 uppercase font-black tracking-widest block">ACTIVE FEATURE PREVIEW</span>
               <h5 className="text-[10.5px] font-bold text-white uppercase">{activeChap.label.split('. ')[1] || activeChap.label}</h5>
               <p className="text-[9.5px] text-zinc-400 leading-relaxed font-sans mt-1">
-                {activeChap.id === 'intro' ? 'The system triggers a deep audit, analyzing locations and capturing digital score details automatically.' : 
-                 activeChap.id === 'discovery' ? 'Radar radar scanning uncovers dentists, plumbers or local targets that need immediate conversion optimizations.' : 
-                 activeChap.id === 'kanban' ? 'Toggle specific rows dynamically with the new Multi-Select view to narrow focus on target opportunities.' : 
-                 activeChap.id === 'summary' ? 'Click on cards to generate instant Gemini sales strategies & pitch options automatically.' : 
-                 'Save visible pipeline matrix targets immediately in a fully-complied formatted CSV file ready for import.'}
+                {activeChap.id === 'intro' ? 'The portfolio combines AscendSME, Lumi, Hone, and AI Client Finder — from discovery to close, all in one kit.' : 
+                 activeChap.id === 'scanner' ? 'Enter a city and business niche, and the Scanner Agent finds every relevant business on Google Maps.' : 
+                 activeChap.id === 'analyzer' ? 'Each lead gets a digital presence score based on website status, SEO, mobile readiness, and more.' : 
+                 activeChap.id === 'pitcher' ? 'AI generates personalized outreach messages tailored to each lead’s specific needs and gaps.' : 
+                 'Manage your pipeline in a drag-and-drop CRM and automate multi-channel campaign sequences.'}
               </p>
             </div>
           </div>

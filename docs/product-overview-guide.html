@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Overview — AI Client Hunter Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 2cm 2.2cm;
+    @bottom-center {
+      content: counter(page);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 8pt;
+      color: #888;
+    }
+  }
+  @page :first { @bottom-center { content: none; } }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
+    line-height: 1.7;
+    font-size: 10.5pt;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== COVER ===== */
+  .cover-page {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #0f0c29 0%, #1a1a4e 50%, #24243e 100%);
+    color: white;
+    text-align: center;
+    padding: 3cm 2cm;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 100px;
+    padding: 8px 24px;
+    font-size: 9pt;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 40px;
+  }
+  .cover-title {
+    font-size: 28pt;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .cover-subtitle {
+    font-size: 12pt;
+    color: rgba(255,255,255,0.6);
+    max-width: 500px;
+    margin-bottom: 40px;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  .cover-meta {
+    position: absolute;
+    bottom: 2cm;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 8pt;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+  }
+
+  /* ===== CONTENT ===== */
+  .chapter { page-break-before: always; padding-top: 0.5cm; }
+  .chapter:first-of-type { page-break-before: avoid; }
+
+  h1 {
+    font-size: 22pt;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #1a1a2e;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  h1 .ch-number {
+    display: block;
+    font-size: 9pt;
+    font-weight: 600;
+    color: #6366f1;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .ch-divider {
+    width: 60px; height: 3px;
+    background: linear-gradient(90deg, #6366f1, #a78bfa);
+    border-radius: 3px;
+    margin: 16px 0 24px;
+  }
+
+  h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-top: 28px;
+    margin-bottom: 12px;
+  }
+  h3 {
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+  p { margin-bottom: 12px; color: #4b5563; hyphens: auto; }
+
+  /* ===== FEATURE CARDS ===== */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+  .feature-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 18px;
+    page-break-inside: avoid;
+  }
+  .feature-card .fc-icon { font-size: 20pt; margin-bottom: 6px; }
+  .feature-card .fc-title { font-weight: 700; font-size: 11pt; color: #1a1a2e; margin-bottom: 4px; }
+  .feature-card .fc-desc { font-size: 9pt; color: #6b7280; line-height: 1.5; }
+
+  /* ===== PROJECT CARDS ===== */
+  .project-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+  .project-card {
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    page-break-inside: avoid;
+  }
+  .project-card:nth-child(1) { background: linear-gradient(135deg, #6366f1, #818cf8); }
+  .project-card:nth-child(2) { background: linear-gradient(135deg, #10b981, #34d399); }
+  .project-card:nth-child(3) { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+  .project-card:nth-child(4) { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+  .project-card .pc-name { font-size: 13pt; font-weight: 700; margin-bottom: 2px; }
+  .project-card .pc-tag { font-size: 7.5pt; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .project-card .pc-desc { font-size: 9pt; opacity: 0.9; line-height: 1.5; }
+
+  /* ===== CALLOUTS ===== */
+  .callout {
+    background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+    border-left: 3px solid #6366f1;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+  .callout strong { color: #4338ca; }
+
+  /* ===== TABLES ===== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th {
+    background: #f3f4f6;
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #d1d5db;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #4b5563;
+  }
+
+  /* ===== LIST ===== */
+  ul, ol { margin: 8px 0 12px 24px; color: #4b5563; }
+  li { margin-bottom: 6px; }
+
+  /* ===== QUOTE ===== */
+  .blockquote {
+    background: #fafafa;
+    border-left: 3px solid #d1d5db;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-style: italic;
+    color: #6b7280;
+    page-break-inside: avoid;
+  }
+  .blockquote strong { color: #1a1a2e; font-style: normal; }
+
+  .page-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 8pt;
+    color: #888;
+    text-align: center;
+  }
+
+  @media print {
+    body { font-size: 10pt; }
+    .cover-page { height: 100vh; }
+    .feature-card, .project-card, .callout { break-inside: avoid; }
+    table { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<div class="cover-page">
+  <div class="cover-badge">Non-Technical Product Guide</div>
+  <h1 class="cover-title">AI Client Hunter<br>Product Overview</h1>
+  <p class="cover-subtitle">Understanding how AI agents can transform the way you find, analyze, and convert business leads — explained simply.</p>
+  <div class="cover-meta">AscendSME · Lumi · Hone · AI Client Finder &mdash; 2026</div>
+</div>
+
+<!-- ===== CHAPTER 1 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 01</span>What Is AI Client Hunter?</h1>
+  <div class="ch-divider"></div>
+
+  <p>Imagine having a team of five tireless assistants working 24/7 to find potential clients, research every detail about their business, craft personalized messages, and nurture them through a sales pipeline until they convert. That's what <strong>AI Client Hunter</strong> does — except the "team" is a group of specialized AI agents that work together automatically.</p>
+
+  <p>At its core, AI Client Hunter is an <strong>intelligent lead prospecting platform</strong>. It takes the repetitive, time-consuming work of finding and qualifying leads and automates it with AI. Instead of spending hours searching Google Maps, copying business information into spreadsheets, and drafting cold emails from scratch, you tell the system what you're looking for and it delivers ready-to-act leads.</p>
+
+  <div class="callout">
+    <strong>Plain English:</strong> It's like having a virtual sales development team that never sleeps. You describe your ideal client, and the AI finds them, researches them, scores them, and even suggests what to say to them.
+  </div>
+
+  <h2>Who Is It For?</h2>
+  <ul>
+    <li><strong>Sales professionals</strong> who want to spend more time closing and less time prospecting</li>
+    <li><strong>Agency owners</strong> who need to consistently find new clients for their services</li>
+    <li><strong>Small business owners</strong> looking to grow their customer base</li>
+    <li><strong>Marketing teams</strong> who want data-driven lead qualification</li>
+    <li><strong>Anyone curious about AI</strong> and how it can be applied to real business problems</li>
+  </ul>
+</div>
+
+<!-- ===== CHAPTER 2 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 02</span>Key Features</h1>
+  <div class="ch-divider"></div>
+
+  <p>AI Client Hunter brings together five core capabilities that work in concert to automate the lead lifecycle:</p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="fc-icon">🔍</div>
+      <div class="fc-title">Smart Lead Discovery</div>
+      <div class="fc-desc">Automatically finds businesses from map data, web searches, and directories. Filter by location, industry, ratings, and more. The Scanner Agent continuously watches for new opportunities.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">📊</div>
+      <div class="fc-title">Intelligent Scoring</div>
+      <div class="fc-desc">Every lead gets a priority score based on online presence quality, engagement potential, and fit with your ideal customer profile. Know exactly who to contact first.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">📋</div>
+      <div class="fc-title">Online Presence Analysis</div>
+      <div class="fc-desc">The Analyzer Agent audits each lead's website, social media, reviews, and SEO standing. You get a clear picture of their strengths and gaps — perfect for pitching your services.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">✉️</div>
+      <div class="fc-title">AI-Powered Outreach</div>
+      <div class="fc-desc">Generate personalized pitch messages based on the lead's specific situation — their industry, location, online gaps, and potential needs. Works across email, WhatsApp, and more.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🔄</div>
+      <div class="fc-title">Pipeline Management</div>
+      <div class="fc-desc">A visual kanban pipeline that tracks every lead from "New" through "Contacted," "Interested," "Negotiating," to "Won." Drag and drop to update stages. See exactly where every deal stands.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🎯</div>
+      <div class="fc-title">Campaign Automation</div>
+      <div class="fc-desc">Create multi-step outreach sequences with timed follow-ups across different channels. The Campaign Agent handles timing, triggers, and performance tracking automatically.</div>
+    </div>
+  </div>
+
+  <h2>Analytics & Insights</h2>
+  <p>Beyond individual lead management, the platform provides:</p>
+  <ul>
+    <li><strong>Revenue tracking</strong> with projected vs. actual conversion metrics</li>
+    <li><strong>Source distribution</strong> — know which channels generate the best leads</li>
+    <li><strong>Pipeline velocity</strong> — track how fast leads move through stages</li>
+    <li><strong>Campaign performance</strong> — open rates, response rates, conversion by sequence</li>
+    <li><strong>Geographic mapping</strong> — visualize lead distribution and market coverage</li>
+  </ul>
+</div>
+
+<!-- ===== CHAPTER 3 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 03</span>How It Works (Step by Step)</h1>
+  <div class="ch-divider"></div>
+
+  <p>The system operates as a coordinated pipeline. Here's how a typical workflow unfolds:</p>
+
+  <h3>Step 1: Define Your Target</h3>
+  <p>You tell Bishop (the AI assistant) what you're looking for. For example: <em>"Find me dental practices in Austin, Texas with under 50 Google reviews that need website improvements."</em></p>
+
+  <h3>Step 2: Discovery</h3>
+  <p>The Scanner Agent searches across maps, directories, and web sources. It returns a list of matching businesses with names, addresses, phone numbers, websites, ratings, review counts, and categories.</p>
+
+  <h3>Step 3: Analysis & Scoring</h3>
+  <p>The Analyzer Agent evaluates each lead's online presence. It checks website quality, SEO, social media activity, review sentiment, and identifies gaps. Each lead gets a priority score (0-100) and a detailed audit report.</p>
+
+  <h3>Step 4: Qualification</h3>
+  <p>You review the scored leads through the pipeline view or chat interface. Bishop highlights the highest-potential leads and explains why they're ranked highly. You can also manually adjust scores and add notes.</p>
+
+  <h3>Step 5: Outreach</h3>
+  <p>The Pitcher Agent drafts personalized messages for each lead, incorporating insights from the analysis. A lead with a poorly optimized website gets a pitch focused on web improvements. A lead with great reviews but no social media gets a different angle.</p>
+
+  <h3>Step 6: Pipeline Tracking</h3>
+  <p>As you reach out, leads move through the kanban pipeline. The Converter Agent tracks responses, flags engaged leads, and moves them through stages automatically based on triggers you define.</p>
+
+  <h3>Step 7: Campaigns & Follow-Ups</h3>
+  <p>For leads that need nurturing, the Campaign Agent creates multi-step sequences — initial email, follow-up in 3 days, LinkedIn connection request in 5 days, phone call in 7 days. All automated and tracked.</p>
+
+  <div class="blockquote">
+    <strong>Real-World Flow:</strong> "A digital marketing agency used AI Client Hunter to find 50 local restaurants in their city. The system identified 12 with outdated websites (low SEO scores) and no social media presence (gap detected). The AI drafted personalized pitches offering web redesign + social setup services. Result: 8 responses, 3 signed clients in 2 weeks."
+  </div>
+</div>
+
+<!-- ===== CHAPTER 4 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 04</span>The Project Portfolio</h1>
+  <div class="ch-divider"></div>
+
+  <p>AI Client Hunter is part of a broader exploration into what's possible when you build <strong>with AI as the operating system</strong>. Each project in this portfolio tackles a different dimension of AI-native software:</p>
+
+  <div class="project-grid">
+    <div class="project-card">
+      <div class="pc-tag">Project 1</div>
+      <div class="pc-name">AscendSME</div>
+      <div class="pc-desc">An AI-powered business growth platform that acts as a virtual consultant for small and medium enterprises. It analyzes business data, identifies growth opportunities, and generates actionable strategies.</div>
+    </div>
+    <div class="project-card">
+      <div class="pc-tag">Project 2</div>
+      <div class="pc-name">Lumi</div>
+      <div class="pc-desc">A content intelligence system that uses AI agents to analyze, optimize, and generate content across multiple platforms. Think of it as an AI content strategist and creator combined.</div>
+    </div>
+    <div class="project-card">
+      <div class="pc-tag">Project 3</div>
+      <div class="pc-name">Hone</div>
+      <div class="pc-desc">An automation engine that builds reliable AI agents for repetitive business workflows — data processing, report generation, task scheduling, and operational coordination.</div>
+    </div>
+    <div class="project-card">
+      <div class="pc-tag">Project 4</div>
+      <div class="pc-name">AI Client Finder</div>
+      <div class="pc-desc">The lead intelligence platform described in this guide. Multi-agent orchestration for end-to-end prospecting, analysis, and conversion — the culmination of learnings from the other projects.</div>
+    </div>
+  </div>
+
+  <p>Each project builds on the learnings of the others. The agent orchestration patterns from AI Client Finder inform how AscendSME coordinates its consultant agents. The content insights from Lumi feed into the Analyzer Agent's audit capabilities. The automation reliability patterns from Hone ensure all agents handle errors gracefully.</p>
+
+  <div class="callout">
+    <strong>Why This Matters:</strong> These projects aren't just products — they're a <em>learning system</em>. Each one teaches something new about how AI behaves, how to structure prompts, how to handle edge cases, and how to build interfaces that make AI feel natural and trustworthy.
+  </div>
+</div>
+
+<!-- ===== CHAPTER 5 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 05</span>AI-First Development: A New Way to Build</h1>
+  <div class="ch-divider"></div>
+
+  <p>These projects represent more than just software — they're an experiment in a completely new way of building things. This is what <strong>AI-first development</strong> looks like in practice.</p>
+
+  <h2>What Does "AI-First" Mean?</h2>
+  <p>In traditional software development, you write code, run it, debug it, and repeat. AI might help with autocomplete or suggest fixes. It's a <strong>tool</strong> bolted onto the existing process.</p>
+  <p>In AI-first development, the AI is the <strong>primary builder</strong>. The human's role shifts from writing every line of code to:</p>
+  <ul>
+    <li><strong>Architecting</strong> — designing the system structure and component relationships</li>
+    <li><strong>Guiding</strong> — telling the AI what to build in natural language</li>
+    <li><strong>Reviewing</strong> — validating that the AI's output meets quality standards</li>
+    <li><strong>Deciding</strong> — making strategic choices about direction and priorities</li>
+  </ul>
+
+  <h2>Learning Through Building</h2>
+  <p>The most powerful insight from this journey: <strong>the fastest way to learn is to build with AI.</strong></p>
+  <p>Instead of spending months learning a programming language or framework before building anything useful, you can start building immediately. The AI handles the implementation, and you learn by:</p>
+  <ul>
+    <li>Seeing how the AI structures code and solving problems</li>
+    <li>Asking the AI to explain decisions and trade-offs</li>
+    <li>Iterating quickly — try an idea, see it built in minutes, refine</li>
+    <li>Gradually understanding the patterns until you can guide with confidence</li>
+  </ul>
+
+  <div class="blockquote">
+    <strong>The Core Belief:</strong> "In this era, learning from scratch is a waste of time. Instead, learn by building. Use AI to accelerate your understanding. Every project you build teaches you more than a hundred tutorials ever could."
+  </div>
+
+  <h2>Prompt Engineering as a Superpower</h2>
+  <p>Prompt engineering is the new literacy. Just as reading and writing unlocked knowledge, and typing unlocked computing, prompt engineering unlocks AI. It's not about "magic words" — it's about:</p>
+  <ul>
+    <li><strong>Clear communication</strong> — articulating what you want precisely</li>
+    <li><strong>Context provision</strong> — giving the AI the information it needs to succeed</li>
+    <li><strong>Iterative refinement</strong> — treating the first output as a draft, not a final answer</li>
+    <li><strong>Critical thinking</strong> — evaluating outputs and knowing when to push back</li>
+  </ul>
+  <p>These skills transfer to every domain — business strategy, creative work, technical problem-solving, and personal growth.</p>
+</div>
+
+<!-- ===== CHAPTER 6 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 06</span>Getting Started</h1>
+  <div class="ch-divider"></div>
+
+  <p>Whether you're a potential user of the platform or someone inspired to start building with AI, here's how to take the next step:</p>
+
+  <h2>Using the Platform</h2>
+  <ol>
+    <li><strong>Start a conversation</strong> — Open the Sales Copilot and tell Bishop what you need in plain English</li>
+    <li><strong>Define your search</strong> — "Find me [type of business] in [location]" is all it takes to start</li>
+    <li><strong>Review results</strong> — Leads appear with scores, analysis summaries, and suggested next actions</li>
+    <li><strong>Act</strong> — Approve pitch drafts, move leads through the pipeline, launch campaigns</li>
+    <li><strong>Track</strong> — Monitor analytics, pipeline velocity, and campaign performance in real-time</li>
+  </ol>
+
+  <h2>Start Building With AI</h2>
+  <p>For anyone inspired to start their own AI journey:</p>
+  <ol>
+    <li><strong>Pick a problem</strong> — What repetitive task would you love to automate?</li>
+    <li><strong>Start a conversation</strong> — Ask an AI assistant (like this one!) to help you build a solution</li>
+    <li><strong>Iterate</strong> — Refine, ask questions, experiment. The AI is patient and will explain anything.</li>
+    <li><strong>Stay curious</strong> — The technology evolves daily. What wasn't possible last week might be possible today.</li>
+    <li><strong>Share</strong> — The best way to learn is to teach. Share what you build and what you learn.</li>
+  </ol>
+
+  <div class="callout">
+    <strong>The Most Important Thing:</strong> You don't need to be a developer. You don't need to know how to code. You just need curiosity and the willingness to try. The AI handles the rest. The future belongs to the curious — those who ask "what if?" and use AI to find out.
+  </div>
+
+  <div class="page-footer">
+    <p>AI Client Hunter — Product Overview Guide &mdash; AscendSME · Lumi · Hone · AI Client Finder &mdash; 2026</p>
+  </div>
+</div>
+
+</body>
+</html>

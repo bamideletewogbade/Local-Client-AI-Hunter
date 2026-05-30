@@ -43,7 +43,7 @@ export default function SalesCopilot() {
     {
       id: 'init',
       role: 'assistant',
-      content: "Yo, I'm Bishop. Welcome to my workspace. I'm a developer and system architect. I built this Hub to demonstrate how a platform can self-coordinate using a five-agent mesh. Ask me anything about my tools, USSD platforms, West African telecom APIs, or how the site memory works.",
+      content: "Yo, I'm Bishop. Welcome to my workspace. I'm a developer and system architect behind projects like **AscendSME**, **Lumi**, **Hone**, and **AI Client Finder**. This Hub demonstrates how a platform can self-coordinate using a five-agent mesh to find, score, analyze, and convert local business leads. Ask me anything about my tools, USSD platforms, West African telecom APIs, or how the site memory works.",
       timestamp: new Date()
     }
   ]);
@@ -283,7 +283,7 @@ export default function SalesCopilot() {
     }
   };
 
-  // Submits the query to server AI endpoint
+  // Submits the query to Bishop's agent execution endpoint (real agentic pipeline)
   const handleSendMessage = async (textToSend?: string) => {
     const rawQuery = textToSend !== undefined ? textToSend : inputText;
     const query = rawQuery.trim();
@@ -306,29 +306,51 @@ export default function SalesCopilot() {
       timestamp: new Date()
     };
 
-    const updatedMessages = [...messages, newUserMessage];
-    setMessages(updatedMessages);
+    setMessages(prev => [...prev, newUserMessage]);
     setIsLoading(true);
 
-    try {
-      // Convert messages list specifically keeping system context tidy
-      const backendPayload = updatedMessages.map(m => ({
-        role: m.role,
-        content: m.content
-      }));
+    // Add a thinking message to show Bishop is working
+    const thinkingId = `m-${Date.now()}-thinking`;
+    setMessages(prev => [...prev, {
+      id: thinkingId,
+      role: 'assistant',
+      content: '🧠 **Bishop is analyzing your request and planning the workflow...**\n\n_Agent activity will appear in the Agent Log panel in real-time._',
+      timestamp: new Date()
+    }]);
 
-      const res = await fetch('/api/copilot/chat', {
+    try {
+      const res = await fetch('/api/agent/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: backendPayload })
+        body: JSON.stringify({ goal: query })
       });
 
       if (!res.ok) {
-        throw new Error("Failed to communicate with AI chat gateway.");
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Bishop's agent execution failed.");
       }
 
       const data = await res.json();
-      const assistantReply = data.content || "I apologize, I received an empty response. Let me know how I can assist you otherwise.";
+      
+      // Remove the thinking message
+      setMessages(prev => prev.filter(m => m.id !== thinkingId));
+
+      // Build response with tool call info and steps
+      let assistantReply = data.response || "I completed the analysis but have no specific findings to report.";
+
+      if (data.toolCalls > 0 || (data.steps && data.steps.length > 0)) {
+        assistantReply += '\n\n';
+        
+        if (data.steps && data.steps.length > 0) {
+          assistantReply += '📋 **Steps executed:**\n';
+          data.steps.forEach((step: string) => {
+            assistantReply += `\n${step}`;
+          });
+          assistantReply += '\n';
+        }
+
+        assistantReply += `\n⚡ **${data.toolCalls} tool calls** across the agent pipeline.`;
+      }
 
       const newAssistantMessage: ChatMessage = {
         id: `m-${Date.now()}-a`,
@@ -344,14 +366,20 @@ export default function SalesCopilot() {
         speakText(assistantReply);
       }
 
+      triggerToastNotification(`Bishop completed with ${data.toolCalls || 0} tool calls`, 'success');
+
     } catch (err: any) {
       console.error(err);
-      triggerToastNotification(err.message || "An error occurred with your copilot request.", "error");
+      
+      // Remove thinking message on error
+      setMessages(prev => prev.filter(m => m.id !== thinkingId));
+      
+      triggerToastNotification(err.message || "An error occurred with Bishop's agent execution.", "error");
       
       setMessages(prev => [...prev, {
         id: `m-${Date.now()}-err`,
         role: 'assistant',
-        content: "🚨 **Service Timeout**: I had trouble contacting my cloud neural gateway. Let's try again in a second!",
+        content: "🚨 **Bishop encountered an error**: " + (err.message || "Agent execution failed. Please try again."),
         timestamp: new Date()
       }]);
     } finally {
@@ -359,12 +387,13 @@ export default function SalesCopilot() {
     }
   };
 
-  // Quick prompt triggers
+  // Quick prompt triggers — now agentic actions for Bishop
   const quickSearches = [
-    { title: '🤖 Five-Agent Mesh', prompt: 'Tell me how the five-agent mesh self-coordination runs in this Hub to find and convert leads.' },
-    { title: '📞 USSD Platforms', prompt: 'Explain how custom USSD platforms like Africa\'s Talking can streamline appointment bookings offline.' },
-    { title: '💳 Telecom APIs', prompt: 'How can we integrate West African telecom APIs (MTN MoMo, Telecel Cash) into client booking websites?' },
-    { title: '💾 Site Memory State', prompt: 'How does the Hub\'s site memory and state persistence keep our saved B2B leads safe?' }
+    { title: '🚀 Project Portfolio', prompt: 'Tell me about the projects you have worked on — AscendSME, Lumi, Hone, and AI Client Finder.' },
+    { title: '🔍 Find Leads', prompt: 'Search for 5 dentists in Accra without websites and score them.' },
+    { title: '📊 CRM Stats', prompt: 'Get me the current CRM statistics and tell me which leads are the highest priority.' },
+    { title: '🏆 Top Leads', prompt: 'List my top 3 highest-opportunity leads and generate pitches for them.' },
+    { title: '📈 Run Audit', prompt: 'Run a full pipeline audit on all leads and give me a quality report.' }
   ];
 
   return (
@@ -544,7 +573,7 @@ export default function SalesCopilot() {
               {messages.length === 1 && !isLoading && (
                 <div className="space-y-2 pt-3 border-t border-zinc-900 mt-4">
                   <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 font-mono flex items-center gap-1">
-                    <HelpCircle className="h-3 w-3 text-indigo-400" /> Common B2B Hot-queries:
+                    <HelpCircle className="h-3 w-3 text-indigo-400" /> Quick Queries — Projects & Platform:
                   </p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {quickSearches.map((qs, idx) => (

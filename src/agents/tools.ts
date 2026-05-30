@@ -832,6 +832,46 @@ export const sendWhatsAppOutreachTool: AgentTool = {
   },
 };
 
+/**
+ * Audit the full pipeline output for quality assurance.
+ * Reviews leads scored, pitches generated, and conversion readiness.
+ */
+export const auditResultsTool: AgentTool = {
+  name: 'auditResults',
+  description: 'Audit the full pipeline results — reviews lead quality, score completeness, pitch readiness, and conversion preparedness. Returns an audit report with findings, warnings, and recommendations.',
+  parameters: [
+    strParam('query', 'The original search query used', false),
+    strParam('location', 'The location searched', false),
+    numParam('scannedCount', 'Number of leads discovered', false),
+    numParam('analyzedCount', 'Number of leads analyzed/scored', false),
+    numParam('pitchedCount', 'Number of leads with pitches generated', false),
+    numParam('convertedCount', 'Number of leads ready for conversion', false),
+  ],
+  execute: async (args: {
+    query?: string;
+    location?: string;
+    scannedCount?: number;
+    analyzedCount?: number;
+    pitchedCount?: number;
+    convertedCount?: number;
+  }, ctx: AgentContext) => {
+    const { auditPipeline } = await import('./auditor.js');
+    const leads = ctx.leadDatabase;
+
+    agentLogger.info('auditResults', `Auditing ${leads.length} leads across all pipeline stages`);
+
+    const report = auditPipeline(leads, {
+      query: args.query || 'unknown',
+      location: args.location || 'unknown',
+      count: args.scannedCount || leads.length,
+    });
+
+    agentLogger.info('auditResults', `Audit complete: score ${report.overallQuality}/100, ${report.findings.length} findings, ${report.recommendations.length} recommendations`);
+
+    return report;
+  },
+};
+
 export const ALL_TOOLS: AgentTool[] = [
   searchLeadsTool,
   scoreLeadTool,
@@ -847,4 +887,5 @@ export const ALL_TOOLS: AgentTool[] = [
   getLeadTool,
   updateLeadTool,
   getNoWebsiteLeadsTool,
+  auditResultsTool,
 ];

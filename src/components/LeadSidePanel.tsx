@@ -282,27 +282,27 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
   };
 
   return (
-    <div id="side-panel-container" className="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l border-zinc-800 bg-[#0C0C0E] p-0 shadow-2xl transition-transform duration-300">
+    <div id="side-panel-container" className="fixed inset-y-0 right-0 z-50 flex w-full sm:max-w-xl flex-col border-l border-zinc-800 bg-[#0C0C0E] p-0 shadow-2xl transition-transform duration-300">
       {/* Drawer Header */}
-      <div className="flex items-center justify-between border-b border-zinc-800 bg-[#09090B]/50 px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0C0C0E] border border-zinc-800">
-            <Building2 className="h-5 w-5 text-zinc-300" />
+      <div className="flex items-center justify-between border-b border-zinc-800 bg-[#09090B]/50 px-4 sm:px-5 py-3 sm:py-4">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <div className="flex h-9 sm:h-10 w-9 sm:w-10 shrink-0 items-center justify-center rounded-lg bg-[#0C0C0E] border border-zinc-800">
+            <Building2 className="h-4.5 sm:h-5 w-4.5 sm:w-5 text-zinc-300" />
           </div>
-          <div>
-            <h4 className="text-sm font-sans font-bold text-white truncate max-w-[280px]" title={lead.name}>{lead.name}</h4>
-            <span className="text-[10px] text-blue-400 font-bold tracking-wider uppercase">{lead.category}</span>
+          <div className="min-w-0">
+            <h4 className="text-xs sm:text-sm font-sans font-bold text-white truncate max-w-[180px] sm:max-w-[280px]" title={lead.name}>{lead.name}</h4>
+            <span className="text-[9px] sm:text-[10px] text-blue-400 font-bold tracking-wider uppercase truncate block">{lead.category}</span>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-zinc-800/60 text-zinc-400 hover:text-white transition-colors duration-150 cursor-pointer"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-zinc-800/60 text-zinc-400 hover:text-white transition-colors duration-150 cursor-pointer"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3 sm:py-4 space-y-4 sm:space-y-5">
         
         {panelError && (
           <div className="flex items-start gap-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 p-3.5 text-xs text-rose-300">
@@ -1074,7 +1074,7 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
       </div>
 
       {/* Drawer Footer controls */}
-      <div className="border-t border-zinc-800 bg-[#09090B]/50 px-5 py-3.5 flex items-center justify-between">
+      <div className="border-t border-zinc-800 bg-[#09090B]/50 px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between">
         {onDeleteLead ? (
           <button
             onClick={() => setIsDeleteModalOpen(true)}

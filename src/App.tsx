@@ -3,6 +3,7 @@ import Header from './components/Header';
 import DiscoveryEngine from './components/DiscoveryEngine';
 import CrmPipeline from './components/CrmPipeline';
 import AnalyticsPanel from './components/AnalyticsPanel';
+import AgentDashboard from './components/AgentDashboard';
 import LeadSidePanel from './components/LeadSidePanel';
 import LaunchVideoPlayer from './components/LaunchVideo';
 import ProductLanding from './components/ProductLanding';
@@ -13,13 +14,17 @@ import SalesCopilot from './components/SalesCopilot';
 import { useAuth } from './components/AuthContext';
 import { Lead } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Sparkles, CalendarRange, Target, AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
+import { useWebSocket } from './hooks/useWebSocket';
+import { Sparkles, CalendarRange, Target, AlertCircle, CheckCircle2, Info, X, Wifi, WifiOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useLocalStorage<'guide' | 'discovery' | 'crm' | 'analytics'>('hunter_active_tab', 'guide');
+  const [activeTab, setActiveTab] = useLocalStorage<'guide' | 'discovery' | 'crm' | 'analytics' | 'agents'>('hunter_active_tab', 'guide');
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error'; id: number } | null>(null);
+
+  // Initialize real-time WebSocket connection for agent log streaming
+  const wsEvents = useWebSocket();
 
   // Set up real-time toast notifications listener
   useEffect(() => {
@@ -35,6 +40,13 @@ export default function App() {
     };
     window.addEventListener('hunter-toast', handleToast);
     return () => window.removeEventListener('hunter-toast', handleToast);
+  }, []);
+
+  // Listen for 'hunter-open-dashboard' event from pipeline auditor
+  useEffect(() => {
+    const handler = () => setActiveTab('agents');
+    window.addEventListener('hunter-open-dashboard', handler);
+    return () => window.removeEventListener('hunter-open-dashboard', handler);
   }, []);
 
   useEffect(() => {
@@ -303,7 +315,7 @@ export default function App() {
             document.getElementById('agent-process-flow')?.scrollIntoView({ behavior: 'smooth' });
           }} />
           {/* Animated 5-agent workflow infographic */}
-          <AgentProcessFlow />
+          <AgentProcessFlow onNavigate={(tab) => setActiveTab(tab)} />
           {/* Interactive product demo, simulator, pricing */}
           <ProductLanding
             onStartApp={() => setActiveTab('discovery')}
@@ -314,7 +326,7 @@ export default function App() {
           />
         </div>
       ) : (
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 dark-scrollbar">
           
           {globalError && (
             <div className="mb-4 flex items-start gap-3 rounded-xl bg-orange-50 border border-orange-200/60 p-4 text-xs text-orange-850">
@@ -354,6 +366,13 @@ export default function App() {
                 leads={crmLeads}
               />
             )}
+
+            {activeTab === 'agents' && (
+              <AgentDashboard
+                crmLeads={crmLeads}
+                onNavigate={(tab) => setActiveTab(tab as 'guide' | 'discovery' | 'crm' | 'analytics' | 'agents')}
+              />
+            )}
           </div>
 
           {/* 💌 Integrated Compact Attribution Footer */}
@@ -381,7 +400,7 @@ export default function App() {
           {/* Overlay clicking backdrop triggers close */}
           <div
             onClick={() => setSelectedLead(null)}
-            className="fixed inset-0 z-40 bg-zinc-950/60 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-zinc-950/60 backdrop-blur-sm touch-none"
           />
           <LeadSidePanel
             lead={selectedLead}
@@ -389,6 +408,14 @@ export default function App() {
             onUpdateLead={handleUpdateCrmLead}
             onDeleteLead={crmLeads.some(l => l.id === selectedLead.id) ? handleDeleteCrmLead : undefined}
           />
+          {/* Mobile swipe indicator for side panel */}
+          {selectedLead && (
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 sm:hidden flex items-center gap-1.5 bg-zinc-900/80 backdrop-blur-md border border-zinc-800 rounded-full px-3 py-1.5 shadow-lg pointer-events-none">
+              <div className="w-6 h-0.5 bg-zinc-600 rounded-full" />
+              <span className="text-[9px] text-zinc-500 font-mono font-bold uppercase tracking-wider">Swipe to close</span>
+              <div className="w-6 h-0.5 bg-zinc-600 rounded-full" />
+            </div>
+          )}
         </>
       )}
 
@@ -401,7 +428,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed top-6 right-6 z-50 max-w-sm w-full p-4 rounded-xl border shadow-2xl bg-[#0c0c0e] border-zinc-800 flex items-start gap-3 text-white"
+            className="fixed top-4 right-4 left-4 sm:top-6 sm:right-6 sm:left-auto z-50 max-w-sm w-auto sm:w-full p-4 rounded-xl border shadow-2xl bg-[#0c0c0e] border-zinc-800 flex items-start gap-3 text-white"
           >
             <div className="shrink-0 mt-0.5">
               {toast.type === 'success' ? (

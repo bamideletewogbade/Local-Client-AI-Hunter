@@ -100,6 +100,9 @@ class AgentLogger {
     // Broadcast to listeners
     this.listeners.forEach(l => l(entry));
 
+    // Broadcast via WebSocket if we're on the server
+    broadcastLogEntry(entry);
+
     return entry;
   }
 

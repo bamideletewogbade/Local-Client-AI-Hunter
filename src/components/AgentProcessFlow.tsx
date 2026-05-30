@@ -39,7 +39,7 @@ const AGENTS: AgentNode[] = [
     icon: Search,
     color: '#3b82f6',
     gradient: 'from-blue-600 to-blue-400',
-    description: 'Scans Google Maps in real-time across 50+ cities to find local businesses with weak digital presence.',
+    description: 'Scans Google Maps in real-time for any city or region to find local businesses with weak digital presence.',
     details: [
       'Crawls Google Maps listings by niche & location',
       'Extracts ratings, reviews, websites, and contact data',
@@ -109,7 +109,11 @@ const AGENTS: AgentNode[] = [
   }
 ];
 
-export default function AgentProcessFlow() {
+interface AgentProcessFlowProps {
+  onNavigate?: (tab: 'discovery' | 'crm' | 'analytics') => void;
+}
+
+export default function AgentProcessFlow({ onNavigate }: AgentProcessFlowProps) {
   const [visibleNodes, setVisibleNodes] = useState<Set<string>>(new Set());
   const [activeAgent, setActiveAgent] = useState<string | null>(null);
   const [pulseIndex, setPulseIndex] = useState(0);
@@ -238,7 +242,9 @@ export default function AgentProcessFlow() {
                     style={{
                       transitionDelay: `${idx * 150}ms`,
                     }}
-                    onClick={() => setActiveAgent(isActive ? null : agent.id)}
+                    onClick={() => {
+                      setActiveAgent(isActive ? null : agent.id);
+                    }}
                     onMouseEnter={() => setActiveAgent(agent.id)}
                     onMouseLeave={() => setActiveAgent(null)}
                   >
@@ -303,11 +309,37 @@ export default function AgentProcessFlow() {
                       </div>
                     </div>
 
-                    {/* Expand hint */}
-                    <div className={`mt-2 text-[9px] font-mono uppercase tracking-wider transition-opacity ${
-                      isActive ? 'opacity-0' : 'opacity-40 group-hover:opacity-60'
-                    }`} style={{ color: agent.color }}>
-                      {isActive ? '' : 'Click to expand →'}
+                    {/* Launch button */}
+                    <div className="mt-3 pt-3 border-t border-zinc-800/60">
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onNavigate) {
+                            const tabMap: Record<string, 'discovery' | 'crm'> = {
+                              scanner: 'discovery',
+                              analyzer: 'discovery',
+                              auditor: 'discovery',
+                              pitcher: 'discovery',
+                              converter: 'crm'
+                            };
+                            const tab = tabMap[agent.id];
+                            if (tab) onNavigate(tab);
+                          }
+                        }}
+                        className={`w-full flex items-center justify-center gap-1.5 rounded-lg py-2 text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-[0.97] ${
+                          isPulsing || isActive
+                            ? 'text-white shadow-sm'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                        style={{
+                          backgroundColor: (isPulsing || isActive) ? agent.color + '30' : 'transparent',
+                          borderColor: agent.color + '30',
+                          borderWidth: 1,
+                        }}
+                      >
+                        Launch {agent.title}
+                        <ArrowRight className="h-3 w-3" />
+                      </div>
                     </div>
                   </div>
 
@@ -352,7 +384,7 @@ export default function AgentProcessFlow() {
         }`}>
           {[
             { value: '5', label: 'Specialized Agents', icon: Cpu, color: 'text-blue-400' },
-            { value: '50+', label: 'Supported Cities', icon: Network, color: 'text-purple-400' },
+            { value: 'Any City', label: 'Global Targeting', icon: Network, color: 'text-purple-400' },
             { value: '< 2s', label: 'Lead Scan Time', icon: Zap, color: 'text-amber-400' },
             { value: '30%+', label: 'Avg. Response Rate', icon: Target, color: 'text-emerald-400' },
           ].map((stat) => {

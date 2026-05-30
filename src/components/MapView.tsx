@@ -354,7 +354,7 @@ export default function MapView({ leads, onSelectLead, activeLeadId }: MapViewPr
   return (
     <div className="relative flex flex-col w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950">
       {/* Target Container block for leaflet instantiation */}
-      <div className="relative h-[340px] w-full">
+      <div className="relative h-[260px] sm:h-[340px] w-full">
         <div id="leaflet-live-openstreetmap" ref={containerRef} className="h-full w-full z-10" />
 
         {/* Floating status badge on top-left of the map overlay */}

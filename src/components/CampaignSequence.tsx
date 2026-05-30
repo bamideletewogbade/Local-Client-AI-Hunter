@@ -428,26 +428,26 @@ export default function CampaignSequence({
   return (
     <div className="space-y-3.5">
       {/* Header metrics */}
-      <div className="grid grid-cols-4 gap-2">
-        <div className="p-3 rounded-xl bg-gradient-to-br from-blue-950/30 to-zinc-950 border border-blue-900/30">
-          <p className="text-[9px] text-blue-400 uppercase tracking-widest font-bold">Total Campaigns</p>
-          <p className="text-lg font-bold text-white mt-1">{campaigns.length}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-blue-950/30 to-zinc-950 border border-blue-900/30">
+          <p className="text-[8px] sm:text-[9px] text-blue-400 uppercase tracking-widest font-bold">Total Campaigns</p>
+          <p className="text-base sm:text-lg font-bold text-white mt-0.5 sm:mt-1">{campaigns.length}</p>
         </div>
-        <div className="p-3 rounded-xl bg-[#09090B] border border-zinc-800">
-          <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Total Steps</p>
-          <p className="text-lg font-bold text-white mt-1">
+        <div className="p-2.5 sm:p-3 rounded-xl bg-[#09090B] border border-zinc-800">
+          <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Total Steps</p>
+          <p className="text-base sm:text-lg font-bold text-white mt-0.5 sm:mt-1">
             {campaigns.reduce((sum, c) => sum + c.steps.length, 0)}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-[#09090B] border border-zinc-800">
-          <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Active</p>
-          <p className="text-lg font-bold text-emerald-400 mt-1">
+        <div className="p-2.5 sm:p-3 rounded-xl bg-[#09090B] border border-zinc-800">
+          <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Active</p>
+          <p className="text-base sm:text-lg font-bold text-emerald-400 mt-0.5 sm:mt-1">
             {campaigns.filter(c => c.isActive).length}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-[#09090B] border border-zinc-800">
-          <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Assigned Leads</p>
-          <p className="text-lg font-bold text-white mt-1">
+        <div className="p-2.5 sm:p-3 rounded-xl bg-[#09090B] border border-zinc-800">
+          <p className="text-[8px] sm:text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Assigned Leads</p>
+          <p className="text-base sm:text-lg font-bold text-white mt-0.5 sm:mt-1">
             {campaigns.reduce((sum, c) => sum + c.assignedLeadIds.length, 0)}
           </p>
         </div>

@@ -22,32 +22,50 @@ import {
   Gauge
 } from 'lucide-react';
 
-const COUNTRIES_AND_CITIES = [
-  {
-    code: 'GH',
-    name: 'Ghana 🇬🇭',
-    cities: ['Accra', 'Kumasi']
-  },
-  {
-    code: 'NG',
-    name: 'Nigeria 🇳🇬',
-    cities: ['Lagos']
-  },
-  {
-    code: 'KE',
-    name: 'Kenya 🇰🇪',
-    cities: ['Nairobi']
-  },
-  {
-    code: 'GB',
-    name: 'United Kingdom 🇬🇧',
-    cities: ['London']
-  },
-  {
-    code: 'US',
-    name: 'United States 🇺🇸',
-    cities: ['New York']
-  }
+export const ALL_CITIES = [
+  // Africa
+  'Accra', 'Kumasi', 'Lagos', 'Abuja', 'Nairobi', 'Cape Town', 'Johannesburg',
+  'Dar es Salaam', 'Kampala', 'Kigali', 'Addis Ababa', 'Cairo', 'Casablanca',
+  // Middle East
+  'Dubai', 'Doha', 'Riyadh',
+  // North America
+  'New York', 'Los Angeles', 'Chicago', 'San Francisco', 'Miami', 'Houston',
+  'Seattle', 'Boston', 'Denver', 'Toronto', 'Vancouver', 'Montreal',
+  // Europe
+  'London', 'Manchester', 'Birmingham', 'Liverpool', 'Edinburgh',
+  'Paris', 'Berlin', 'Munich', 'Madrid', 'Barcelona', 'Rome', 'Milan',
+  'Amsterdam', 'Brussels',
+  // Asia Pacific
+  'Sydney', 'Melbourne', 'Singapore', 'Tokyo', 'Mumbai', 'Delhi',
+];
+
+export const COUNTRIES_AND_CITIES = [
+  { code: 'GH', name: 'Ghana 🇬🇭', cities: ['Accra', 'Kumasi'] },
+  { code: 'NG', name: 'Nigeria 🇳🇬', cities: ['Lagos', 'Abuja'] },
+  { code: 'KE', name: 'Kenya 🇰🇪', cities: ['Nairobi'] },
+  { code: 'ZA', name: 'South Africa 🇿🇦', cities: ['Cape Town', 'Johannesburg'] },
+  { code: 'TZ', name: 'Tanzania 🇹🇿', cities: ['Dar es Salaam'] },
+  { code: 'UG', name: 'Uganda 🇺🇬', cities: ['Kampala'] },
+  { code: 'RW', name: 'Rwanda 🇷🇼', cities: ['Kigali'] },
+  { code: 'ET', name: 'Ethiopia 🇪🇹', cities: ['Addis Ababa'] },
+  { code: 'EG', name: 'Egypt 🇪🇬', cities: ['Cairo'] },
+  { code: 'MA', name: 'Morocco 🇲🇦', cities: ['Casablanca'] },
+  { code: 'AE', name: 'UAE 🇦🇪', cities: ['Dubai'] },
+  { code: 'QA', name: 'Qatar 🇶🇦', cities: ['Doha'] },
+  { code: 'SA', name: 'Saudi Arabia 🇸🇦', cities: ['Riyadh'] },
+  { code: 'GB', name: 'United Kingdom 🇬🇧', cities: ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Edinburgh'] },
+  { code: 'US', name: 'United States 🇺🇸', cities: ['New York', 'Los Angeles', 'Chicago', 'San Francisco', 'Miami', 'Houston', 'Seattle', 'Boston', 'Denver'] },
+  { code: 'CA', name: 'Canada 🇨🇦', cities: ['Toronto', 'Vancouver', 'Montreal'] },
+  { code: 'FR', name: 'France 🇫🇷', cities: ['Paris'] },
+  { code: 'DE', name: 'Germany 🇩🇪', cities: ['Berlin', 'Munich'] },
+  { code: 'ES', name: 'Spain 🇪🇸', cities: ['Madrid', 'Barcelona'] },
+  { code: 'IT', name: 'Italy 🇮🇹', cities: ['Rome', 'Milan'] },
+  { code: 'NL', name: 'Netherlands 🇳🇱', cities: ['Amsterdam'] },
+  { code: 'BE', name: 'Belgium 🇧🇪', cities: ['Brussels'] },
+  { code: 'AU', name: 'Australia 🇦🇺', cities: ['Sydney', 'Melbourne'] },
+  { code: 'SG', name: 'Singapore 🇸🇬', cities: ['Singapore'] },
+  { code: 'JP', name: 'Japan 🇯🇵', cities: ['Tokyo'] },
+  { code: 'IN', name: 'India 🇮🇳', cities: ['Mumbai', 'Delhi'] },
 ];
 
 interface ProductLandingProps {
@@ -169,11 +187,11 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
           <div className="lg:col-span-7 space-y-8 text-left max-w-2xl">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200/60 px-3 py-1 text-xs font-semibold text-blue-700">
               <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-              <span className="font-display tracking-tight">AI Client Acquisition Engine v2.0</span>
+              <span className="font-display tracking-tight">AscendSME · Lumi · Hone · AI Client Finder</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 font-display leading-[1.08]">
-              Fire your outbound agency. <br />
+              Skip cold outreach. <br />
               <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-700">
                 Get real local clients.
               </span>
@@ -286,9 +304,15 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                       type="text"
                       value={selectedNiche}
                       onChange={(e) => setSelectedNiche(e.target.value)}
+                      list="niche-autocomplete-hero"
                       placeholder="Or type custom niche (e.g. Dentist, Cafe...)"
                       className="w-full bg-zinc-850 border border-zinc-750 text-zinc-150 placeholder-zinc-600 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-zinc-500 font-medium font-sans"
                     />
+                    <datalist id="niche-autocomplete-hero">
+                      {['Dentist', 'Cafe', 'Restaurant', 'Barber', 'Salon', 'Bakery', 'Hotel', 'School', 'Hospital', 'Gym', 'Pharmacy', 'Clinic', 'Pizza', 'Laundry', 'Auto Repair', 'Plumber', 'Electrician', 'Lawyer', 'Real Estate', 'Daycare', 'Pet Store', 'Supermarket', 'Boutique', 'Spa'].map(niche => (
+                        <option key={niche} value={niche} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
 
@@ -321,9 +345,15 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                         type="text"
                         value={targetCity}
                         onChange={(e) => setTargetCity(e.target.value)}
+                        list="city-autocomplete-hero"
                         placeholder="e.g. Accra, Lagos, London..."
                         className="w-full bg-zinc-850 border border-zinc-750 rounded-xl pl-9 pr-4 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 font-medium"
                       />
+                      <datalist id="city-autocomplete-hero">
+                        {ALL_CITIES.map(city => (
+                          <option key={city} value={city} />
+                        ))}
+                      </datalist>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
@@ -946,7 +976,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
                 Built with ❤️ by <span className="text-blue-600 hover:underline">Bamidele Tewogbade</span>
               </p>
               <p className="text-[10px] text-zinc-400 font-light max-w-md mx-auto">
-                Helping modern agencies target, discover, analyze, and automate local client contracts seamlessly.
+                Helping modern agencies target, discover, analyze, and automate local client contracts seamlessly across the full project portfolio.
               </p>
             </div>
 
@@ -987,7 +1017,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
             {/* Platform Brand */}
             <div className="pt-4 border-t border-zinc-200/80 w-full max-w-sm">
               <p className="text-[10px] font-extrabold tracking-wider text-zinc-450 font-mono uppercase">
-                CLIENT HUNTER • SAAS ENGINE © {new Date().getFullYear()}
+                AscendSME · Lumi · Hone · AI Client Finder © {new Date().getFullYear()}
               </p>
             </div>
 

@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Technical Deep-Dive — AI Client Hunter Architecture</title>
+<style>
+  @page {
+    size: A4;
+    margin: 2cm 2.2cm;
+    @top-center {
+      content: element(header);
+    }
+    @bottom-center {
+      content: counter(page);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 8pt;
+      color: #888;
+    }
+  }
+
+  @page :first {
+    @top-center { content: none; }
+    @bottom-center { content: none; }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
+    line-height: 1.7;
+    font-size: 10.5pt;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== COVER PAGE ===== */
+  .cover-page {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #0f0c29 0%, #1a1a4e 50%, #24243e 100%);
+    color: white;
+    text-align: center;
+    padding: 3cm 2cm;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover-page::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(168,85,247,0.1) 0%, transparent 50%);
+    animation: none;
+  }
+  .cover-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 100px;
+    padding: 8px 24px;
+    font-size: 9pt;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 40px;
+  }
+  .cover-title {
+    font-size: 32pt;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .cover-subtitle {
+    font-size: 13pt;
+    color: rgba(255,255,255,0.6);
+    max-width: 500px;
+    margin-bottom: 60px;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  .cover-meta {
+    position: absolute;
+    bottom: 2cm;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 8pt;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+  }
+
+  /* ===== TOC ===== */
+  .toc-page {
+    page-break-after: always;
+    padding: 2cm 0;
+  }
+  .toc-title {
+    font-size: 18pt;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: #1a1a2e;
+    letter-spacing: -0.5px;
+  }
+  .toc-list { list-style: none; }
+  .toc-list li {
+    display: flex;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px dashed #e5e7eb;
+    cursor: default;
+  }
+  .toc-num {
+    font-weight: 700;
+    color: #6366f1;
+    font-size: 10pt;
+    min-width: 36px;
+  }
+  .toc-text { flex: 1; font-size: 11pt; font-weight: 500; color: #1a1a2e; }
+  .toc-desc {
+    font-size: 8.5pt;
+    color: #888;
+    font-weight: 400;
+    margin-left: 10px;
+  }
+  .toc-page-num {
+    font-size: 10pt;
+    color: #6366f1;
+    font-weight: 600;
+  }
+
+  /* ===== CONTENT STYLES ===== */
+  .chapter {
+    page-break-before: always;
+    padding-top: 0.5cm;
+  }
+  .chapter:first-of-type { page-break-before: avoid; }
+
+  h1 {
+    font-size: 22pt;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #1a1a2e;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  h1 .ch-number {
+    display: block;
+    font-size: 9pt;
+    font-weight: 600;
+    color: #6366f1;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .ch-divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #6366f1, #a78bfa);
+    border-radius: 3px;
+    margin: 16px 0 24px;
+  }
+
+  h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  h3 {
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+
+  p {
+    margin-bottom: 12px;
+    color: #4b5563;
+    hyphens: auto;
+    text-align: justify;
+  }
+
+  /* ===== CALLOUTS ===== */
+  .callout {
+    background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+    border-left: 3px solid #6366f1;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+  .callout strong { color: #4338ca; }
+  .callout.info {
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%);
+    border-left-color: #10b981;
+  }
+  .callout.info strong { color: #059669; }
+  .callout.warn {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-left-color: #f59e0b;
+  }
+  .callout.warn strong { color: #d97706; }
+
+  /* ===== SVG DIAGRAMS ===== */
+  .diagram-container {
+    background: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+  .diagram-container svg { max-width: 100%; height: auto; }
+  .diagram-caption {
+    font-size: 8.5pt;
+    color: #888;
+    margin-top: 12px;
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* ===== TABLES ===== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th {
+    background: #f3f4f6;
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #d1d5db;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #4b5563;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  /* ===== CODE BLOCKS ===== */
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 8.5pt;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #7c3aed;
+  }
+  pre {
+    background: #1a1a2e;
+    color: #e5e7eb;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 8pt;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 16px 0;
+    page-break-inside: avoid;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  /* ===== LISTS ===== */
+  ul, ol {
+    margin: 8px 0 12px 24px;
+    color: #4b5563;
+  }
+  li { margin-bottom: 6px; }
+
+  /* ===== KEY-VALUE GRID ===== */
+  .kv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+    page-break-inside: avoid;
+  }
+  .kv-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .kv-item .label {
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6366f1;
+    margin-bottom: 4px;
+  }
+  .kv-item .value { font-size: 10pt; color: #1a1a2e; font-weight: 500; }
+
+  /* ===== ARCHITECTURE FLOW ===== */
+  .flow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+  .flow-step {
+    flex: 1;
+    min-width: 100px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    font-size: 8.5pt;
+    position: relative;
+  }
+  .flow-step .step-num {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    background: #6366f1;
+    color: white;
+    border-radius: 50%;
+    font-size: 7.5pt;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .flow-step .step-label { font-weight: 600; color: #1a1a2e; }
+  .flow-step .step-desc { font-size: 7.5pt; color: #888; margin-top: 4px; }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    color: #6366f1;
+    font-size: 14pt;
+    font-weight: 300;
+  }
+
+  /* ===== AGENT CARDS ===== */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+    page-break-inside: avoid;
+  }
+  .agent-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 16px;
+    page-break-inside: avoid;
+  }
+  .agent-card .agent-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14pt;
+    margin-bottom: 8px;
+  }
+  .agent-card .agent-name { font-weight: 700; font-size: 11pt; color: #1a1a2e; }
+  .agent-card .agent-role { font-size: 8pt; color: #6366f1; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .agent-card .agent-desc { font-size: 9pt; color: #6b7280; line-height: 1.5; }
+  .agent-card:nth-child(1) { border-top: 3px solid #6366f1; }
+  .agent-card:nth-child(2) { border-top: 3px solid #10b981; }
+  .agent-card:nth-child(3) { border-top: 3px solid #f59e0b; }
+  .agent-card:nth-child(4) { border-top: 3px solid #ef4444; }
+  .agent-card:nth-child(5) { border-top: 3px solid #8b5cf6; }
+
+  /* ===== FOOTER ===== */
+  .page-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 8pt;
+    color: #888;
+    text-align: center;
+  }
+
+  @media print {
+    body { font-size: 10pt; }
+    .cover-page { height: 100vh; }
+    .diagram-container { break-inside: avoid; }
+    .agent-card { break-inside: avoid; }
+    .kv-item { break-inside: avoid; }
+    .callout { break-inside: avoid; }
+    table { break-inside: avoid; }
+    pre { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<div class="cover-page">
+  <div class="cover-badge">Technical Architecture Document</div>
+  <h1 class="cover-title">AI Client Hunter<br>System Architecture</h1>
+  <p class="cover-subtitle">A multi-agent orchestration platform for intelligent lead prospecting, scoring, analysis, and conversion — reimagined for the AI-first era.</p>
+  <div class="cover-meta">AscendSME · Lumi · Hone · AI Client Finder &mdash; 2026</div>
+</div>
+
+<!-- ===== TOC ===== -->
+<div class="toc-page">
+  <div class="toc-title">Table of Contents</div>
+  <ul class="toc-list">
+    <li><span class="toc-num">01</span><span class="toc-text">Executive Overview</span><span class="toc-desc">— The vision and architectural philosophy</span><span class="toc-page-num">3</span></li>
+    <li><span class="toc-num">02</span><span class="toc-text">Current System Architecture</span><span class="toc-desc">— How the platform works today</span><span class="toc-page-num">4</span></li>
+    <li><span class="toc-num">03</span><span class="toc-text">The Five-Agent Mesh</span><span class="toc-desc">— Specialist agents and their responsibilities</span><span class="toc-page-num">6</span></li>
+    <li><span class="toc-num">04</span><span class="toc-text">Agentic Redesign</span><span class="toc-desc">— Transitioning from UI-heavy to agent-native</span><span class="toc-page-num">8</span></li>
+    <li><span class="toc-num">05</span><span class="toc-text">Architecture Diagrams</span><span class="toc-desc">— Visual system flows and data pipelines</span><span class="toc-page-num">10</span></li>
+    <li><span class="toc-num">06</span><span class="toc-text">Multi-Project Portfolio</span><span class="toc-desc">— AscendSME, Lumi, Hone, AI Client Finder</span><span class="toc-page-num">12</span></li>
+    <li><span class="toc-num">07</span><span class="toc-text">AI-First Development Philosophy</span><span class="toc-desc">— Building with AI as the operating system</span><span class="toc-page-num">14</span></li>
+  </ul>
+</div>
+
+<!-- ===== CHAPTER 1 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 01</span>Executive Overview</h1>
+  <div class="ch-divider"></div>
+
+  <p>The <strong>AI Client Hunter</strong> platform is a multi-agent system designed to automate the entire lead prospecting lifecycle — from discovery and scoring to analysis, outreach, and conversion. It represents a fundamental shift from traditional CRM software toward an <strong>agent-native architecture</strong> where AI specialists collaborate autonomously to achieve business outcomes.</p>
+
+  <div class="callout">
+    <strong>Core Philosophy:</strong> Instead of forcing users through rigid UI workflows, the system delegates tasks to a mesh of specialized AI agents, each with domain expertise — a Scanner, Analyzer, Pitcher, Converter, and Campaign Manager — orchestrated by a central "Bishop" agent.
+  </div>
+
+  <h2>The Problem</h2>
+  <p>Traditional lead generation tools are manual, siloed, and reactive. Sales teams spend 60% of their time on data entry, prospecting research, and administrative tasks rather than actual selling. Existing CRMs are database interfaces, not intelligent assistants.</p>
+
+  <h2>The Solution</h2>
+  <p>AI Client Hunter replaces the traditional UI-driven workflow with an <strong>agentic mesh</strong> — a coordinated team of AI agents that can:</p>
+  <ul>
+    <li><strong>Discover</strong> leads from local map data, web scraping, and API integration</li>
+    <li><strong>Score & Prioritize</strong> leads using multi-factor priority algorithms</li>
+    <li><strong>Analyze</strong> online presence and generate actionable improvement reports</li>
+    <li><strong>Pitch</strong> with personalized, context-aware outreach messages</li>
+    <li><strong>Convert</strong> through a kanban pipeline with automated follow-ups</li>
+  </ul>
+
+  <div class="kv-grid">
+    <div class="kv-item">
+      <div class="label">Architecture Pattern</div>
+      <div class="value">Supervisor/Worker (Hierarchical) + Mesh</div>
+    </div>
+    <div class="kv-item">
+      <div class="label">Orchestrator</div>
+      <div class="value">Bishop — Central coordinator agent</div>
+    </div>
+    <div class="kv-item">
+      <div class="label">Specialist Agents</div>
+      <div class="value">5 domain-specific workers</div>
+    </div>
+    <div class="kv-item">
+      <div class="label">UI Paradigm</div>
+      <div class="value">Hybrid: Chat-first + Visual dashboards</div>
+    </div>
+    <div class="kv-item">
+      <div class="label">AI Models</div>
+      <div class="value">OpenRouter (multi-model), Groq (fast inference)</div>
+    </div>
+    <div class="kv-item">
+      <div class="label">Data Layer</div>
+      <div class="value">Firebase Firestore + Local state + Vector memory</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CHAPTER 2 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 02</span>Current System Architecture</h1>
+  <div class="ch-divider"></div>
+
+  <p>The system is built as a modern single-page application (React + Vite + TypeScript) with a Node.js server layer for agent coordination. The architecture follows a clean separation between the UI layer, the agent orchestration layer, and the data services layer.</p>
+
+  <h2>Technology Stack</h2>
+  <table>
+    <tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+    <tr><td>Frontend</td><td>React 19, Vite, TypeScript</td><td>Component-based UI with fast HMR</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS 4 + custom CSS</td><td>Utility-first, responsive dark theme</td></tr>
+    <tr><td>Animations</td><td>Motion (React), Framer Motion</td><td>Fluid transitions and micro-interactions</td></tr>
+    <tr><td>AI Orchestration</td><td>Custom Agent Framework (Bishop)</td><td>Multi-agent coordination and tool execution</td></tr>
+    <tr><td>AI Inference</td><td>OpenRouter (multi-model), Groq</td><td>LLM access with fallback routing</td></tr>
+    <tr><td>Database</td><td>Firebase Firestore</td><td>Real-time document storage</td></tr>
+    <tr><td>Video</td><td>Remotion 4</td><td>Programmatic product tour videos</td></tr>
+    <tr><td>Charts</td><td>Recharts</td><td>Analytics visualizations</td></tr>
+  </table>
+
+  <h2>Core Data Flow</h2>
+  <p>Leads flow through the system in a structured pipeline:</p>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="step-num">1</div>
+      <div class="step-label">Discovery</div>
+      <div class="step-desc">Map + Web scraping + API ingestion</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">2</div>
+      <div class="step-label">Scoring</div>
+      <div class="step-desc">Priority algorithm + Persona matching</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">3</div>
+      <div class="step-label">Analysis</div>
+      <div class="step-desc">Online presence audit + Gap detection</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">4</div>
+      <div class="step-label">Outreach</div>
+      <div class="step-desc">AI-generated pitches + Sequence campaigns</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">5</div>
+      <div class="step-label">Conversion</div>
+      <div class="step-desc">Kanban pipeline + Follow-up automation</div>
+    </div>
+  </div>
+
+  <h2>System Components (Current)</h2>
+  <table>
+    <tr><th>Component</th><th>Function</th></tr>
+    <tr><td>DiscoveryEngine</td><td>Local map data extraction, business information scraping, web search integration</td></tr>
+    <tr><td>IndustryPersonaEngine</td><td>Industry-specific persona matching and lead qualification scoring</td></tr>
+    <tr><td>PriorityScoreGauge</td><td>Visual priority scoring with multi-factor weighting (online presence, engagement, fit)</td></tr>
+    <tr><td>CrmPipeline</td><td>Kanban-style pipeline with drag-and-drop, lead details, CSV import/export</td></tr>
+    <tr><td>SalesCopilot</td><td>Chat-based AI assistant (Bishop) for natural language interaction with the system</td></tr>
+    <tr><td>AnalyticsPanel</td><td>Performance dashboards with source distribution, revenue tracking, pipeline status</td></tr>
+    <tr><td>CampaignSequence</td><td>Multi-step outreach campaign builder with timing and channel configuration</td></tr>
+    <tr><td>MapView</td><td>Geographic visualization of leads with clustering and filtering</td></tr>
+    <tr><td>AgentProcessFlow</td><td>Visual representation of agent coordination and task delegation</td></tr>
+  </table>
+
+  <div class="callout info">
+    <strong>Key Insight:</strong> The current system is a <em>hybrid architecture</em> — users can interact through both the visual UI (dashboards, pipelines, maps) and through the chat-based Sales Copilot (Bishop agent). The redesign pushes further toward agent-native interaction.
+  </div>
+</div>
+
+<!-- ===== CHAPTER 3 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 03</span>The Five-Agent Mesh</h1>
+  <div class="ch-divider"></div>
+
+  <p>At the heart of AI Client Hunter is a coordinated team of five specialist agents, each with distinct capabilities and tools. They are orchestrated by <strong>Bishop</strong>, the central coordinator that decomposes user goals into tasks and delegates them to the appropriate specialist.</p>
+
+  <div class="agent-grid">
+    <div class="agent-card">
+      <div class="agent-icon" style="background:#eef2ff;color:#6366f1;">🔍</div>
+      <div class="agent-role">Scanner Agent</div>
+      <div class="agent-name">The Prospector</div>
+      <div class="agent-desc">Searches local map data, business directories, and web sources to discover potential leads. Extracts business name, address, phone, website, ratings, and category information. Uses Google Maps integration and web scraping.</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon" style="background:#ecfdf5;color:#10b981;">📊</div>
+      <div class="agent-role">Analyzer Agent</div>
+      <div class="agent-name">The Auditor</div>
+      <div class="agent-desc">Evaluates online presence — website quality, SEO performance, social media activity, review scores. Generates comprehensive audit reports with actionable recommendations for improvement.</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon" style="background:#fffbeb;color:#f59e0b;">✉️</div>
+      <div class="agent-role">Pitcher Agent</div>
+      <div class="agent-name">The Communicator</div>
+      <div class="agent-desc">Crafts personalized outreach messages based on lead analysis. Supports multiple channels (email, WhatsApp) with context-aware personalization. Includes A/B testing for message optimization.</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon" style="background:#fef2f2;color:#ef4444;">🔄</div>
+      <div class="agent-role">Converter Agent</div>
+      <div class="agent-name">The Pipeline Manager</div>
+      <div class="agent-desc">Manages the lead conversion pipeline — tracking stages from New to Won/Lost. Automatically moves leads through stages based on engagement signals. Provides forecasting and bottleneck analysis.</div>
+    </div>
+    <div class="agent-card" style="grid-column: 1 / -1;">
+      <div class="agent-icon" style="background:#f5f3ff;color:#8b5cf6;">🎯</div>
+      <div class="agent-role">Campaign Agent</div>
+      <div class="agent-name">The Strategist</div>
+      <div class="agent-desc">Designs and executes multi-step outreach sequences across channels. Configures timing, triggers, and follow-up rules. Tracks campaign performance with open rates, response rates, and conversion metrics.</div>
+    </div>
+  </div>
+
+  <h2>Bishop — The Orchestrator</h2>
+  <p>Bishop is the central coordinator that receives user goals (either through the chat interface or programmatically) and orchestrates the five specialist agents. It uses a <strong>ReAct (Reason + Act)</strong> reasoning loop to:</p>
+  <ol>
+    <li><strong>Parse</strong> the user's intent from natural language</li>
+    <li><strong>Plan</strong> a sequence of tasks across specialist agents</li>
+    <li><strong>Delegate</strong> tasks with context and success criteria</li>
+    <li><strong>Monitor</strong> execution and handle errors or fallbacks</li>
+    <li><strong>Synthesize</strong> results into a coherent response</li>
+  </ol>
+
+  <div class="callout">
+    <strong>Agent Communication Protocol:</strong> Agents communicate through structured tool calls rather than free-form text. Each agent exposes a defined set of tools (e.g., <code>searchBusinesses</code>, <code>analyzeWebsite</code>, <code>generatePitch</code>) that Bishop can invoke based on the task plan.
+  </div>
+</div>
+
+<!-- ===== CHAPTER 4 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 04</span>Agentic Redesign</h1>
+  <div class="ch-divider"></div>
+
+  <h2>From UI-Heavy to Agent-Native</h2>
+  <p>The current system is a hybrid — rich visual components with a chat overlay. The redesign moves toward an <strong>agent-native architecture</strong> where the primary interaction mode is conversation with Bishop, and the UI surfaces contextually as needed.</p>
+
+  <h2>Redesign Principles</h2>
+  <table>
+    <tr><th>Principle</th><th>What It Means</th></tr>
+    <tr><td><strong>Chat-First Interaction</strong></td><td>The default interface is a conversation with Bishop. Visual dashboards and pipelines are "surfaces" that appear contextually when relevant, not the primary navigation.</td></tr>
+    <tr><td><strong>Agent Delegation</strong></td><td>Users tell Bishop what they want ("Find me plumbers in Austin who need SEO help"). Bishop decomposes this, delegates to Scanner → Analyzer → Pitcher, and reports back.</td></tr>
+    <tr><td><strong>Proactive Agents</strong></td><td>Agents don't just respond — they suggest. The Analyzer might flag a lead whose website went down. The Campaign Agent might suggest re-engaging cold leads with a new offer.</td></tr>
+    <tr><td><strong>Visual by Default</strong></td><td>When information is best understood visually (charts, pipelines, maps), the UI surfaces automatically within the chat context. No navigation required.</td></tr>
+    <tr><td><strong>Single-Command Workflows</strong></td><td>Complex multi-step processes are triggered by a single natural language command. Bishop handles the orchestration, error handling, and reporting.</td></tr>
+  </table>
+
+  <h2>UI Transformation Strategy</h2>
+  <p>The redesign removes "boring UI" — traditional form-heavy interfaces, cluttered dashboards, and multi-step wizards — and replaces them with:</p>
+  <ul>
+    <li><strong>Contextual dashboards</strong> that appear as rich cards within chat</li>
+    <li><strong>Inline interactions</strong> — edit lead details, move pipeline stages, and trigger actions without leaving the conversation</li>
+    <li><strong>Animated transitions</strong> between states that make the system feel alive and responsive</li>
+    <li><strong>Glass morphism</strong> and gradient aesthetics inspired by modern design systems</li>
+    <li><strong>Minimal chrome</strong> — headers, sidebars, and navigation fade to the background</li>
+  </ul>
+
+  <div class="callout warn">
+    <strong>Design Tension:</strong> The challenge is balancing chat simplicity with data complexity. A pipeline with 500 leads can't be effectively browsed through chat alone. The solution is <em>progressive disclosure</em> — chat for goals and decisions, visual for data and patterns.
+  </div>
+
+  <h2>Example: "Find & Pitch" Workflow</h2>
+  <p><strong>Before (Traditional):</strong> User opens DiscoveryEngine → enters search terms → views results → clicks lead → opens IndustryPersona → scores manually → switches to SalesCopilot → types a pitch request → copies to email.</p>
+  <p><strong>After (Agentic):</strong> User tells Bishop "Find me high-potential dental practices in Miami and draft a pitch." Bishop delegates to Scanner → Analyzer → Pitcher in parallel, presents results with a summary card showing leads, scores, and pitch previews. User approves with a single tap.</p>
+
+  <pre><code>// Bishop orchestration pseudo-code
+async function handleUserGoal("Find Miami dentists, score them, draft pitches") {
+  const leads = await Scanner.search({
+    query: "dental practices",
+    location: "Miami, FL",
+    limit: 20
+  });
+  
+  const scored = await Promise.all(
+    leads.map(l => Analyzer.score(l))
+  );
+  
+  const topLeads = scored
+    .filter(l => l.score > 70)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+  
+  const pitches = await Promise.all(
+    topLeads.map(l => Pitcher.draft({ lead: l, channel: "email" }))
+  );
+  
+  return synthesize(topLeads, pitches);
+}</code></pre>
+</div>
+
+<!-- ===== CHAPTER 5 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 05</span>Architecture Diagrams</h1>
+  <div class="ch-divider"></div>
+
+  <h2>System Architecture Overview</h2>
+  <div class="diagram-container">
+    <svg viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#f8fafc"/>
+          <stop offset="100%" style="stop-color:#eef2ff"/>
+        </linearGradient>
+        <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#6366f1"/>
+          <stop offset="100%" style="stop-color:#818cf8"/>
+        </linearGradient>
+        <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#10b981"/>
+          <stop offset="100%" style="stop-color:#34d399"/>
+        </linearGradient>
+        <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#f59e0b"/>
+          <stop offset="100%" style="stop-color:#fbbf24"/>
+        </linearGradient>
+        <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#ef4444"/>
+          <stop offset="100%" style="stop-color:#f87171"/>
+        </linearGradient>
+        <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#8b5cf6"/>
+          <stop offset="100%" style="stop-color:#a78bfa"/>
+        </linearGradient>
+        <filter id="shadow">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+        </filter>
+        <marker id="arrowRight" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+        </marker>
+        <marker id="arrowDown" markerWidth="7" markerHeight="10" refX="3.5" refY="10" orient="auto">
+          <polygon points="0 0, 7 0, 3.5 10" fill="#94a3b8"/>
+        </marker>
+      </defs>
+
+      <!-- Background -->
+      <rect width="800" height="520" rx="12" fill="url(#bgGrad)"/>
+
+      <!-- Title -->
+      <text x="400" y="32" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="14" font-weight="700" fill="#1e293b">Multi-Agent System Architecture</text>
+
+      <!-- User Layer -->
+      <rect x="300" y="50" width="200" height="44" rx="22" fill="url(#blueGrad)" filter="url(#shadow)"/>
+      <text x="400" y="76" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="white">👤 User</text>
+
+      <!-- Arrow down -->
+      <line x1="400" y1="94" x2="400" y2="130" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowDown)"/>
+
+      <!-- Bishop Orchestrator -->
+      <rect x="250" y="130" width="300" height="56" rx="10" fill="#1e293b" filter="url(#shadow)"/>
+      <text x="400" y="155" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700" fill="#a5b4fc">♟️ Bishop Orchestrator</text>
+      <text x="400" y="173" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="9" fill="#94a3b8">Task Decomposition · Planning · Delegation · Synthesis</text>
+
+      <!-- Lines from Bishop to agents -->
+      <line x1="280" y1="186" x2="80" y2="240" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowDown)"/>
+      <line x1="340" y1="186" x2="200" y2="240" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowDown)"/>
+      <line x1="400" y1="186" x2="400" y2="240" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowDown)"/>
+      <line x1="460" y1="186" x2="600" y2="240" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowDown)"/>
+      <line x1="520" y1="186" x2="720" y2="240" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowDown)"/>
+
+      <!-- Specialist Agents Row -->
+      <!-- Scanner -->
+      <rect x="20" y="246" width="140" height="90" rx="10" fill="white" stroke="#6366f1" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="90" y="274" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#6366f1">🔍 Scanner</text>
+      <text x="90" y="290" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#64748b">Prospector</text>
+      <text x="90" y="310" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">Map scraping</text>
+      <text x="90" y="324" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">Web discovery</text>
+
+      <!-- Analyzer -->
+      <rect x="170" y="246" width="140" height="90" rx="10" fill="white" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="240" y="274" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#10b981">📊 Analyzer</text>
+      <text x="240" y="290" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#64748b">Auditor</text>
+      <text x="240" y="310" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">Website audit</text>
+      <text x="240" y="324" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">Score & prioritize</text>
+
+      <!-- Pitcher -->
+      <rect x="330" y="246" width="140" height="90" rx="10" fill="white" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="400" y="274" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#f59e0b">✉️ Pitcher</text>
+      <text x="400" y="290" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#64748b">Communicator</text>
+      <text x="400" y="310" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">AI pitch generation</text>
+      <text x="400" y="324" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">Multi-channel</text>
+
+      <!-- Converter -->
+      <rect x="490" y="246" width="120" height="90" rx="10" fill="white" stroke="#ef4444" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="550" y="274" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#ef4444">🔄 Converter</text>
+      <text x="550" y="290" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#64748b">Pipeline Manager</text>
+      <text x="550" y="310" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">Kanban tracking</text>
+      <text x="550" y="324" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">Stage automation</text>
+
+      <!-- Campaign -->
+      <rect x="625" y="246" width="155" height="90" rx="10" fill="white" stroke="#8b5cf6" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="702" y="274" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#8b5cf6">🎯 Campaign</text>
+      <text x="702" y="290" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#64748b">Strategist</text>
+      <text x="702" y="310" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">Sequence design</text>
+      <text x="702" y="324" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">Performance tracking</text>
+
+      <!-- Arrows down from agents -->
+      <line x1="90" y1="336" x2="90" y2="370" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+      <line x1="240" y1="336" x2="240" y2="370" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+      <line x1="400" y1="336" x2="400" y2="370" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+      <line x1="550" y1="336" x2="550" y2="370" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+      <line x1="702" y1="336" x2="702" y2="370" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+
+      <!-- Tools Layer -->
+      <rect x="20" y="372" width="760" height="56" rx="10" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="400" y="392" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600" fill="#64748b">Agent Tools & Integrations</text>
+      <text x="90" y="412" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#94a3b8">🌐 Web Search</text>
+      <text x="240" y="412" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#94a3b8">☁️ OpenRouter AI</text>
+      <text x="400" y="412" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#94a3b8">⚡ Groq Inference</text>
+      <text x="550" y="412" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#94a3b8">🔥 Firestore DB</text>
+      <text x="702" y="412" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#94a3b8">📱 WhatsApp API</text>
+
+      <!-- Arrow to Data -->
+      <line x1="400" y1="428" x2="400" y2="455" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+
+      <!-- Data Layer -->
+      <rect x="100" y="458" width="600" height="44" rx="22" fill="url(#blueGrad)" filter="url(#shadow)" opacity="0.15"/>
+      <rect x="100" y="458" width="600" height="44" rx="22" fill="none" stroke="#6366f1" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+      <text x="400" y="476" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600" fill="#6366f1">Output: Leads · Scores · Pitches · Analytics · Campaigns</text>
+      <text x="400" y="492" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#94a3b8">Structured data flowing through the agent pipeline</text>
+    </svg>
+    <div class="diagram-caption">Figure 1: Multi-Agent System Architecture — User interacts with Bishop, which delegates to five specialist agents, each with access to distinct tools and data layers.</div>
+  </div>
+
+  <h2>Lead Processing Pipeline</h2>
+  <div class="diagram-container">
+    <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="pipeBg" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#eef2ff"/>
+          <stop offset="100%" style="stop-color:#f5f3ff"/>
+        </linearGradient>
+        <filter id="shadow2">
+          <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.08"/>
+        </filter>
+      </defs>
+
+      <rect width="800" height="400" rx="12" fill="url(#pipeBg)"/>
+      <text x="400" y="28" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700" fill="#1e293b">Lead Processing Pipeline</text>
+
+      <!-- Stage 1: Raw Input -->
+      <rect x="30" y="60" width="140" height="80" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow2)"/>
+      <text x="100" y="88" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#475569">🌐 Raw Data</text>
+      <text x="100" y="104" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Map coordinates</text>
+      <text x="100" y="118" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Business listings</text>
+      <text x="100" y="132" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Web scrapes</text>
+
+      <line x1="170" y1="100" x2="200" y2="100" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowRight)"/>
+
+      <!-- Stage 2: Enriched -->
+      <rect x="205" y="60" width="140" height="80" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5" filter="url(#shadow2)"/>
+      <text x="275" y="88" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#6366f1">📦 Scanner</text>
+      <text x="275" y="104" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Enrichment</text>
+      <text x="275" y="118" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Category matching</text>
+      <text x="275" y="132" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Location verification</text>
+
+      <line x1="345" y1="100" x2="375" y2="100" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowRight)"/>
+
+      <!-- Stage 3: Scored -->
+      <rect x="380" y="60" width="140" height="80" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5" filter="url(#shadow2)"/>
+      <text x="450" y="88" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#10b981">📊 Analyzer</text>
+      <text x="450" y="104" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Priority scoring</text>
+      <text x="450" y="118" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Persona matching</text>
+      <text x="450" y="132" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Audit generation</text>
+
+      <line x1="520" y1="100" x2="550" y2="100" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowRight)"/>
+
+      <!-- Stage 4: Pitched -->
+      <rect x="555" y="60" width="140" height="80" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow2)"/>
+      <text x="625" y="88" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#f59e0b">✉️ Pitcher</text>
+      <text x="625" y="104" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Message generation</text>
+      <text x="625" y="118" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Channel selection</text>
+      <text x="625" y="132" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8">Personalization</text>
+
+      <!-- Feedback loop arrow -->
+      <path d="M 625 220 L 625 260 L 275 260 L 275 220" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowUp)"/>
+      <text x="450" y="278" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="7.5" fill="#94a3b8" font-style="italic">Feedback loop: Response data improves scoring & pitching</text>
+
+      <!-- Stage 5: Pipeline -->
+      <rect x="30" y="170" width="665" height="44" rx="22" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <text x="362" y="195" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600" fill="#64748b">🔄 Converter Pipeline</text>
+
+      <!-- Pipeline sub-stages -->
+      <rect x="50" y="222" width="90" height="36" rx="18" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="95" y="244" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#64748b">New</text>
+      <text x="95" y="270" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="6.5" fill="#94a3b8">just added</text>
+
+      <line x1="140" y1="240" x2="155" y2="240" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arrowRight)"/>
+
+      <rect x="160" y="222" width="90" height="36" rx="18" fill="#eef2ff" stroke="#6366f1" stroke-width="1"/>
+      <text x="205" y="244" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#6366f1">Contacted</text>
+      <text x="205" y="270" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="6.5" fill="#94a3b8">pitched</text>
+
+      <line x1="250" y1="240" x2="265" y2="240" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arrowRight)"/>
+
+      <rect x="270" y="222" width="90" height="36" rx="18" fill="#fffbeb" stroke="#f59e0b" stroke-width="1"/>
+      <text x="315" y="244" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#d97706">Interested</text>
+      <text x="315" y="270" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="6.5" fill="#94a3b8">engaged</text>
+
+      <line x1="360" y1="240" x2="375" y2="240" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arrowRight)"/>
+
+      <rect x="380" y="222" width="90" height="36" rx="18" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+      <text x="425" y="244" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" fill="#059669">Negotiating</text>
+      <text x="425" y="270" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="6.5" fill="#94a3b8">closing in</text>
+
+      <line x1="470" y1="240" x2="485" y2="240" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arrowRight)"/>
+
+      <rect x="490" y="222" width="90" height="36" rx="18" fill="#10b981"/>
+      <text x="535" y="244" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8" font-weight="600" fill="white">Won ✅</text>
+      <text x="535" y="270" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="6.5" fill="#6ee7b7">converted</text>
+
+      <!-- Campaign Layer -->
+      <rect x="30" y="310" width="665" height="44" rx="10" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="362" y="336" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600" fill="#8b5cf6">🎯 Campaign Agent — Multi-step sequences across channels</text>
+    </svg>
+    <div class="diagram-caption">Figure 2: Lead Processing Pipeline — Raw data flows through Scanner → Analyzer → Pitcher → Converter → Campaign, with feedback loops for continuous improvement.</div>
+  </div>
+
+  <h2>Agent Communication Flow</h2>
+  <div class="diagram-container">
+    <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrowUp" markerWidth="10" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+          <polygon points="10 7, 0 3.5, 10 0" fill="#6366f1"/>
+        </marker>
+        <filter id="shadow3">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+        </filter>
+      </defs>
+
+      <rect width="800" height="300" rx="12" fill="#f8fafc"/>
+
+      <!-- User -->
+      <ellipse cx="400" cy="50" rx="80" ry="30" fill="url(#blueGrad)" filter="url(#shadow3)"/>
+      <text x="400" y="55" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="white">"Find me leads"</text>
+
+      <!-- Arrow down -->
+      <line x1="400" y1="80" x2="400" y2="110" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowDown)"/>
+
+      <!-- Bishop -->
+      <rect x="275" y="115" width="250" height="40" rx="8" fill="#1e293b" filter="url(#shadow3)"/>
+      <text x="400" y="140" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600" fill="#a5b4fc">♟️ Bishop decomposes goal</text>
+
+      <!-- Parallel lines to agents -->
+      <line x1="320" y1="155" x2="80" y2="195" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+      <line x1="360" y1="155" x2="200" y2="195" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+      <line x1="400" y1="155" x2="400" y2="195" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+      <line x1="440" y1="155" x2="530" y2="195" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+      <line x1="480" y1="155" x2="690" y2="195" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+
+      <!-- Agents in parallel -->
+      <rect x="20" y="200" width="120" height="34" rx="6" fill="white" stroke="#6366f1" stroke-width="1.2"/>
+      <text x="80" y="221" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8.5" font-weight="600" fill="#6366f1">🔍 Scanner</text>
+
+      <rect x="150" y="200" width="100" height="34" rx="6" fill="white" stroke="#10b981" stroke-width="1.2"/>
+      <text x="200" y="221" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8.5" font-weight="600" fill="#10b981">📊 Analyzer</text>
+
+      <rect x="340" y="200" width="120" height="34" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.2"/>
+      <text x="400" y="221" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8.5" font-weight="600" fill="#f59e0b">✉️ Pitcher</text>
+
+      <rect x="480" y="200" width="100" height="34" rx="6" fill="white" stroke="#ef4444" stroke-width="1.2"/>
+      <text x="530" y="221" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8.5" font-weight="600" fill="#ef4444">🔄 Converter</text>
+
+      <rect x="610" y="200" width="155" height="34" rx="6" fill="white" stroke="#8b5cf6" stroke-width="1.2"/>
+      <text x="688" y="221" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8.5" font-weight="600" fill="#8b5cf6">🎯 Campaign</text>
+
+      <!-- Time label -->
+      <line x1="400" y1="240" x2="400" y2="255" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <text x="420" y="258" font-family="Inter, system-ui, sans-serif" font-size="7" fill="#94a3b8">parallel execution</text>
+
+      <!-- Arrows back up -->
+      <line x1="80" y1="234" x2="80" y2="270" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrowUp)"/>
+      <line x1="200" y1="234" x2="200" y2="270" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrowUp)"/>
+      <line x1="400" y1="234" x2="400" y2="270" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrowUp)"/>
+      <line x1="530" y1="234" x2="530" y2="270" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrowUp)"/>
+      <line x1="688" y1="234" x2="688" y2="270" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrowUp)"/>
+
+      <!-- Synthesis -->
+      <rect x="250" y="270" width="300" height="24" rx="12" fill="#1e293b"/>
+      <text x="400" y="287" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="8.5" font-weight="600" fill="#a5b4fc">♟️ Bishop synthesizes results → User response</text>
+    </svg>
+    <div class="diagram-caption">Figure 3: Agent Communication Flow — User goal is decomposed by Bishop, delegated in parallel to specialist agents, results synthesized back.</div>
+  </div>
+</div>
+
+<!-- ===== CHAPTER 6 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 06</span>Multi-Project Portfolio</h1>
+  <div class="ch-divider"></div>
+
+  <p>The AI Client Hunter platform is one of four interconnected projects in an AI-first development portfolio. Each project explores different aspects of agentic AI, from lead intelligence to automation to AI-driven analytics.</p>
+
+  <h2>Project Portfolio</h2>
+  <table>
+    <tr><th>Project</th><th>Focus</th><th>Key Learnings</th></tr>
+    <tr>
+      <td><strong>AscendSME</strong></td>
+      <td>Small business growth platform — AI-powered consulting, automated audit reports, and actionable growth strategies for local businesses.</td>
+      <td>Building AI agents that act as business consultants; generating structured, actionable reports from unstructured data.</td>
+    </tr>
+    <tr>
+      <td><strong>Lumi</strong></td>
+      <td>AI-driven content intelligence — automated content analysis, SEO optimization, and multi-platform content strategy.</td>
+      <td>Agentic approaches to content creation; understanding how AI can both analyze and generate creative output.</td>
+    </tr>
+    <tr>
+      <td><strong>Hone</strong></td>
+      <td>Process automation platform — AI agents that automate repetitive business workflows, data processing, and operational tasks.</td>
+      <td>Building reliable, production-grade automation agents; error handling, retry logic, and human-in-the-loop patterns.</td>
+    </tr>
+    <tr>
+      <td><strong>AI Client Finder</strong></td>
+      <td>Lead intelligence platform — this system. Multi-agent orchestration for end-to-end lead prospecting and conversion.</td>
+      <td>Multi-agent coordination, chat-first UX, real-time data integration, and visual-analytics hybrid interfaces.</td>
+    </tr>
+  </table>
+
+  <div class="callout">
+    <strong>Portfolio Strategy:</strong> Each project explores a distinct AI capability — consulting, content, automation, and intelligence. Together, they form a comprehensive exploration of what it means to build <em>with</em> AI as the operating system, not just as a feature.
+  </div>
+</div>
+
+<!-- ===== CHAPTER 7 ===== -->
+<div class="chapter">
+  <h1><span class="ch-number">Chapter 07</span>AI-First Development Philosophy</h1>
+  <div class="ch-divider"></div>
+
+  <h2>Building With AI, Not Just Using It</h2>
+  <p>The projects in this portfolio embody an <strong>AI-first development methodology</strong> — a fundamental shift from treating AI as a feature bolted onto existing software, to treating AI as the <strong>operating system</strong> around which everything is built.</p>
+
+  <h2>Key Principles</h2>
+
+  <h3>1. Agents as Architects</h3>
+  <p>In traditional development, the human writes code and AI assists (autocomplete, debugging, documentation). In AI-first development, the <em>AI agent writes the code</em> and the human guides, reviews, and makes strategic decisions. This flips the development paradigm: the human becomes the <strong>system architect</strong> and <strong>product strategist</strong>, while the AI handles implementation.</p>
+
+  <h3>2. Prompt Engineering as a Core Skill</h3>
+  <p>Just as typing was the foundational skill of the PC era and search was the foundational skill of the internet era, <strong>prompt engineering</strong> is the foundational skill of the AI era. It's not about "tricking" AI into giving good answers — it's about:</p>
+  <ul>
+    <li><strong>Context engineering</strong> — providing the right information for informed decisions</li>
+    <li><strong>Chain-of-thought reasoning</strong> — guiding step-by-step problem solving</li>
+    <li><strong>Tool definition</strong> — giving agents the right capabilities to take action</li>
+    <li><strong>Feedback loops</strong> — iteratively refining outputs toward quality</li>
+  </ul>
+
+  <h3>3. Learn by Building, Not by Memorizing</h3>
+  <p>The AI era makes memorization obsolete. Instead of learning syntax, APIs, and frameworks by rote, developers (and entrepreneurs) can learn by <strong>building real things</strong> with AI as a pair programmer. Every project becomes a learning accelerator:</p>
+  <ul>
+    <li>Want to understand databases? Build an app that stores data and ask AI to explain as you go.</li>
+    <li>Want to understand machine learning? Build a classifier and have AI explain each step.</li>
+    <li>Want to understand business strategy? Use AI as a thought partner to model scenarios.</li>
+  </ul>
+
+  <div class="callout info">
+    <strong>The Learning Flywheel:</strong> Curiosity → Build with AI → Understand → Build something better → Deeper understanding → More curiosity. This flywheel is accessible to anyone willing to stay curious and experiment.
+  </div>
+
+  <h2>The Future</h2>
+  <p>As AI models become more capable and agentic frameworks mature, the distinction between "building software" and "using software" will blur. The most successful people in the next decade won't be those who know the most, but those who can <strong>ask the best questions</strong>, <strong>orchestrate the most effective agent teams</strong>, and <strong>stay relentlessly curious</strong> about what's possible.</p>
+
+  <div class="page-footer">
+    <p>AI Client Hunter — Technical Architecture Document &mdash; AscendSME · Lumi · Hone · AI Client Finder &mdash; 2026</p>
+    <p>Built with AI-first development methodology using React, TypeScript, Node.js, and multi-agent orchestration.</p>
+  </div>
+</div>
+
+</body>
+</html>

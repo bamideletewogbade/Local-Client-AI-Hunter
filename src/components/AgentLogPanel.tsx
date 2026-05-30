@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { agentLogger, AgentLogEntry } from '../agents/logger';
-import { Terminal, X, RefreshCw, ChevronDown, AlertCircle, CheckCircle2, Loader2, Bug } from 'lucide-react';
+import { useWebSocketStatus } from '../hooks/useWebSocket';
+import AgentHandoffPipeline from './AgentHandoffPipeline';
+import { Terminal, X, RefreshCw, ChevronDown, AlertCircle, CheckCircle2, Loader2, Bug, Play, MessageSquare, Activity, ArrowRight, Wifi, WifiOff } from 'lucide-react';
 
 interface AgentLogPanelProps {
   maxHeight?: string;
@@ -19,6 +21,7 @@ export default function AgentLogPanel({ maxHeight = '320px', defaultOpen = false
   const [autoScroll, setAutoScroll] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
+  const wsConnected = useWebSocketStatus();
 
   // Subscribe to logger
   useEffect(() => {
@@ -105,6 +108,18 @@ export default function AgentLogPanel({ maxHeight = '320px', defaultOpen = false
               <span className="text-[9px] font-mono text-zinc-600">
                 {logs.length} events
               </span>
+              {/* WebSocket connection status */}
+              <div className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] font-mono font-bold uppercase tracking-wider ${
+                wsConnected
+                  ? 'text-emerald-500 bg-emerald-500/5'
+                  : 'text-rose-500 bg-rose-500/5'
+              }`}>
+                {wsConnected ? (
+                  <><Wifi className="h-2 w-2" /> Live</>
+                ) : (
+                  <><WifiOff className="h-2 w-2" /> Offline</>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -157,9 +172,63 @@ export default function AgentLogPanel({ maxHeight = '320px', defaultOpen = false
             style={{ maxHeight: `calc(${maxHeight} - 82px)` }}
           >
             {filteredLogs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-zinc-600">
-                <Loader2 className="h-5 w-5 mb-2 animate-spin text-zinc-700" />
-                <p className="text-[10px] font-mono">Awaiting agent activity...</p>
+              <div className="px-2 py-3">
+                {/* Agent handoff pipeline visualization */}
+                <div className="bg-zinc-900/40 rounded-lg border border-zinc-800/50 p-3 mb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="h-3 w-3 text-blue-400" />
+                    <span className="text-[9px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
+                      Agent Pipeline
+                    </span>
+                  </div>
+                  <AgentHandoffPipeline compact autoRun={false} />
+                </div>
+
+                {/* Action buttons */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('hunter-open-copilot'));
+                    }}
+                    className="flex items-center justify-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-[9px] font-bold font-mono uppercase tracking-wider text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-all cursor-pointer"
+                  >
+                    <MessageSquare className="h-3 w-3 text-indigo-400" />
+                    Ask Bishop
+                  </button>
+                  <button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('hunter-run-pipeline'));
+                    }}
+                    className="flex items-center justify-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-[9px] font-bold font-mono uppercase tracking-wider text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-all cursor-pointer"
+                  >
+                    <Play className="h-3 w-3 text-emerald-400" />
+                    Run Demo
+                  </button>
+                </div>
+
+                {/* Info tip */}
+                <div className="rounded-lg bg-gradient-to-r from-blue-500/5 via-zinc-900/40 to-purple-500/5 border border-zinc-800/50 p-3">
+                  <p className="text-[9px] font-mono text-zinc-500 leading-relaxed">
+                    <span className="text-blue-400 font-bold">Agents activate</span> when you run a lead scan or ask Bishop a question.
+                    Each agent passes results to the next in the pipeline.
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-[8px] font-mono text-zinc-600 flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Scanner → Analyzer
+                    </span>
+                    <ArrowRight className="h-2 w-2 text-zinc-700" />
+                    <span className="text-[8px] font-mono text-zinc-600 flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
+                      Analyzer → Pitcher
+                    </span>
+                    <ArrowRight className="h-2 w-2 text-zinc-700" />
+                    <span className="text-[8px] font-mono text-zinc-600 flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                      Pitcher → Converter
+                    </span>
+                  </div>
+                </div>
               </div>
             ) : (
               filteredLogs.map((entry) => (

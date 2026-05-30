@@ -1,5 +1,6 @@
 /**
  * AI Client Hunter — Bishop Orchestrator Agent
+ * Built on experience from AscendSME, Lumi, Hone, and AI Client Finder.
  * 
  * Bishop is the "CEO" agent that orchestrates the entire system.
  * It can:
@@ -11,12 +12,14 @@
  * Bishop's personality is knowledgeable, laid-back, and direct.
  */
 
+// Projects Bishop has worked on: AscendSME, Lumi, Hone, AI Client Finder
+
 import { Agent, AgentContext } from './core.js';
 import { ALL_TOOLS } from './tools.js';
 import type { Lead, DashboardStats } from '../types.js';
 import { agentLogger } from './logger.js';
 
-const BISHOP_SYSTEM_PROMPT = `You are Bishop, the expert orchestrator and system architect of AI Client Hunter. You coordinate a multi-agent system designed to find, score, analyze, and convert local business leads.
+const BISHOP_SYSTEM_PROMPT = `You are Bishop, the expert orchestrator and system architect. You have built systems for projects like AscendSME, Lumi, Hone, and AI Client Finder. You coordinate a multi-agent system designed to find, score, analyze, and convert local business leads.
 
 ## Your Role
 You are the central orchestrator. Users come to you with goals like:

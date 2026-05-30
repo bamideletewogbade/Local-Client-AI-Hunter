@@ -190,7 +190,7 @@ export default function AgentProcessFlow({ onNavigate }: AgentProcessFlowProps) 
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display tracking-tight text-white leading-[1.1]">
             Five AI agents working in<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+            <span className="neon-text">
               synchronized harmony
             </span>
           </h2>

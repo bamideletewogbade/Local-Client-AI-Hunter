@@ -390,7 +390,7 @@ export default function NeuralFlowHero({ onScrollDown }: NeuralFlowHeroProps) {
           {/* Animated badge */}
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-4 py-1.5">
             <Activity className="h-3.5 w-3.5 text-blue-400 animate-pulse" />
-            <span className="text-[10px] font-mono tracking-widest text-blue-300/80 uppercase">
+            <span className="text-[10px] font-mono tracking-widest text-blue-300/80 uppercase font-bold">
               AI-Powered Acquisition Engine
             </span>
           </div>
@@ -398,7 +398,7 @@ export default function NeuralFlowHero({ onScrollDown }: NeuralFlowHeroProps) {
           {/* Main headline */}
           <h1 className="relative">
             <span
-              className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold font-display tracking-tight leading-none transition-all duration-150 ${
+              className={`text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold font-display tracking-tight leading-none transition-all duration-150 ${
                 glitchText ? 'opacity-80 translate-x-1' : 'opacity-100 translate-x-0'
               }`}
               style={{
@@ -417,7 +417,7 @@ export default function NeuralFlowHero({ onScrollDown }: NeuralFlowHeroProps) {
             </span>
             {/* Glitch shadows */}
             <span
-              className={`absolute inset-0 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold font-display tracking-tight leading-none text-blue-500/20 pointer-events-none transition-all duration-75 ${
+              className={`absolute inset-0 text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold font-display tracking-tight leading-none text-blue-500/20 pointer-events-none transition-all duration-75 ${
                 glitchText ? 'translate-x-1.5 opacity-100' : '-translate-x-0 opacity-0'
               }`}
               style={{ clipPath: 'inset(20% 0 40% 0)' }}

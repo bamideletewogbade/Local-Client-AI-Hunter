@@ -514,3 +514,17 @@ html { scrollbar-color: #27272A #0A0B12; }
   }
   * { scroll-behavior: auto !important; }
 }
+
+/* Hide scrollbars but keep scrollability (e.g., mobile nav strip) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Belt-and-suspenders: never allow horizontal page scroll on small screens */
+@media (max-width: 640px) {
+  html, body { overflow-x: hidden; }
+}

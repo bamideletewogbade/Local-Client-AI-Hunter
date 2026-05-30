@@ -42,17 +42,17 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenChat }
   }, []);
 
   // Per-tab active accent so each section keeps its signature neon color
-  const tabBase = 'flex items-center gap-1 rounded-lg px-2 sm:px-3 py-1.5 text-xs font-medium tracking-tight transition-all duration-200 cursor-pointer border';
+  const tabBase = 'flex items-center gap-1 rounded-lg px-2 sm:px-3 py-1.5 text-xs font-medium tracking-tight transition-all duration-200 cursor-pointer border shrink-0';
   const tabInactive = 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5';
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#06070D]/85 backdrop-blur-xl">
       {/* faint top neon line */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
 
         {/* Brand Logo */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-600/30 ring-1 ring-blue-400/30 shrink-0">
             <Target className="h-4.5 w-4.5 text-white" />
           </div>
@@ -72,7 +72,7 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenChat }
         </div>
 
         {/* Tab Navigation */}
-        <nav className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1 shrink-0">
+        <nav className="flex items-center gap-0.5 sm:gap-1 bg-white/5 border border-white/10 rounded-xl p-1 overflow-x-auto no-scrollbar min-w-0">
           <button
             onClick={() => setActiveTab('guide')}
             className={`${tabBase} ${activeTab === 'guide' ? 'bg-white/10 text-white border-white/15 shadow-sm' : tabInactive}`}
@@ -125,7 +125,7 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenChat }
         </nav>
 
         {/* Operations Cluster */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* ASK BISHOP button — opens AI chat copilot */}
           <button
             type="button"

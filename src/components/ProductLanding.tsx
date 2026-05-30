@@ -173,7 +173,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
     <div id="product-landing-root" className="relative text-zinc-200 selection:bg-blue-600/30 selection:text-blue-100">
       
       {/* 🚀 Cinematic Hero — dark, matches the app shell & NeuralFlowHero */}
-      <section className="relative overflow-hidden pt-20 pb-28 border-b border-white/10">
+      <section className="relative overflow-hidden pt-14 sm:pt-20 pb-20 sm:pb-28 border-b border-white/10">
 
         {/* Ambient cinematic background: grid + drifting glow orbs */}
         <div className="absolute inset-0 pointer-events-none">
@@ -459,7 +459,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display tracking-tight text-white leading-[1.1]">
               One call. Full diagnosis.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400">
+              <span className="neon-text">
                 A plan they can't refuse.
               </span>
             </h2>
@@ -800,7 +800,7 @@ export default function ProductLanding({ onStartApp, isFirebaseConfigured, onCon
 
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-emerald-300 font-mono">Value Tiering</span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold font-display tracking-tight text-white mt-4">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display tracking-tight text-white leading-[1.1] mt-4">
               Start finding local leads <span className="neon-text">free</span>
             </h2>
             <p className="text-sm text-zinc-400 mt-3 leading-relaxed">

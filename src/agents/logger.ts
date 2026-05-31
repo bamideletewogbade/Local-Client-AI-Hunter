@@ -23,6 +23,11 @@ export interface AgentLogEntry {
   iteration?: number;
   error?: string;
   details?: string;
+  // ─── Observability metadata (optional) ───
+  kind?: 'agent' | 'http' | 'system';
+  method?: string;   // HTTP method for kind==='http'
+  path?: string;     // request path for kind==='http'
+  statusCode?: number; // HTTP status for kind==='http'
 }
 
 type LogListener = (entry: AgentLogEntry) => void;

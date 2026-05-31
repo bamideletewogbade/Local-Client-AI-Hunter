@@ -16,6 +16,7 @@ import {
   parseWebhookPayload,
 } from './src/whatsapp.js';
 import { scheduler, setBroadcastFn, generateFollowUpMessage } from './src/scheduler.js';
+import { agentLogger } from './src/agents/logger.js';
 
 dotenv.config();
 
@@ -61,6 +62,26 @@ wss.on('connection', (ws) => {
 });
 
 app.use(express.json());
+
+// ─── Request observability ───
+// Log every /api request (method, path, status, latency) through the agent logger
+// so it streams to the live Activity Monitor widget via WebSocket.
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api')) return next();
+  const start = Date.now();
+  res.on('finish', () => {
+    const durationMs = Date.now() - start;
+    const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
+    agentLogger.log(level, 'HTTP', `${req.method} ${req.path}`, {
+      kind: 'http',
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      durationMs,
+    });
+  });
+  next();
+});
 
 // Path to CRM leads persistence storage
 const DB_FILE = path.join(process.cwd(), 'leads_db.json');

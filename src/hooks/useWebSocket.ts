@@ -77,6 +77,10 @@ export function useWebSocket() {
                 iteration: entry.iteration,
                 error: entry.error,
                 details: entry.details,
+                kind: entry.kind,
+                method: entry.method,
+                path: entry.path,
+                statusCode: entry.statusCode,
               }
             );
             setStatus(prev => ({ ...prev, eventsReceived: prev.eventsReceived + 1 }));

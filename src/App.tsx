@@ -457,7 +457,7 @@ export default function App() {
 
       {/* Interactive Floating AI Sales Copilot Agent widget */}
       {/* Also toggled via Header 'Ask Bishop' button */}
-      <SalesCopilot />
+      <SalesCopilot leads={crmLeads} />
 
       {/* Remotion-Powered Video Launch Tour Overlay */}
       <LaunchVideoPlayer

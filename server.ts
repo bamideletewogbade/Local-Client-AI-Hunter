@@ -906,18 +906,44 @@ app.post('/api/leads/score', (req, res) => {
 });
 
 // BI Report Endpoint - generates business intelligence report
-app.post('/api/leads/bi-report', (req, res) => {
+app.post('/api/leads/bi-report', async (req, res) => {
   const { lead } = req.body as { lead: Lead };
   if (!lead) return res.status(400).json({ error: "Lead is required." });
 
-  const report = generateBIReport(lead);
-  
+  const fallback = generateBIReport(lead);
+
   if (!isAiConfigured()) {
-    return res.json({ report, isFallback: true });
+    return res.json({ report: fallback, isFallback: true });
   }
 
-  // In the future, use AI to generate a richer report
-  return res.json({ report, isFallback: false });
+  try {
+    const systemPrompt = `You are a senior business intelligence analyst. Produce a concise, decision-ready BI report for the business below and return STRICT valid JSON only (no prose, no markdown) with EXACTLY these keys:
+- businessOverview (string, 2 sentences)
+- digitalHealthScore (integer 0-100)
+- topOpportunity (string)
+- recommendedAction (string)
+- competitiveInsight (string)
+- estimatedValueUpside (string, e.g. "$1,200-2,000/month")
+
+Business: ${lead.name}
+Category: ${lead.category || 'N/A'}
+Website: ${lead.website || 'None'}
+Rating: ${lead.rating ?? 'N/A'} (${lead.reviewsCount ?? 0} reviews)
+Address: ${lead.address || 'N/A'}
+Digital presence score: ${lead.digitalPresenceScore ?? 'N/A'}/100`;
+
+    const text = await generateContent(systemPrompt, `Generate the BI report for ${lead.name}`, { responseFormat: "json_object" });
+
+    if (text) {
+      const parsed = JSON.parse(text.trim());
+      // Merge over the template so any missing keys are still populated.
+      return res.json({ report: { ...fallback, ...parsed }, isFallback: false });
+    }
+  } catch (error) {
+    console.warn("BI report AI generation failed; using template fallback.", error);
+  }
+
+  return res.json({ report: fallback, isFallback: true });
 });
 
 // Outreach Logging Endpoint
@@ -1622,32 +1648,39 @@ setTimeout(() => {
 // Submit a goal/task to the Bishop orchestrator agent.
 // Bishop will plan, execute tools, and return results.
 app.post('/api/agent/execute', async (req, res) => {
-  const { goal } = req.body;
+  const { goal, leads: clientLeads } = req.body;
   if (!goal) {
     return res.status(400).json({ error: 'Goal is required. Provide a task for Bishop to execute.' });
   }
 
-  console.log(`[Agent] Bishop executing goal: "${goal}"`);
+  // Prefer the caller's live CRM leads (e.g. a signed-in user's Firestore pipeline)
+  // so Bishop reasons over the SAME data the user sees. Fall back to the server's
+  // local database for anonymous/offline use. Client-provided leads are treated as
+  // read context — mutations stay ephemeral and are not persisted server-side.
+  const usingClientLeads = Array.isArray(clientLeads) && clientLeads.length > 0;
+  const db: any[] = usingClientLeads ? clientLeads : leadsDatabase;
+
+  console.log(`[Agent] Bishop executing goal: "${goal}" over ${db.length} leads (${usingClientLeads ? 'client' : 'server'} source)`);
 
   // Compute stats for agent context
-  const total = leadsDatabase.length;
-  const totalScore = leadsDatabase.reduce((acc, l) => {
+  const total = db.length;
+  const totalScore = db.reduce((acc, l) => {
     return acc + (l.scoreBreakdown?.total || calculateLeadOpportunityScore(l));
   }, 0);
   const stats = {
     totalLeads: total,
-    noWebsite: leadsDatabase.filter(l => !l.website).length,
-    contactedLeads: leadsDatabase.filter(l => l.status !== 'new').length,
-    repliesReceived: leadsDatabase.filter(l => l.status === 'replied' || l.status === 'interested' || l.status === 'closed').length,
-    meetingsBooked: leadsDatabase.filter(l => l.status === 'interested' || l.status === 'closed').length,
-    conversionRate: total > 0 ? Math.round((leadsDatabase.filter(l => l.status === 'closed').length / total) * 100) : 0,
-    estimatedPipelineRevenue: leadsDatabase.reduce((acc, lead) => {
+    noWebsite: db.filter(l => !l.website).length,
+    contactedLeads: db.filter(l => l.status !== 'new').length,
+    repliesReceived: db.filter(l => l.status === 'replied' || l.status === 'interested' || l.status === 'closed').length,
+    meetingsBooked: db.filter(l => l.status === 'interested' || l.status === 'closed').length,
+    conversionRate: total > 0 ? Math.round((db.filter(l => l.status === 'closed').length / total) * 100) : 0,
+    estimatedPipelineRevenue: db.reduce((acc, lead) => {
       if (lead.status === 'closed') return acc + (lead.serviceType === 'web_design' ? 1500 : lead.serviceType === 'ai_automation' ? 2500 : 4000);
       if (lead.status === 'interested') return acc + (lead.serviceType === 'web_design' ? 1500 : lead.serviceType === 'ai_automation' ? 2500 : 4000) * 0.5;
       return acc;
     }, 0),
     leadsBySource: Object.entries(
-      leadsDatabase.reduce((acc: Record<string, number>, l) => {
+      db.reduce((acc: Record<string, number>, l) => {
         const src = l.source || 'ai_search';
         acc[src] = (acc[src] || 0) + 1;
         return acc;
@@ -1657,11 +1690,13 @@ app.post('/api/agent/execute', async (req, res) => {
   };
 
   try {
-    const result = await runBishop(goal, leadsDatabase, stats);
-    
-    // Broadcast that leads were updated (agents may have modified the database)
-    saveDatabase();
-    broadcast({ type: 'leads_updated', timestamp: new Date().toISOString() });
+    const result = await runBishop(goal, db, stats);
+
+    // Only persist + broadcast when Bishop operated on the server-owned database.
+    if (!usingClientLeads) {
+      saveDatabase();
+      broadcast({ type: 'leads_updated', timestamp: new Date().toISOString() });
+    }
 
     res.json({
       response: result.response,

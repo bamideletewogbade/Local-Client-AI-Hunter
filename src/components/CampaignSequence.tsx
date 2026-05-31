@@ -278,7 +278,7 @@ function CampaignCard({ campaign, onUpdate, onDelete, isExpanded: defaultExpande
             }`}
             title={campaign.isActive ? 'Pause Campaign' : 'Activate Campaign'}
           >
-            {campaign.isActive ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+            {campaign.isActive ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
           </button>
 
           {/* Expand */}

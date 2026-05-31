@@ -41,9 +41,9 @@ const FREE_MODEL = "openrouter/free";
  * These are individual `:free` models that can be tried directly.
  */
 const FREE_FALLBACK_MODELS = [
+  "meta-llama/llama-3.3-70b-instruct:free",
   "meta-llama/llama-3.2-3b-instruct:free",
-  "mistralai/mistral-7b-instruct:free",
-  "google/gemma-2-9b-it:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
 ];
 
 /**

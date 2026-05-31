@@ -9,9 +9,7 @@ import {
   Activity
 } from 'lucide-react';
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
-
-// Auth controls render only when Clerk is configured; otherwise the app runs anonymously.
-const hasClerk = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+import { hasClerk } from '../clerkConfig';
 
 interface HeaderProps {
   activeTab: 'guide' | 'discovery' | 'crm' | 'analytics' | 'agents';

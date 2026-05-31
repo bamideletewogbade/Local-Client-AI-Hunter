@@ -44,6 +44,7 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import { ClerkProvider } from '@clerk/react';
+import { CLERK_PUBLISHABLE_KEY } from './clerkConfig';
 import App from './App.tsx';
 import { AuthProvider } from './components/AuthContext.tsx';
 import './index.css';
@@ -72,11 +73,9 @@ if (typeof window !== 'undefined' && !(window as any).__clerkFetchPatched) {
   };
 }
 
-// Clerk provides auth + user management. ClerkProvider auto-reads
-// VITE_CLERK_PUBLISHABLE_KEY. Gate on the key so the app still boots in
-// anonymous/local mode before the key is configured.
-const hasClerkKey = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
+// Clerk auth + user management. The publishable key (non-secret) is resolved in
+// clerkConfig — env var wins, with the project's dev instance baked as default so
+// auth works out of the box. Gated so the app still boots if the key is ever blank.
 const tree = (
   <AuthProvider>
     <App />
@@ -85,8 +84,8 @@ const tree = (
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {hasClerkKey ? (
-      <ClerkProvider afterSignOutUrl="/">
+    {CLERK_PUBLISHABLE_KEY ? (
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} afterSignOutUrl="/">
         {tree}
       </ClerkProvider>
     ) : (

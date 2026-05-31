@@ -17,6 +17,7 @@ import {
 } from './src/whatsapp.js';
 import { scheduler, setBroadcastFn, generateFollowUpMessage } from './src/scheduler.js';
 import { agentLogger } from './src/agents/logger.js';
+import { clerkMiddleware, getAuth } from '@clerk/express';
 
 dotenv.config();
 
@@ -62,6 +63,13 @@ wss.on('connection', (ws) => {
 });
 
 app.use(express.json());
+
+// ─── Clerk auth (optional) — attaches req.auth when CLERK_SECRET_KEY is set.
+// Without the secret key the middleware is skipped and every request resolves
+// to the "public" owner, preserving the app's anonymous/offline behavior. ───
+if (process.env.CLERK_SECRET_KEY) {
+  app.use(clerkMiddleware());
+}
 
 // ─── Request observability ───
 // Log every /api request (method, path, status, latency) through the agent logger
@@ -307,28 +315,59 @@ const INITIAL_LEADS: Lead[] = [
   }
 ];
 
-// Load Database
-let leadsDatabase: Lead[] = [];
+// ─── Per-owner lead store ───
+// Leads are keyed by owner id: the *verified* Clerk userId, or "public" for
+// anonymous / Clerk-not-configured use. The server never trusts a client-claimed
+// id — only req.auth from Clerk middleware. This keeps each signed-in user's
+// pipeline private while preserving today's shared behavior when Clerk is off.
+type LeadStore = Record<string, Lead[]>;
+
+let store: LeadStore = {};
 if (fs.existsSync(DB_FILE)) {
   try {
-    const rawData = fs.readFileSync(DB_FILE, 'utf-8');
-    leadsDatabase = JSON.parse(rawData);
+    const parsed = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+    // Migrate legacy flat-array format -> { public: [...] }
+    store = Array.isArray(parsed) ? { public: parsed } : (parsed || {});
   } catch (error) {
     console.error("Error reading database file, loading defaults:", error);
-    leadsDatabase = [...INITIAL_LEADS];
+    store = { public: [...INITIAL_LEADS] };
   }
 } else {
-  leadsDatabase = [...INITIAL_LEADS];
-  fs.writeFileSync(DB_FILE, JSON.stringify(leadsDatabase, null, 2));
+  store = { public: [...INITIAL_LEADS] };
+  fs.writeFileSync(DB_FILE, JSON.stringify(store, null, 2));
 }
 
-// Save helper
+// Persist the whole store to disk.
 function saveDatabase() {
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(leadsDatabase, null, 2));
+    fs.writeFileSync(DB_FILE, JSON.stringify(store, null, 2));
   } catch (error) {
     console.error("Failed to persist database file:", error);
   }
+}
+
+// Resolve the owner id for a request: verified Clerk userId, else "public".
+function getOwnerId(req: any): string {
+  try {
+    const { userId } = getAuth(req);
+    return userId || 'public';
+  } catch {
+    return 'public';
+  }
+}
+
+// The owner's lead array (stable reference, so in-place mutations persist on
+// saveDatabase()). New signed-in users start with an empty pipeline.
+function leadsFor(req: any): Lead[] {
+  const owner = getOwnerId(req);
+  if (!store[owner]) store[owner] = [];
+  return store[owner];
+}
+
+// All leads across every owner — used by the WhatsApp webhook, which Meta calls
+// without a user session and therefore must match globally.
+function allLeads(): Lead[] {
+  return Object.values(store).flat();
 }
 
 // Check if OpenRouter API key is configured
@@ -788,10 +827,12 @@ Sales Intelligence Partner`;
 
 // CRM Endpoints
 app.get('/api/crm/leads', (req, res) => {
+  const leadsDatabase = leadsFor(req);
   res.json(leadsDatabase);
 });
 
 app.post('/api/crm/leads', (req, res) => {
+  const leadsDatabase = leadsFor(req);
   const newLead: Lead = {
     ...req.body,
     id: req.body.id || `lead-crm-${Date.now()}`,
@@ -817,6 +858,7 @@ app.post('/api/crm/leads', (req, res) => {
 });
 
 app.put('/api/crm/leads/:id', (req, res) => {
+  const leadsDatabase = leadsFor(req);
   const { id } = req.params;
   const leadIndex = leadsDatabase.findIndex(l => l.id === id);
   if (leadIndex === -1) {
@@ -837,6 +879,7 @@ app.put('/api/crm/leads/:id', (req, res) => {
 });
 
 app.delete('/api/crm/leads/:id', (req, res) => {
+  const leadsDatabase = leadsFor(req);
   const { id } = req.params;
   const leadIndex = leadsDatabase.findIndex(l => l.id === id);
   if (leadIndex === -1) {
@@ -866,6 +909,7 @@ function calculateLeadOpportunityScore(lead: Lead): number {
 }
 
 app.get('/api/crm/stats', (req, res) => {
+  const leadsDatabase = leadsFor(req);
   const total = leadsDatabase.length;
   const noWebsite = leadsDatabase.filter(l => !l.website).length;
   const contacted = leadsDatabase.filter(l => l.status !== 'new').length;
@@ -969,6 +1013,7 @@ Digital presence score: ${lead.digitalPresenceScore ?? 'N/A'}/100`;
 
 // Outreach Logging Endpoint
 app.post('/api/leads/outreach', (req, res) => {
+  const leadsDatabase = leadsFor(req);
   const { leadId, entry } = req.body as { leadId: string; entry: OutreachEntry };
   if (!leadId || !entry) return res.status(400).json({ error: "Lead ID and outreach entry are required." });
 
@@ -1244,6 +1289,7 @@ Return a simple JSON enclosing a "message" string property.`;
 
 // AI CRM Lead Status Summarizer endpoint
 app.post('/api/crm/leads/:id/summarize', async (req, res) => {
+  const leadsDatabase = leadsFor(req);
   const { id } = req.params;
   const lead = leadsDatabase.find(l => l.id === id);
   if (!lead) {
@@ -1372,6 +1418,7 @@ app.post('/api/scheduler/generate', (req, res) => {
  * If scheduleAt is provided, creates scheduled jobs instead of sending immediately.
  */
 app.post('/api/whatsapp/broadcast', async (req, res) => {
+  const leadsDatabase = leadsFor(req);
   const { leadIds, message, scheduleAt, maxMessages = 10 } = req.body;
 
   if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
@@ -1494,6 +1541,7 @@ app.get('/api/whatsapp/config', (_req, res) => {
  * Send a WhatsApp message to a lead.
  */
 app.post('/api/whatsapp/send', async (req, res) => {
+  const leadsDatabase = leadsFor(req);
   const { to, text, leadId, templateName } = req.body;
 
   if (!to) {
@@ -1614,7 +1662,7 @@ app.post('/api/whatsapp/webhook', (req, res) => {
   if (payload.type === 'message') {
     // Try to find a matching lead by phone number
     const phoneClean = payload.from.replace(/[^0-9]/g, '');
-    const matchingLead = leadsDatabase.find((l: any) =>
+    const matchingLead = allLeads().find((l: any) =>
       l.phone && l.phone.replace(/[^0-9]/g, '').includes(phoneClean.slice(-9))
     );
 
@@ -1639,7 +1687,7 @@ app.post('/api/whatsapp/webhook', (req, res) => {
     }
   } else if (payload.type === 'status_update' && payload.status) {
     // Update outreach history entry with delivery status
-    for (const lead of leadsDatabase) {
+    for (const lead of allLeads()) {
       const histEntry = lead.outreachHistory?.find(
         (e: any) => e.notes?.includes(payload.messageId)
       );
@@ -1669,6 +1717,7 @@ setTimeout(() => {
 // Submit a goal/task to the Bishop orchestrator agent.
 // Bishop will plan, execute tools, and return results.
 app.post('/api/agent/execute', async (req, res) => {
+  const leadsDatabase = leadsFor(req);
   const { goal, leads: clientLeads } = req.body;
   if (!goal) {
     return res.status(400).json({ error: 'Goal is required. Provide a task for Bishop to execute.' });

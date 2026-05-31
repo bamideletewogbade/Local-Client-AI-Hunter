@@ -48,6 +48,30 @@ import App from './App.tsx';
 import { AuthProvider } from './components/AuthContext.tsx';
 import './index.css';
 
+// Attach the Clerk session token to same-origin /api requests so the server can
+// verify the user and scope their pipeline. No-op until Clerk is loaded + signed
+// in, so anonymous traffic is unaffected and the app still works without Clerk.
+if (typeof window !== 'undefined' && !(window as any).__clerkFetchPatched) {
+  (window as any).__clerkFetchPatched = true;
+  const _fetch = window.fetch.bind(window);
+  window.fetch = async (input: any, init: any = {}) => {
+    try {
+      if (typeof input === 'string' && input.includes('/api/')) {
+        const clerk = (window as any).Clerk;
+        const token = clerk?.session ? await clerk.session.getToken() : null;
+        if (token) {
+          const headers = new Headers(init.headers || {});
+          if (!headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
+          init = { ...init, headers };
+        }
+      }
+    } catch {
+      /* fall through to an unauthenticated request */
+    }
+    return _fetch(input, init);
+  };
+}
+
 // Clerk provides auth + user management. ClerkProvider auto-reads
 // VITE_CLERK_PUBLISHABLE_KEY. Gate on the key so the app still boots in
 // anonymous/local mode before the key is configured.

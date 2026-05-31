@@ -11,7 +11,8 @@ import NeuralFlowHero from './components/NeuralFlowHero';
 import AgentProcessFlow from './components/AgentProcessFlow';
 import AgentLogPanel from './components/AgentLogPanel';
 import SalesCopilot from './components/SalesCopilot';
-import { useAuth } from './components/AuthContext';
+import { useAuth as useClerkAuth, SignInButton, SignUpButton } from '@clerk/react';
+import { hasClerk } from './clerkConfig';
 import { Lead } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useWebSocket } from './hooks/useWebSocket';
@@ -61,24 +62,21 @@ export default function App() {
     setToast({ message, type, id: Date.now() });
   };
   
-  // Custom Firebase Sync
-  const { 
-    user, 
-    crmLeads: firebaseLeads, 
-    isConfigured, 
-    saveLead: saveLeadToFirebase, 
-    updateLeadStatus: updateLeadStatusFirebase, 
-    updateLeadDetails: updateLeadDetailsFirebase, 
-    deleteLead: deleteLeadFirebase,
-  } = useAuth();
+  // Clerk auth state (drives sign-in gating). Per-user data is handled on the
+  // server via the Clerk session token; the client always uses the Express API.
+  const { isSignedIn, isLoaded } = useClerkAuth();
 
   // Local CRM leads loaded from offline server database (persisted in localStorage)
   const [localLeads, setLocalLeads] = useLocalStorage<Lead[]>('hunter_local_leads', []);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  // Compute active leads list dynamically
-  const crmLeads = user ? firebaseLeads : localLeads;
+  // Compute active leads list (server is the source of truth, per-user via Clerk token)
+  const crmLeads = localLeads;
+
+  // Funnel gating: the in-app workspace requires sign-in; Home/Discover stay open.
+  const requiresAuth = hasClerk && isLoaded && !isSignedIn &&
+    (activeTab === 'crm' || activeTab === 'analytics' || activeTab === 'agents');
   
   // Refresh local CRM list from database
   const loadCrmLeads = async () => {
@@ -154,6 +152,11 @@ export default function App() {
               });
               break;
 
+            case 'leads_updated':
+              // An agent run (Bishop) mutated the pipeline server-side — refresh from source.
+              loadCrmLeads();
+              break;
+
             default:
               break;
           }
@@ -195,8 +198,11 @@ export default function App() {
 
   // Save new prospect to CRM database
   const saveLeadToCrm = async (newLead: Lead): Promise<boolean> => {
-    if (user) {
-      return await saveLeadToFirebase(newLead);
+    // Funnel: require sign-in to persist to a private pipeline.
+    if (hasClerk && isLoaded && !isSignedIn) {
+      triggerToast('Sign in to save leads to your pipeline.', 'info');
+      (window as any).Clerk?.openSignIn?.();
+      return false;
     }
 
     try {
@@ -227,12 +233,7 @@ export default function App() {
       setSelectedLead(updatedLead);
     }
 
-    if (user) {
-      await updateLeadDetailsFirebase(updatedLead);
-      return;
-    }
-
-    // Otherwise, perform local Express DB PUT
+    // Persist via the Express API (per-user on the server via the Clerk token).
     setLocalLeads((prev) => prev.map((item) => (item.id === updatedLead.id ? updatedLead : item)));
     try {
       await fetch(`/api/crm/leads/${updatedLead.id}`, {
@@ -251,13 +252,8 @@ export default function App() {
     if (!lead) return;
 
     const updated = { ...lead, status: nextStatus };
-    
-    if (user) {
-      await updateLeadStatusFirebase(id, nextStatus);
-      return;
-    }
 
-    // Otherwise update Express DB
+    // Persist via the Express API (per-user on the server via the Clerk token).
     setLocalLeads((prev) => prev.map((item) => (item.id === id ? updated : item)));
     try {
       await fetch(`/api/crm/leads/${id}`, {
@@ -272,14 +268,6 @@ export default function App() {
 
   // Delete lead
   const handleDeleteCrmLead = async (id: string) => {
-    if (user) {
-      const success = await deleteLeadFirebase(id);
-      if (success && selectedLead && selectedLead.id === id) {
-        setSelectedLead(null);
-      }
-      return;
-    }
-
     try {
       const response = await fetch(`/api/crm/leads/${id}`, {
         method: 'DELETE'
@@ -319,9 +307,9 @@ export default function App() {
           {/* Interactive product demo, simulator, pricing */}
           <ProductLanding
             onStartApp={() => setActiveTab('discovery')}
-            isFirebaseConfigured={isConfigured}
+            isFirebaseConfigured={false}
             onConnectDatabase={() => {
-              triggerToast("To pair your Cloud Database, ensure you configure Firebase terms in the platform panel! Once live, client data will seamlessly auto-synchronize to Firestore.", 'info');
+              if (hasClerk) (window as any).Clerk?.openSignIn?.();
             }}
           />
         </div>
@@ -340,6 +328,23 @@ export default function App() {
 
           {/* Tab Layout Switching content */}
           <div id="saas-main-section">
+            {requiresAuth ? (
+              <div className="flex flex-col items-center justify-center text-center py-24 px-6">
+                <div className="glass-card rounded-2xl p-8 max-w-sm">
+                  <h2 className="text-xl font-bold font-display text-white">Sign in to continue</h2>
+                  <p className="text-sm text-zinc-400 mt-2 mb-5">Your pipeline, analytics, and agents are private to your account. Sign in or create a free account to access them.</p>
+                  <div className="flex items-center justify-center gap-2.5">
+                    <SignInButton mode="modal">
+                      <button className="rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs uppercase tracking-wider px-4 py-2 cursor-pointer">Sign In</button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <button className="rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider px-4 py-2 cursor-pointer shadow-lg shadow-blue-600/20">Create Account</button>
+                    </SignUpButton>
+                  </div>
+                </div>
+              </div>
+            ) : (
+            <>
             {activeTab === 'discovery' && (
               <DiscoveryEngine
                 onSaveLead={saveLeadToCrm}
@@ -372,6 +377,8 @@ export default function App() {
                 crmLeads={crmLeads}
                 onNavigate={(tab) => setActiveTab(tab as 'guide' | 'discovery' | 'crm' | 'analytics' | 'agents')}
               />
+            )}
+            </>
             )}
           </div>
 
@@ -457,7 +464,7 @@ export default function App() {
 
       {/* Interactive Floating AI Sales Copilot Agent widget */}
       {/* Also toggled via Header 'Ask Bishop' button */}
-      <SalesCopilot leads={crmLeads} />
+      <SalesCopilot />
 
       {/* Remotion-Powered Video Launch Tour Overlay */}
       <LaunchVideoPlayer

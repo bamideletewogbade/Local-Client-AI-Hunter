@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import type { Lead } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -25,7 +24,7 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-export default function SalesCopilot({ leads = [] }: { leads?: Lead[] }) {
+export default function SalesCopilot() {
   const [isOpen, setIsOpen] = useState(false);
 
   // Listen for external toggle event from header nav
@@ -323,7 +322,7 @@ export default function SalesCopilot({ leads = [] }: { leads?: Lead[] }) {
       const res = await fetch('/api/agent/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ goal: query, leads })
+        body: JSON.stringify({ goal: query })
       });
 
       if (!res.ok) {

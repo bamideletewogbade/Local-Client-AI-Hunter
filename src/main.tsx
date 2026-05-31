@@ -46,7 +46,6 @@ import {createRoot} from 'react-dom/client';
 import { ClerkProvider } from '@clerk/react';
 import { CLERK_PUBLISHABLE_KEY } from './clerkConfig';
 import App from './App.tsx';
-import { AuthProvider } from './components/AuthContext.tsx';
 import './index.css';
 
 // Attach the Clerk session token to same-origin /api requests so the server can
@@ -77,9 +76,7 @@ if (typeof window !== 'undefined' && !(window as any).__clerkFetchPatched) {
 // clerkConfig — env var wins, with the project's dev instance baked as default so
 // auth works out of the box. Gated so the app still boots if the key is ever blank.
 const tree = (
-  <AuthProvider>
-    <App />
-  </AuthProvider>
+  <App />
 );
 
 createRoot(document.getElementById('root')!).render(

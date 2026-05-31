@@ -7,7 +7,6 @@ import {
   TrendingUp, BarChart3, Target, Clock, PhoneCall, Footprints, Megaphone, ChevronDown
 } from 'lucide-react';
 import { Lead, BusinessAnalysis, WebDesignProposal, OutreachPitch, OutreachEntry, ScoreBreakdown, BIReport, Campaign, PriorityScore, AgentPersonaType } from '../types';
-import { useAuth } from './AuthContext';
 import ConfirmationDialog from './ConfirmationDialog';
 import PriorityScoreGauge, { generatePriorityScore } from './PriorityScoreGauge';
 import CampaignSequence from './CampaignSequence';
@@ -22,7 +21,6 @@ interface LeadSidePanelProps {
 }
 
 export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLead }: LeadSidePanelProps) {
-  const { user } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState<'audit' | 'website_offer' | 'outreach' | 'bi_report' | 'campaigns'>('audit');
 
   
@@ -229,11 +227,6 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
   };
 
   const updateDbLead = async (updated: Lead) => {
-    if (user) {
-      onUpdateLead(updated);
-      return;
-    }
-
     try {
       const response = await fetch(`/api/crm/leads/${lead.id}`, {
         method: 'PUT',

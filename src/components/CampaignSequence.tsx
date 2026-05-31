@@ -14,7 +14,7 @@ import {
   AlertCircle, Zap, Target, Users, Play, Pause, ChevronDown,
   ChevronUp, Copy, BarChart3, Sparkles
 } from 'lucide-react';
-import { Campaign, CampaignStep, OutreachChannel } from '../types';
+import { Campaign, CampaignStep, OutreachChannel, Lead } from '../types';
 
 // ─── Channel Config ───
 
@@ -190,11 +190,12 @@ function StepEditor({ step, index, onChange, onDelete, isFirst }: StepEditorProp
 interface CampaignCardProps {
   campaign: Campaign;
   onUpdate: (campaign: Campaign) => void;
+  onActivate: (campaign: Campaign) => void;
   onDelete: (id: string) => void;
   isExpanded?: boolean;
 }
 
-function CampaignCard({ campaign, onUpdate, onDelete, isExpanded: defaultExpanded }: CampaignCardProps) {
+function CampaignCard({ campaign, onUpdate, onActivate, onDelete, isExpanded: defaultExpanded }: CampaignCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded ?? false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(campaign.name);
@@ -270,7 +271,7 @@ function CampaignCard({ campaign, onUpdate, onDelete, isExpanded: defaultExpande
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Toggle active */}
           <button
-            onClick={() => onUpdate({ ...campaign, isActive: !campaign.isActive })}
+            onClick={() => campaign.isActive ? onUpdate({ ...campaign, isActive: false }) : onActivate(campaign)}
             className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
               campaign.isActive
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
@@ -386,6 +387,7 @@ interface CampaignSequenceProps {
   onDeleteCampaign: (id: string) => void;
   onCreateCampaign: (campaign: Campaign) => void;
   assignedLeadIds?: string[];
+  lead?: Lead;
 }
 
 export default function CampaignSequence({
@@ -394,10 +396,76 @@ export default function CampaignSequence({
   onDeleteCampaign,
   onCreateCampaign,
   assignedLeadIds,
+  lead,
 }: CampaignSequenceProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
+
+  // Substitute personalization tokens with the lead's details.
+  const fillTemplate = (msg: string) =>
+    (msg || '')
+      .replace(/\{\{\s*name\s*\}\}/gi, lead?.name || 'there')
+      .replace(/\{\{\s*business\s*\}\}/gi, lead?.name || 'your business')
+      .replace(/\{\{\s*sender\s*\}\}/gi, 'AscendSME');
+
+  const toast = (message: string, type: 'success' | 'info' | 'error' = 'info') =>
+    window.dispatchEvent(new CustomEvent('hunter-toast', { detail: { message, type } }));
+
+  // Activating a campaign schedules its WhatsApp steps on the server scheduler
+  // (cumulative delays + placeholder substitution). Non-WhatsApp steps stay manual.
+  const launchCampaign = async (campaign: Campaign) => {
+    if (!lead || !lead.phone) {
+      toast(`"${campaign.name}" activated. ${lead ? `${lead.name} has no phone number, so WhatsApp steps can't be auto-scheduled.` : 'Open a lead to auto-schedule WhatsApp steps.'}`, 'info');
+      onUpdateCampaign({ ...campaign, isActive: true });
+      return;
+    }
+
+    // Avoid double-scheduling if this campaign was already launched once.
+    if (campaign.stats && campaign.stats.sent > 0) {
+      onUpdateCampaign({ ...campaign, isActive: true });
+      toast(`"${campaign.name}" resumed.`, 'info');
+      return;
+    }
+
+    let cumulativeDays = 0;
+    let scheduled = 0;
+    for (const step of campaign.steps) {
+      cumulativeDays += step.delayDays || 0;
+      if (step.channel !== 'whatsapp' || !step.message?.trim()) continue;
+      const scheduledAt = new Date(Date.now() + cumulativeDays * 86400000).toISOString();
+      try {
+        const res = await fetch('/api/scheduler/jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            leadId: lead.id,
+            leadName: lead.name,
+            leadPhone: lead.phone,
+            message: fillTemplate(step.message),
+            scheduledAt,
+            metadata: { source: 'campaign', campaignId: campaign.id, stepId: step.id },
+          }),
+        });
+        if (res.ok) scheduled++;
+      } catch {
+        /* continue scheduling remaining steps even if one request fails */
+      }
+    }
+
+    onUpdateCampaign({
+      ...campaign,
+      isActive: true,
+      stats: { sent: scheduled, delivered: 0, replied: 0, converted: 0 },
+    });
+
+    toast(
+      scheduled > 0
+        ? `"${campaign.name}" launched — ${scheduled} WhatsApp step${scheduled > 1 ? 's' : ''} scheduled for ${lead.name}.`
+        : `"${campaign.name}" activated, but no WhatsApp steps were scheduled. Add a WhatsApp step with a message and ensure the server is running.`,
+      scheduled > 0 ? 'success' : 'error'
+    );
+  };
 
   const handleCreate = () => {
     if (!newName.trim()) return;
@@ -460,6 +528,7 @@ export default function CampaignSequence({
             key={c.id}
             campaign={c}
             onUpdate={onUpdateCampaign}
+            onActivate={launchCampaign}
             onDelete={onDeleteCampaign}
           />
         ))}

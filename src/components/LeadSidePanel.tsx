@@ -1041,6 +1041,7 @@ export default function LeadSidePanel({ lead, onClose, onUpdateLead, onDeleteLea
                   </h4>
                 </div>
                 <CampaignSequence
+                  lead={lead}
                   campaigns={leadCampaigns}
                   onUpdateCampaign={(updated) => {
                     setLeadCampaigns(prev => prev.map(c => c.id === updated.id ? updated : c));

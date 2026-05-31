@@ -4,13 +4,14 @@ import {
   Sparkles,
   BarChart3,
   House,
-  CloudLightning,
-  Database,
   LayoutList,
   MessageSquare,
   Activity
 } from 'lucide-react';
-import { useAuth } from './AuthContext';
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
+
+// Auth controls render only when Clerk is configured; otherwise the app runs anonymously.
+const hasClerk = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 interface HeaderProps {
   activeTab: 'guide' | 'discovery' | 'crm' | 'analytics' | 'agents';
@@ -20,8 +21,6 @@ interface HeaderProps {
 }
 
 export default function Header({ activeTab, setActiveTab, crmCount, onOpenChat }: HeaderProps) {
-  const { user, isConfigured, signInWithGoogle, logout } = useAuth();
-
   const [isFallbackActive, setIsFallbackActive] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('hunter_ai_fallback') === 'true';
@@ -137,53 +136,39 @@ export default function Header({ activeTab, setActiveTab, crmCount, onOpenChat }
             <span className="sm:hidden">AI</span>
           </button>
 
-          {/* Core Firebase Auth state — compact */}
-          {!isConfigured ? (
-            <div
-              title="Database backup defaults to fast native browser IndexedDB."
-              className="flex items-center gap-1 rounded-lg bg-white/5 border border-white/10 text-zinc-400 px-2 sm:px-2.5 py-1.5 text-[10px] font-mono font-bold"
-            >
-              <Database className="h-3 w-3 text-zinc-500 shrink-0" />
-              <span className="hidden sm:inline">DB: LOCAL</span>
-              <span className="sm:hidden">Local</span>
-            </div>
-          ) : user ? (
-            <div className="flex items-center gap-2 border-l border-white/10 pl-2 sm:pl-3">
-              {user.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName || "User"}
-                  className="h-6 w-6 rounded-full border border-white/15 shadow-sm shrink-0"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white uppercase shrink-0">
-                  {user.displayName?.charAt(0) || 'U'}
-                </div>
-              )}
-              <div className="text-left hidden sm:block">
-                <p className="text-[10px] text-zinc-100 font-bold truncate max-w-[80px] leading-tight">
-                  {user.displayName || user.email?.split('@')[0] || 'Active User'}
-                </p>
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="text-[9px] text-zinc-500 hover:text-rose-400 font-bold block leading-none cursor-pointer mt-0.5"
-                >
-                  Disconnect
-                </button>
-              </div>
-            </div>
+          {/* Auth + user management via Clerk */}
+          {hasClerk ? (
+            <>
+              <Show when="signed-out">
+                <SignInButton mode="modal">
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/15 text-zinc-200 font-bold text-[9px] uppercase tracking-wider px-2.5 py-1.5 transition-all cursor-pointer shadow-sm active:scale-95 border border-white/15"
+                  >
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button
+                    type="button"
+                    className="hidden sm:flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-[9px] uppercase tracking-wider px-2.5 py-1.5 transition-all cursor-pointer shadow-lg shadow-blue-600/20 active:scale-95 border border-indigo-400/30"
+                  >
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: 'h-7 w-7' } }} />
+              </Show>
+            </>
           ) : (
-            <button
-              type="button"
-              onClick={signInWithGoogle}
-              className="flex items-center gap-1 rounded-lg bg-white/10 hover:bg-white/15 text-zinc-200 font-bold text-[9px] uppercase tracking-wider px-2 py-1.5 transition-all cursor-pointer shadow-sm active:scale-95 border border-white/15"
-              title="Sign in with Google"
+            <div
+              title="Set VITE_CLERK_PUBLISHABLE_KEY to enable Clerk sign-in"
+              className="flex items-center gap-1 rounded-lg bg-white/5 border border-white/10 text-zinc-500 px-2 sm:px-2.5 py-1.5 text-[10px] font-mono font-bold"
             >
-              <CloudLightning className="h-3 w-3 text-zinc-300 shrink-0" />
-              <span className="hidden sm:inline text-[9px]">Sign In</span>
-            </button>
+              <span className="hidden sm:inline">AUTH: SET KEY</span>
+              <span className="sm:hidden">Auth</span>
+            </div>
           )}
         </div>
 

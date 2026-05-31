@@ -43,15 +43,31 @@
 
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
+import { ClerkProvider } from '@clerk/react';
 import App from './App.tsx';
 import { AuthProvider } from './components/AuthContext.tsx';
 import './index.css';
 
+// Clerk provides auth + user management. ClerkProvider auto-reads
+// VITE_CLERK_PUBLISHABLE_KEY. Gate on the key so the app still boots in
+// anonymous/local mode before the key is configured.
+const hasClerkKey = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+const tree = (
+  <AuthProvider>
+    <App />
+  </AuthProvider>
+);
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    {hasClerkKey ? (
+      <ClerkProvider afterSignOutUrl="/">
+        {tree}
+      </ClerkProvider>
+    ) : (
+      tree
+    )}
   </StrictMode>,
 );
 

@@ -1042,16 +1042,83 @@ app.post('/api/leads/outreach', (req, res) => {
 });
 
 // Search API using OpenRouter AI (generates leads based on model knowledge)
+// ─── Real lead data via Google Places (optional) ───
+// When GOOGLE_PLACES_API_KEY is set, fetch REAL businesses from Google Places
+// Text Search (New). Returns mapped leads, or null to fall back to AI/synthetic.
+async function searchGooglePlaces(query: string, location: string, source?: string): Promise<Lead[] | null> {
+  const key = process.env.GOOGLE_PLACES_API_KEY;
+  if (!key) return null;
+  const textQuery = location ? `${query} in ${location}` : query;
+  try {
+    const resp = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': key,
+        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.websiteUri,places.rating,places.userRatingCount,places.location,places.internationalPhoneNumber,places.nationalPhoneNumber,places.googleMapsUri,places.primaryTypeDisplayName',
+      },
+      body: JSON.stringify({ textQuery, maxResultCount: 8 }),
+    });
+    if (!resp.ok) {
+      console.warn('[Places] search failed:', resp.status, (await resp.text()).slice(0, 200));
+      return null;
+    }
+    const data: any = await resp.json();
+    const places: any[] = data.places || [];
+    if (places.length === 0) return null;
+    return places.slice(0, 8).map((p: any, index: number) => {
+      const website = p.websiteUri || null;
+      const item: any = {
+        name: p.displayName?.text || 'Unknown business',
+        category: p.primaryTypeDisplayName?.text || query,
+        address: p.formattedAddress || location || '',
+        website,
+        phone: p.internationalPhoneNumber || p.nationalPhoneNumber || null,
+        rating: typeof p.rating === 'number' ? p.rating : null,
+        reviewsCount: typeof p.userRatingCount === 'number' ? p.userRatingCount : null,
+        latitude: p.location?.latitude,
+        longitude: p.location?.longitude,
+        mapsUrl: p.googleMapsUri || null,
+      };
+      const scoreBreakdown = calculateScoreBreakdown(item);
+      const biReport = generateBIReport(item);
+      return {
+        ...item,
+        id: `lead-places-${index}-${Date.now()}`,
+        status: 'new',
+        source: source || 'google_maps',
+        outreachHistory: [],
+        scoreBreakdown,
+        biReport,
+        digitalPresenceScore: scoreBreakdown?.total,
+        createdAt: new Date().toISOString(),
+        notes: website
+          ? 'Real Google Maps listing with a website — audit for performance/SEO upgrade.'
+          : 'Real Google Maps listing with NO website — high-priority web-design target.',
+      } as Lead;
+    });
+  } catch (err) {
+    console.warn('[Places] error:', err);
+    return null;
+  }
+}
+
 app.post('/api/leads/search', async (req, res) => {
   const { query, location, source } = req.body;
   const fullSearchQuery = location ? `${query} in ${location}` : query;
-  
+
   if (!query) {
     return res.status(400).json({ error: "Search query string is required" });
   }
 
   console.log(`Processing lead discovery query: "${fullSearchQuery}"`);
-  
+
+  // 1) Prefer REAL businesses from Google Places when configured.
+  const placesLeads = await searchGooglePlaces(query, location, source);
+  if (placesLeads && placesLeads.length > 0) {
+    return res.json({ leads: placesLeads, isFallback: false, source: 'google_places' });
+  }
+
   if (!isAiConfigured()) {
     // Safe fallback mode
     const fallbacks = getRealisticFallbacks(fullSearchQuery);
